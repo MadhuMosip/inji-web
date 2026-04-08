@@ -27,10 +27,9 @@ const LoginSessionStatusChecker = () => {
     const redirectToLogin = useCallback(() => {
         removeUser()
         if (!isRootPage()) {
-            const isVpAuthorizeEntry =
-                location.pathname === ROUTES.USER_AUTHORIZE &&
-                isVpTokenAuthorizeSearch(location.search);
-            if (isVpAuthorizeEntry) {
+            const isOpenIdVPAuthorizeRoute =
+                location.pathname === ROUTES.USER_AUTHORIZE
+            if (isOpenIdVPAuthorizeRoute) {
                 try {
                     sessionStorage.setItem(OPENID_VP_LOGIN, 'true');
                 } catch (e) {
@@ -40,7 +39,7 @@ const LoginSessionStatusChecker = () => {
             console.warn("Redirecting to / page as accessing protected route without login from ", location.pathname);
             navigate(ROUTES.ROOT);
         }
-    }, [isRootPage, location.pathname, location.search, navigate, removeUser]);
+    }, [isRootPage, location.pathname, navigate, removeUser]);
 
 
     const validateStatus = useCallback(() => {
@@ -114,11 +113,5 @@ const LoginSessionStatusChecker = () => {
 
     return null;
 };
-
-function isVpTokenAuthorizeSearch(search: string | undefined): boolean {
-    const safeSearch = search ?? '';
-    const query = safeSearch.startsWith('?') ? safeSearch.slice(1) : safeSearch;
-    return new URLSearchParams(query).get('response_type') === 'vp_token';
-}
 
 export default LoginSessionStatusChecker;
