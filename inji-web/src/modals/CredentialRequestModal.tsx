@@ -38,6 +38,8 @@ export const CredentialRequestModal: React.FC<CredentialRequestModalProps> = ({
     const [credentials, setCredentials] = useState<PresentationCredential[]>([]);
     const [missingClaims, setMissingClaims] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isCancelPending, setIsCancelPending] = useState(false);
+    const cancelInFlightRef = useRef(false);
     const fetchingRef = useRef<boolean>(false);
     const {fetchData} = useApi<CredentialsResponse>();
 
@@ -52,12 +54,22 @@ export const CredentialRequestModal: React.FC<CredentialRequestModalProps> = ({
     } = useApiErrorHandler({ onClose: onCancel });
 
     const handleCancel = useCallback(async () => {
-        await rejectVerifierRequest({
+        if (cancelInFlightRef.current) {
+            return;
+        }
+        cancelInFlightRef.current = true;
+        setIsCancelPending(true);
+        const ok = await rejectVerifierRequest({
             presentationId,
             fetchData,
             redirectUri: verifier?.redirectUri || null,
             onSuccess: onCancel
         });
+        
+        if (!ok) {
+            cancelInFlightRef.current = false;
+            setIsCancelPending(false);
+        }
     }, [presentationId, fetchData, onCancel, verifier?.redirectUri]);
 
     const handleCredentialToggle = useCallback((credentialId: string) => {
@@ -94,6 +106,7 @@ export const CredentialRequestModal: React.FC<CredentialRequestModalProps> = ({
     const footer = (
         <CredentialRequestModalFooter
             isConsentButtonEnabled={isConsentButtonEnabled}
+            isCancelPending={isCancelPending}
             onCancel={handleCancel}
             onConsentAndShare={handleConsentAndShare}
         />
@@ -144,6 +157,8 @@ export const CredentialRequestModal: React.FC<CredentialRequestModalProps> = ({
     useEffect(() => {
         if (!isVisible) {
             fetchingRef.current = false;
+            cancelInFlightRef.current = false;
+            setIsCancelPending(false);
         }
     }, [isVisible]);
 

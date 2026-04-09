@@ -62,8 +62,9 @@ describe('verifierUtils', () => {
 
     describe('rejectVerifierRequest', () => {
         it('should make API call with correct payload', async () => {
-            await rejectVerifierRequest(defaultOptions);
+            const result = await rejectVerifierRequest(defaultOptions);
 
+            expect(result).toBe(true);
             expect(withErrorHandling).toHaveBeenCalledTimes(1);
             expect(mockFetchData).toHaveBeenCalledTimes(1);
             expect(mockFetchData).toHaveBeenCalledWith({
@@ -103,6 +104,39 @@ describe('verifierUtils', () => {
             expect(mockNavigate).not.toHaveBeenCalled();
         });
 
+        it('should prefer redirectUri from API response over options.redirectUri', async () => {
+            const propUri = 'https://verifier.com/callback';
+            const apiUri = 'https://issuer.com/after-reject';
+            mockFetchData.mockResolvedValue({
+                ok: () => true,
+                data: { redirectUri: apiUri }
+            });
+
+            await rejectVerifierRequest({
+                ...defaultOptions,
+                redirectUri: propUri
+            });
+
+            expect(window.location.href).toBe(apiUri);
+        });
+
+        it('should not call onSuccess or redirect when API result is not ok', async () => {
+            mockFetchData.mockResolvedValue({
+                ok: () => false,
+                data: { redirectUri: 'https://example.com/callback' }
+            });
+
+            const result = await rejectVerifierRequest({
+                ...defaultOptions,
+                onSuccess: mockOnSuccess,
+                redirectUri: 'https://fallback.com/callback'
+            });
+
+            expect(result).toBe(false);
+            expect(mockOnSuccess).not.toHaveBeenCalled();
+            expect(window.location.href).toBe('');
+        });
+
         it('should navigate to ROOT if navigate is provided and no redirectUri', async () => {
             await rejectVerifierRequest({
                 ...defaultOptions,
@@ -127,25 +161,8 @@ describe('verifierUtils', () => {
             expect(mockNavigate).not.toHaveBeenCalled();
         });
 
-        it('should call onSuccess before navigation', async () => {
+        it('should not call onSuccess when redirecting (avoids SPA home flash before full navigation)', async () => {
             const redirectUri = 'https://example.com/callback';
-            const callOrder: string[] = [];
-
-            mockOnSuccess.mockImplementation(() => {
-                callOrder.push('onSuccess');
-            });
-
-            Object.defineProperty(window, 'location', {
-                value: {
-                    set href(url: string) {
-                        callOrder.push('redirect');
-                    },
-                    get href() {
-                        return '';
-                    }
-                },
-                writable: true
-            });
 
             await rejectVerifierRequest({
                 ...defaultOptions,
@@ -153,10 +170,11 @@ describe('verifierUtils', () => {
                 onSuccess: mockOnSuccess
             });
 
-            expect(callOrder).toEqual(['onSuccess', 'redirect']);
+            expect(mockOnSuccess).not.toHaveBeenCalled();
+            expect(window.location.href).toBe(redirectUri);
         });
 
-        it('should call onSuccess before navigate', async () => {
+        it('should call onSuccess and not navigate when both are provided and there is no redirect', async () => {
             const callOrder: string[] = [];
 
             mockOnSuccess.mockImplementation(() => {
@@ -173,7 +191,8 @@ describe('verifierUtils', () => {
                 onSuccess: mockOnSuccess
             });
 
-            expect(callOrder).toEqual(['onSuccess', 'navigate']);
+            expect(callOrder).toEqual(['onSuccess']);
+            expect(mockNavigate).not.toHaveBeenCalled();
         });
 
         it('should handle null redirectUri', async () => {
@@ -226,8 +245,9 @@ describe('verifierUtils', () => {
                 return { error };
             });
 
-            await rejectVerifierRequest(defaultOptions);
+            const result = await rejectVerifierRequest(defaultOptions);
 
+            expect(result).toBe(false);
             expect(mockFetchData).toHaveBeenCalled();
             expect(mockOnSuccess).not.toHaveBeenCalled();
         });
@@ -243,11 +263,12 @@ describe('verifierUtils', () => {
                 return { error };
             });
 
-            await rejectVerifierRequest({
+            const result = await rejectVerifierRequest({
                 ...defaultOptions,
                 onSuccess: mockOnSuccess
             });
 
+            expect(result).toBe(false);
             expect(mockOnSuccess).not.toHaveBeenCalled();
         });
 
@@ -262,11 +283,12 @@ describe('verifierUtils', () => {
                 return { error };
             });
 
-            await rejectVerifierRequest({
+            const result = await rejectVerifierRequest({
                 ...defaultOptions,
                 navigate: mockNavigate
             });
 
+            expect(result).toBe(false);
             expect(mockNavigate).not.toHaveBeenCalled();
         });
     });

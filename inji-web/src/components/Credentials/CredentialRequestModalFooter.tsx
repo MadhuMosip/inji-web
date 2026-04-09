@@ -4,12 +4,15 @@ import { CredentialRequestModalStyles } from '../../modals/CredentialRequestModa
 
 interface CredentialRequestModalFooterProps {
     isConsentButtonEnabled: boolean;
+    /** After first Cancel click, disables both Cancel buttons until reset by parent */
+    isCancelPending?: boolean;
     onCancel: () => void;
     onConsentAndShare: () => void;
 }
 
 export const CredentialRequestModalFooter: React.FC<CredentialRequestModalFooterProps> = ({
     isConsentButtonEnabled,
+    isCancelPending = false,
     onCancel,
     onConsentAndShare
 }) => {
@@ -37,6 +40,7 @@ export const CredentialRequestModalFooter: React.FC<CredentialRequestModalFooter
                         type="button"
                         data-testid="btn-cancel"
                         onClick={onCancel}
+                        disabled={isCancelPending}
                         className={`${CredentialRequestModalStyles.footer.cancelButton} bg-white rounded-md w-full h-full flex items-center justify-center border-none`}
                     >
                         <span className={CredentialRequestModalStyles.footer.cancelButtonText}>{t('buttons.cancel')}</span>
@@ -52,6 +56,7 @@ export const CredentialRequestModalFooter: React.FC<CredentialRequestModalFooter
                         type="button"
                         data-testid="btn-cancel"
                         onClick={onCancel}
+                        disabled={isCancelPending}
                         className={`${CredentialRequestModalStyles.footer.cancelButton} bg-white rounded-md w-full h-full flex items-center justify-center border-none`}
                     >
                         <span className={CredentialRequestModalStyles.footer.cancelButtonText}>{t('buttons.cancel')}</span>
