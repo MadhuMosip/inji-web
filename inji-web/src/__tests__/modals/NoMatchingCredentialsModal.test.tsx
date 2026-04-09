@@ -80,6 +80,14 @@ describe('NoMatchingCredentialsModal', () => {
         presentationId: 'test-presentation-id',
     };
 
+    /** API must return redirectUri for full-page navigation; the prop alone is not applied by handleExit() when no presentationId. */
+    const mockApiRejectSuccessWithRedirect = {
+        data: { success: true, redirectUri: 'https://example.com/redirect' },
+        error: null,
+        status: 200,
+        ok: () => true,
+    };
+
     const mockFetchData = jest.fn();
     let mockErrorHandlerReturnValue: ReturnType<typeof useApiErrorHandler>;
 
@@ -138,8 +146,27 @@ describe('NoMatchingCredentialsModal', () => {
     });
 
     const setupWindowLocationMock = (initialHref: string = '') => {
+        let href = initialHref;
         delete (window as any).location;
-        window.location = { href: initialHref } as any;
+        const mockLocation = {
+            assign: jest.fn(),
+            replace: jest.fn(),
+            reload: jest.fn(),
+        };
+        Object.defineProperty(mockLocation, 'href', {
+            configurable: true,
+            get() {
+                return href;
+            },
+            set(next: string) {
+                href = next;
+            },
+        });
+        Object.defineProperty(window, 'location', {
+            configurable: true,
+            writable: true,
+            value: mockLocation,
+        });
     };
 
     describe('Rendering', () => {
@@ -193,20 +220,22 @@ describe('NoMatchingCredentialsModal', () => {
             expect(mockFetchData).not.toHaveBeenCalled();
         });
 
-        it('redirects when go to home button is clicked without presentationId but with redirectUri', () => {
+        it('calls onGoToHome when go to home is clicked without presentationId (redirectUri prop does not set location)', () => {
+            const onGoToHome = jest.fn();
             const propsWithoutPresentationId = {
                 ...defaultProps,
                 presentationId: undefined,
+                onGoToHome,
             };
             setupWindowLocationMock();
             render(<NoMatchingCredentialsModal {...propsWithoutPresentationId} />);
-            const goToHomeButton = screen.getByTestId('btn-go-to-home');
-            fireEvent.click(goToHomeButton);
-            expect(window.location.href).toBe('https://example.com/redirect');
+            fireEvent.click(screen.getByTestId('btn-go-to-home'));
+            expect(onGoToHome).toHaveBeenCalledTimes(1);
+            expect(window.location.href).toBe('');
         });
 
         it('calls API to reject verifier when presentationId is provided', async () => {
-            mockFetchData.mockResolvedValue({ data: { success: true }, error: null, status: 200, ok: () => true });
+            mockFetchData.mockResolvedValue(mockApiRejectSuccessWithRedirect);
             setupWindowLocationMock();
             render(<NoMatchingCredentialsModal {...defaultProps} />);
             const goToHomeButton = screen.getByTestId('btn-go-to-home');
@@ -234,7 +263,7 @@ describe('NoMatchingCredentialsModal', () => {
 
     describe('API Integration', () => {
         it('handles API success correctly and redirects', async () => {
-            mockFetchData.mockResolvedValue({ data: { success: true }, error: null, status: 200, ok: () => true });
+            mockFetchData.mockResolvedValue(mockApiRejectSuccessWithRedirect);
             setupWindowLocationMock();
             render(<NoMatchingCredentialsModal {...defaultProps} />);
             const goToHomeButton = screen.getByTestId('btn-go-to-home');
@@ -383,7 +412,7 @@ describe('NoMatchingCredentialsModal', () => {
         });
 
         it('prevents multiple API calls on rapid clicks', async () => {
-            mockFetchData.mockResolvedValueOnce({ data: { success: true }, error: null, status: 200, ok: () => true });
+            mockFetchData.mockResolvedValueOnce(mockApiRejectSuccessWithRedirect);
             setupWindowLocationMock('');
 
             render(<NoMatchingCredentialsModal {...defaultProps} />);
