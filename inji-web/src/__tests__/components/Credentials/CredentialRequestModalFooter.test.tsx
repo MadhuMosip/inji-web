@@ -253,6 +253,21 @@ describe('CredentialRequestModalFooter Component', () => {
             expect(mockOnCancel).toHaveBeenCalledTimes(2);
         });
 
+        it('should disable cancel buttons when isCancelPending', () => {
+            render(
+                <CredentialRequestModalFooter
+                    isConsentButtonEnabled={true}
+                    isCancelPending={true}
+                    onCancel={mockOnCancel}
+                    onConsentAndShare={mockOnConsentAndShare}
+                />
+            );
+
+            screen.getAllByTestId('btn-cancel').forEach((btn) => {
+                expect(btn).toBeDisabled();
+            });
+        });
+
         it('should have correct button type', () => {
             render(
                 <CredentialRequestModalFooter

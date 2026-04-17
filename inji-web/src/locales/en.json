@@ -552,7 +552,7 @@
   "NoMatchingCredentialsModal": {
     "title": "No matching credentials found",
     "description": "Please download the corresponding credentials and retry the sharing process",
-    "goToHomeButton": "Go to Home"
+    "goToHomeButton": "Go Back"
   },
   "LogoutConfirmation": {
     "title": "Are you sure you want to exit?",

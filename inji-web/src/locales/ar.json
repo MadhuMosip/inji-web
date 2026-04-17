@@ -554,7 +554,7 @@
   "NoMatchingCredentialsModal": {
     "title": "لم يتم العثور على بيانات اعتماد مطابقة",
     "description": "يرجى تحميل بيانات الاعتماد المقابلة وإعادة محاولة عملية المشاركة",
-    "goToHomeButton": "الذهاب إلى الصفحة الرئيسية"
+    "goToHomeButton": "عُد"
   },
   "LogoutConfirmation": {
     "title": "هل أنت متأكد أنك تريد الخروج؟",

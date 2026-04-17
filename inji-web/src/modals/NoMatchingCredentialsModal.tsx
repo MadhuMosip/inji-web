@@ -25,7 +25,7 @@ export const NoMatchingCredentialsModal: React.FC<NoMatchingCredentialsModalProp
     presentationId,
 }) => {
     const { t } = useTranslation("NoMatchingCredentialsModal");
-    const { fetchData: rejectVerifier } = useApi<{ success: boolean }>();
+    const { fetchData: rejectVerifier } = useApi<{ success: boolean; redirectUri?: string | null }>();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const {
@@ -38,7 +38,7 @@ export const NoMatchingCredentialsModal: React.FC<NoMatchingCredentialsModalProp
         onRetry
     } = useApiErrorHandler({ onClose: onGoToHome });
 
-    const handleExit = useCallback(() => {
+    const handleExit = useCallback((redirectUri:string = "") => {
         if (redirectUri) {
             window.location.href = redirectUri;
         } else if (onGoToHome) {
@@ -48,8 +48,8 @@ export const NoMatchingCredentialsModal: React.FC<NoMatchingCredentialsModalProp
 
     const rejectVerifierCallback = useCallback(async () => {
         const rejectPayload = {
-            errorCode: "access_denied",
-            errorMessage: "User denied authorization to share credentials"
+            errorCode: "invalid_transaction_data",
+            errorMessage: "No matching credentials found to fulfill the request"
         };
 
         const response = await rejectVerifier({
@@ -75,8 +75,9 @@ export const NoMatchingCredentialsModal: React.FC<NoMatchingCredentialsModalProp
 
         try {
             const response = await rejectVerifierCallback();
+            const redirectUri = response?.data?.redirectUri || "";
             if (response.ok()) {
-                handleExit();
+                handleExit(redirectUri);
             } else {
                 throw response.error || new Error("Failed to reject verifier");
             }

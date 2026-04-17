@@ -52,6 +52,7 @@ jest.mock('../../utils/verifierUtils', () => ({
         if (options.onSuccess) {
             options.onSuccess();
         }
+        return true;
     }),
 }));
 
@@ -139,6 +140,7 @@ jest.mock('../../components/Credentials/CredentialRequestModalContent', () => ({
 jest.mock('../../components/Credentials/CredentialRequestModalFooter', () => ({
     CredentialRequestModalFooter: ({
                                        isConsentButtonEnabled,
+                                       isCancelPending,
                                        onCancel,
                                        onConsentAndShare
                                    }: any) => (
@@ -146,6 +148,7 @@ jest.mock('../../components/Credentials/CredentialRequestModalFooter', () => ({
             <button
                 data-testid="btn-cancel-desktop"
                 onClick={onCancel}
+                disabled={!!isCancelPending}
                 type="button"
             >
                 Cancel
@@ -516,6 +519,7 @@ describe('CredentialRequestModal', () => {
                 if (options.onSuccess) {
                     options.onSuccess();
                 }
+                return true;
             });
 
             render(<CredentialRequestModal {...defaultProps} />);

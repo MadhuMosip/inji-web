@@ -554,7 +554,7 @@
   "NoMatchingCredentialsModal": {
     "title": "कोई मिलती-जुलती साख नहीं मिली",
     "description": "कृपया संबंधित साख डाउनलोड करें और साझाकरण प्रक्रिया को पुनः प्रयास करें",
-    "goToHomeButton": "होम पर जाएं"
+    "goToHomeButton": "वापस जाओ"
   },
   "LogoutConfirmation": {
     "title": "क्या आप निश्चित हैं आपकी बाहर निकलने की इच्छा है?",
