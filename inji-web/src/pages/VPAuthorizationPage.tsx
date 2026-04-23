@@ -14,9 +14,23 @@ import { PresentationCredential } from "../types/components";
 import { CredentialShareHandler } from "../handlers/CredentialShareHandler";
 import { useApiErrorHandler } from "../hooks/useApiErrorHandler";
 import { useUser } from '../hooks/User/useUser';
+import CredentialShareCard from "../components/Ovp/CredentialShareCard";
+import {PageTitleStyles} from "../components/Common/PageTitle/PageTitleStyles";
+import DashboardBgTop from "../assets/Background.svg";
+import DashboardBgBottom from "../assets/DashboardBgBottom.svg";
+import MatchingCredentials from "../components/Ovp/MatchingCredentials";
+
+/** Local layout/background for this page only (do not share with Layout / other screens). */
+const VpAuthPageBackgroundStyles = {
+    mainWithBackgrounds: "relative flex min-h-0 flex-1 flex-col overflow-hidden transition-all duration-300",
+    backgroundTop: "pointer-events-none absolute top-0 left-0 z-0 w-full",
+    backgroundBottom: "pointer-events-none absolute bottom-0 left-0 z-0 w-full",
+    // No overflow-y here: Router wrapElement already provides the page scroll. Nested overflow-y caused an extra bar.
+    contentOverlay: "relative z-10 flex w-full min-h-0 flex-1 flex-col overflow-x-hidden",
+} as const;
 
 export const VPAuthorizationPage: React.FC = () => {
-    const { t } = useTranslation("VerifierTrustPage");
+    const { t } = useTranslation(["VerifierTrustPage", "CredentialRequestModal"]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isCancelConfirmation, setIsCancelConfirmation] = useState<boolean>(false);
     const [showTrustVerifier, setShowTrustVerifier] = useState<boolean>(false);
@@ -24,7 +38,9 @@ export const VPAuthorizationPage: React.FC = () => {
     const [verifierData, setVerifierData] = useState<any>(null);
     const [presentationIdData, setPresentationIdData] = useState<string | null>(null);
     const [selectedCredentialsData, setSelectedCredentialsData] = useState<PresentationCredential[] | null>(null);
+    const [credentialsData, setCredentialsData] = useState<any[] | null>(null);
     const fetchingRef = useRef<boolean>(false);
+    const fetchedCredentialsRef = useRef<Set<string>>(new Set());
 
     const apiService = useApi();
     const navigate = useNavigate();
@@ -119,7 +135,6 @@ export const VPAuthorizationPage: React.FC = () => {
     }, [setShowTrustVerifier, setShowCredentialRequest]);
 
     const handleTrustButton = useCallback(async () => {
-        setIsLoading(true);
         try {
             const response = await addTrustedVerifierCallback();
 
@@ -128,9 +143,7 @@ export const VPAuthorizationPage: React.FC = () => {
             } else {
                 throw response?.error || new Error("Failed to add verifier to trusted list.");
             }
-            setIsLoading(false);
         } catch (err) {
-            setIsLoading(false);
 
             handleApiError(
                 err,
@@ -145,6 +158,41 @@ export const VPAuthorizationPage: React.FC = () => {
         setShowTrustVerifier(false);
         setShowCredentialRequest(true);
     };
+
+    useEffect(() => {
+        if (!presentationIdData || !showCredentialRequest) return;
+        
+        // Skip if already fetched for this presentationId
+        if (fetchedCredentialsRef.current.has(presentationIdData)) return;
+        
+        const loadCredentials = async () => {
+            setIsLoading(true);
+            try {
+                const response = await apiService.fetchData({
+                    url: api.fetchPresentationCredentials.url(presentationIdData),
+                    apiConfig: api.fetchPresentationCredentials
+                });
+                console.log("Fetched credentials response:");
+                console.log(response);
+                
+                if (response && response.ok()) {
+                    setCredentialsData(response.data.availableCredentials);
+                } else {
+                    console.error("Failed to fetch credentials:", response?.error);
+                    setCredentialsData([]);
+                }
+                setIsLoading(false);
+            } catch (err) {
+                setIsLoading(false);
+                console.error("Error fetching credentials:", err);
+                setCredentialsData([]);
+            }
+        };
+        
+        // Mark as fetched
+        fetchedCredentialsRef.current.add(presentationIdData);
+        loadCredentials();
+    }, [presentationIdData, showCredentialRequest, apiService]);
 
     const handleCredentialRequestCancel = () => {
         setShowCredentialRequest(false);
@@ -169,36 +217,48 @@ export const VPAuthorizationPage: React.FC = () => {
     const isErrorActive = showError;
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            {/* Sidebar - positioned completely on the left */}
+        <div className="bg-iw-background box-border flex w-full min-h-full max-w-full overflow-x-hidden">
             <div className="flex-shrink-0">
                 <Sidebar disabled={true} forceLeftPosition={true} />
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col items-center justify-center relative">
-                <LoaderModal
-                    isOpen={isLoading || isRetrying}
-                    title={t("loadingCard.title")}
-                    subtitle={t("loadingCard.subtitle")}
-                    size="xl-loading"
-                    testId="modal-loader"
-                />
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                <div
+                    className={`h-full min-h-0 flex-1 ${VpAuthPageBackgroundStyles.mainWithBackgrounds}`}
+                >
+                    <img
+                        src={DashboardBgTop}
+                        alt="Gradient Top Background"
+                        className={VpAuthPageBackgroundStyles.backgroundTop}
+                    />
+                    <img
+                        src={DashboardBgBottom}
+                        alt="Gardient Bottom Background"
+                        className={VpAuthPageBackgroundStyles.backgroundBottom}
+                    />
 
-                <TrustVerifierModal
-                    isOpen={showTrustVerifier && !isErrorActive}
-                    logo={verifierData?.logo}
-                    verifierName={verifierData?.name}
-                    onTrust={handleTrustButton}
-                    onNotTrust={handleNoTrustButton}
-                    onCancel={() => {
-                        setShowTrustVerifier(false);
-                        setIsCancelConfirmation(true);
-                    }}
-                    testId="modal-trust-verifier"
-                />
+                    <div className={VpAuthPageBackgroundStyles.contentOverlay}>
+                        <div className="mx-auto ml-2 flex min-h-0 w-full max-w-full flex-1 flex-col sm:ml-7 sm:px-2 md:px-4 lg:px-6 pb-1 sm:pb-0 sm:pt-2 md:pt-4 lg:pt-6 ml-3 sm:ml-0">
+                <div className="flex flex-col sm:flex-row justify-between  sm:items-center items-start mb-4 sm:mb-6 gap-4 sm:gap-0 px-4 sm:items-start sm:mr-0" data-testid={"page-title-container"}>
+                    <div className="flex items-start">
+                        <div className="flex flex-col items-start">
+                            <h1 className={PageTitleStyles.title}>{t('mainPage.title')}</h1>
+                        </div>
+                    </div>
+                </div>
 
-                {showCredentialRequest && presentationIdData && (
+                <div
+                    className="relative mx-auto flex w-full max-w-full min-h-0 flex-col sm:px-4"
+                    data-testid="vp-authorization-content"
+                >
+                {showCredentialRequest && presentationIdData && verifierData && !isErrorActive && !isLoading && (
+                    <>
+                    <CredentialShareCard verifier={verifierData} presentationId={presentationIdData} />
+                    <MatchingCredentials credentials={credentialsData} refreshCredentials={() => {}} />
+                    </>
+                )}
+                
+                {/* {showCredentialRequest && presentationIdData && (
                     <CredentialRequestModal
                         isVisible={showCredentialRequest && !isErrorActive}
                         verifierName={verifierData?.name || 'Verifier'}
@@ -217,7 +277,31 @@ export const VPAuthorizationPage: React.FC = () => {
                         presentationId={presentationIdData}
                         onClose={() => { setSelectedCredentialsData(null); navigate(ROUTES.ROOT); }}
                     />
-                )}
+                )} */}
+
+                </div>
+
+                <LoaderModal
+                    isOpen={isLoading || isRetrying }
+                    title={!showCredentialRequest ? t("loadingCard.title") : ''}
+                    subtitle={!showCredentialRequest ? t("loadingCard.subtitle") : ''}
+                    message={showCredentialRequest ? t('CredentialRequestModal:loading.message') : ''}
+                    size="xl-loading"
+                    testId="modal-loader"
+                />
+
+                <TrustVerifierModal
+                    isOpen={showTrustVerifier && !isErrorActive}
+                    logo={verifierData?.logo}
+                    verifierName={verifierData?.name}
+                    onTrust={handleTrustButton}
+                    onNotTrust={handleNoTrustButton}
+                    onCancel={() => {
+                        setShowTrustVerifier(false);
+                        setIsCancelConfirmation(true);
+                    }}
+                    testId="modal-trust-verifier"
+                />
 
                 <ErrorCard
                     isOpen={showError}
@@ -244,6 +328,9 @@ export const VPAuthorizationPage: React.FC = () => {
                         testId="modal-trust-rejection-modal"
                     />
                 )}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

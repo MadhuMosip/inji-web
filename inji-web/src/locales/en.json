@@ -491,6 +491,12 @@
     }
   },
   "VerifierTrustPage": {
+      "mainPage":{
+        "title": "Requested Cards",
+        "unknownVerifier": "Verifier Name",
+        "description": "Requesting access to your credentials",
+        "footerInfo": "Select the credentials below to approve this request"
+      },
       "modal": {
         "title": "Verifier Name",
         "description": "Make sure you recognize or trust this verifier. \nOnce you trust this verifier:",

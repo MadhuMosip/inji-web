@@ -81,7 +81,11 @@ module.exports = {
                     darkgreen: 'var(--iw-color-darkGreen)',
                     disabled: 'var(--iw-color-disabled)',
                     dropdownActiveBg: 'var(--iw-color-dropdown-active-bg)',
-                    dropdownText: 'var(--iw-color-dropdown-text)'
+                    dropdownText: 'var(--iw-color-dropdown-text)',
+                    borderGrayLight: 'var(--iw-color-borderGrayLight)',
+                    lightGrayBg: 'var(--iw-color-lightGrayBg)',
+                    mediumGrayText: 'var(--iw-color-mediumGrayText)',
+                    lightGrayBorder: 'var(--iw-color-lightGrayBorder)'
                 }
             },
             boxShadow: {
@@ -92,6 +96,9 @@ module.exports = {
                 'iw-layout': `0px -2px 4px -2px rgba(16, 24, 40, 0.06), 0px 4px 8px -2px rgba(16, 24, 40, 0.10)`,
                 'iw-hamburger-dropdown': `0px 3px 6px rgb(0,0,0,0.07), 0px -1px 6px rgb(0,0,0,0.07)`
             },
+            backgroundImage: {
+                'credential-share-card': 'url("./assets/credentialShareCardBG.png")'
+            }
         }
     },
     plugins: [
