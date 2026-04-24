@@ -21,8 +21,8 @@ import org.testng.annotations.Test;
 import org.testng.internal.BaseTestMethod;
 import org.testng.internal.TestResult;
 
-import api.InjiWebConfigManager;
-import api.InjiWebUtil;
+import utils.InjiWebConfigManager;
+import utils.InjiWebUtil;
 import io.mosip.testrig.apirig.dto.OutputValidationDto;
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
 import io.mosip.testrig.apirig.testrunner.BaseTestCase;
@@ -152,9 +152,10 @@ public class GetWithParam extends InjiWebUtil implements ITest {
 					if (InjiWebConfigManager.isInServiceNotDeployedList("sunbirdrc"))
 						throw new SkipException(GlobalConstants.SERVICE_NOT_DEPLOYED_MESSAGE);
 
-					if (InjiWebConfigManager.getSunbirdBaseURL() != null && !InjiWebConfigManager.getSunbirdBaseURL().isBlank())
-						tempUrl = InjiWebConfigManager.getSunbirdBaseURL();
-						testCaseDTO.setEndPoint(testCaseDTO.getEndPoint().replace("$SUNBIRDBASEURL$", ""));
+					String sunbirdBaseUrl = InjiWebConfigManager.getSunbirdBaseURL();
+					if (sunbirdBaseUrl != null && !sunbirdBaseUrl.isBlank())
+						tempUrl = sunbirdBaseUrl;
+					testCaseDTO.setEndPoint(testCaseDTO.getEndPoint().replace("$SUNBIRDBASEURL$", ""));
 					}
 
 					response = getWithPathParamAndCookie(tempUrl + testCaseDTO.getEndPoint(), inputJson, auditLogCheck,

@@ -21,8 +21,8 @@ import org.testng.annotations.Test;
 import org.testng.internal.BaseTestMethod;
 import org.testng.internal.TestResult;
 
-import api.InjiWebConfigManager;
-import api.InjiWebUtil;
+import utils.InjiWebConfigManager;
+import utils.InjiWebUtil;
 import io.mosip.testrig.apirig.dto.OutputValidationDto;
 import io.mosip.testrig.apirig.dto.TestCaseDTO;
 import io.mosip.testrig.apirig.testrunner.BaseTestCase;
@@ -135,8 +135,9 @@ public class SimplePost extends InjiWebUtil implements ITest {
 					if (InjiWebConfigManager.isInServiceNotDeployedList("sunbirdrc"))
 						throw new SkipException(GlobalConstants.SERVICE_NOT_DEPLOYED_MESSAGE);
 
-					if (InjiWebConfigManager.getSunbirdBaseURL() != null && !InjiWebConfigManager.getSunbirdBaseURL().isBlank())
-						tempUrl = InjiWebConfigManager.getSunbirdBaseURL();
+					String sunbirdBaseUrl = InjiWebConfigManager.getSunbirdBaseURL();
+					if (sunbirdBaseUrl != null && !sunbirdBaseUrl.isBlank())
+						tempUrl = sunbirdBaseUrl;
 					testCaseDTO.setEndPoint(testCaseDTO.getEndPoint().replace("$SUNBIRDBASEURL$", ""));
 					
 					response = postWithBodyAndCookie(tempUrl + testCaseDTO.getEndPoint(), inputJson, auditLogCheck,

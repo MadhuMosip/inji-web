@@ -1,6 +1,6 @@
 Feature: download mosip cridentials
 
-  @smoke @VerifyAndDownloadVcViaMosipNatinalId
+  @smoke @VerifyAndDownloadVcViaMosipNatinalId @NeedsUIN
   Scenario Outline: Mosip Natonal Id by e-Signet
     Then User gets the title of the page
     Then User click on continue as guest
@@ -12,7 +12,7 @@ Feature: download mosip cridentials
     Then User click on data share content validity
     Then User click on select custom validity button
     Then user enter validity for data share content "<Validity>"
-    Then Use click on procced button
+    Then Use click on proceed button
     And User verify login page lables
     And User verify vid input box header
     And User enter the uin
@@ -31,12 +31,13 @@ Feature: download mosip cridentials
   Scenario: Verify Search With Invalid String
     Then User gets the title of the page
     Then User click on continue as guest
+    And Issuers list should be displayed
     And User search the issuers with "qewqdda"
     And User Verify the no issuer found message
     And User search the issuers mosip
     When User click on download mosip credentials button
 
-  @smoke @VerifyAndDownloadVcViaMosipNatinalId
+  @smoke @VerifyAndDownloadVcViaMosipNatinalId @NeedsUIN
   Scenario Outline: Verify And DownloadVc Via Mosip NatinalId
     Then User gets the title of the page
     Then User click on continue as guest
@@ -50,7 +51,7 @@ Feature: download mosip cridentials
     Then User click on data share content validity
     Then User click on select custom validity button
     Then user enter validity for data share content "<Validity>"
-    Then Use click on procced button
+    Then Use click on proceed button
     And User verify login page lables
     And User verify vid input box header
     And User enter the uin
@@ -65,7 +66,7 @@ Feature: download mosip cridentials
       | Validity |
       | 3        |
 
-  @smoke @VerifyAndDownloadVcViaMosipNatinalIdAndRfreshPage
+  @smoke @VerifyAndDownloadVcViaMosipNatinalIdAndRfreshPage @NeedsUIN
   Scenario Outline: Verify And DownloadVc Via Mosip NatinalId And rfreshPage
     Then User gets the title of the page
     Then User click on continue as guest
@@ -77,7 +78,7 @@ Feature: download mosip cridentials
     Then User click on data share content validity
     Then User click on select custom validity button
     Then user enter validity for data share content "<Validity>"
-    Then Use click on procced button
+    Then Use click on proceed button
     And User verify login page lables
     And User verify vid input box header
     And User enter the uin
