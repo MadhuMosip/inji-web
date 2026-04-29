@@ -137,7 +137,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ disabled = false, forceLeftPos
             <CollapseButton
                 isCollapsed={isCollapsed}
                 onClick={toggleSidebar}
-                className={`absolute top-1/4 sm:top-9 p-2 z-40 ${
+                className={`absolute top-1/4 sm:top-9 p-2 z-10 ${
                     isRTL(language) ? 'left-[-20px]' : 'right-[-20px]'
                 }`}
             />

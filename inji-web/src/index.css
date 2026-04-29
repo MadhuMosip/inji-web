@@ -75,6 +75,10 @@
         --iw-color-lightGrayBg: #F9FAFB;
         --iw-color-mediumGrayText: #4A5565;
         --iw-color-lightGrayBorder: #F3F4F6;
+        --iw-color-successBg: #00C950;
+        --iw-color-successText: #49CF00;
+        --iw-color-credentialSelectedBg: #00C950;
+        --iw-color-credentialSelectedText: #49CF00;
         --iw-color-paleViolet: #FAF8FF;
         /* Brand stroke (8 stops, same as border-image / Credential request UI) */
         --iw-gradient-brand-horizontal: linear-gradient(
@@ -151,6 +155,10 @@
         --iw-color-lightGrayBg: #F9FAFB;
         --iw-color-mediumGrayText: #4A5565;
         --iw-color-lightGrayBorder: #F3F4F6;
+        --iw-color-successBg: #00C950;
+        --iw-color-successText: #49CF00;
+        --iw-color-credentialSelectedBg: #00C950;
+        --iw-color-credentialSelectedText: #49CF00;
         --iw-color-paleViolet: #FAF8FF;
     }
 }

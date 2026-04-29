@@ -491,6 +491,14 @@
     }
   },
   "VerifierTrustPage": {
+    "mainPage": {
+      "title": "Cartes demandées",
+      "unknownVerifier": "Nom du vérificateur",
+      "description": "Demande d'accès à vos informations d'identification",
+      "footerInfo": "Sélectionnez les informations d'identification ci-dessous pour approuver cette demande",
+      "addCards": "Ajouter des cartes",
+      "searchPlaceholder": "Recherchez vos documents par nom"
+    },
     "modal": {
       "title": "Vérificateur inconnu",
       "description": "Assurez-vous de reconnaître ou de faire confiance à ce vérificateur. \nUne fois que vous faites confiance à ce vérificateur:",
@@ -528,6 +536,12 @@
     "loadingCard": {
       "title": "Récupération des informations du vérificateur...",
       "subtitle": "Veuillez patienter pendant que nous vérifions la demande et préparons vos informations d'identification."
+    },
+    "credentialTile": {
+      "unselectedTitle": "Sélectionnez les informations d'identification à partager",
+      "selectedTitle": "Informations d'identification sélectionnées",
+      "shareCredentialsButton": "Partager les identifiants",
+      "shareCredentialsDeclineButton": "Déclin"
     }
   },
   "CredentialRequestModal": {

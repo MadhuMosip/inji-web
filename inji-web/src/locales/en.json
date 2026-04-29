@@ -495,7 +495,9 @@
         "title": "Requested Cards",
         "unknownVerifier": "Verifier Name",
         "description": "Requesting access to your credentials",
-        "footerInfo": "Select the credentials below to approve this request"
+        "footerInfo": "Select the credentials below to approve this request",
+        "addCards" :"Add Cards",
+        "searchPlaceholder": "Search your documents by Name"
       },
       "modal": {
         "title": "Verifier Name",
@@ -535,7 +537,13 @@
       "loadingCard": {
       "title": "Fetching verifier info...",
       "subtitle": "Please wait while we verify the request and prepare your credentials."
-    }
+      },
+      "credentialTile":{
+        "unselectedTitle": "Select credential to be shared",
+        "selectedTitle": "Credential selected",
+        "shareCredentialsButton": "Share Credentials",
+        "shareCredentialsDeclineButton": "Decline"
+      }
   },
   "CredentialRequestModal": {
     "loading": {

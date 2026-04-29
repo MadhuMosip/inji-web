@@ -1,0 +1,116 @@
+import React, { useState } from "react";
+import { SharedCredentialInfoTile } from "./SharedCredentialInfoTile";
+import { SolidButton } from "../Common/Buttons/SolidButton";
+import { CancelActionButton } from "../Common/Buttons/CancelActionButton";
+import { useTranslation } from "react-i18next";
+import unknownVerifierLogo from "../../assets/unknown_verifier_logo.png";
+import shieldIcon from "../../assets/Sheild.svg";
+import arrowRight from "../../assets/arrowRight.svg";
+import { useApi } from "../../hooks/useApi";
+import { rejectVerifierRequest } from "../../utils/verifierUtils";
+import { WalletCredential } from "../../types/data";
+import { VerifierCredentialsRequestCardStyles } from "./OvpPageStyles";
+
+export interface Verifier {
+    id: string;
+    logo?: string | null;
+    name: string;
+    preregisteredWithWallet?: boolean;
+    redirectUri?: string | null;
+    trusted?: boolean;
+}
+
+interface CredentialShareCardProps {
+    verifier: Verifier | null;
+    presentationId: string | null;
+    credentials?: WalletCredential[] | null;
+    selectedCredentialIds?: string[];
+    onShareCredentials?: () => void;
+}
+
+function VerifierCredentialsRequestCard({ verifier, presentationId, credentials, selectedCredentialIds = [], onShareCredentials }: CredentialShareCardProps) {
+    const { t } = useTranslation("VerifierTrustPage");
+    const { fetchData } = useApi();
+    const [declineDisabled, setDeclineDisabled] = useState(false);
+
+    const handleDecline = async () => {
+        if (!presentationId || declineDisabled) return;
+        setDeclineDisabled(true);
+
+        // If redirectUri exists, follow it directly (same behavior as CredentialRequestModal utility).
+        if (verifier?.redirectUri) {
+            window.location.href = verifier.redirectUri;
+            return;
+        }
+
+        await rejectVerifierRequest({
+            presentationId,
+            fetchData,
+            redirectUri: verifier?.redirectUri || null
+        });
+    };
+
+    return (
+        <div className={VerifierCredentialsRequestCardStyles.mainContainer}>
+            <div className={VerifierCredentialsRequestCardStyles.requestDetails}>
+                <div className={VerifierCredentialsRequestCardStyles.verifierDetails}>
+                    <img
+                        src={verifier?.logo || unknownVerifierLogo}
+                        alt={verifier?.name || "Verifier Logo"}
+                        className="h-12 w-12 rounded"
+                    />
+                    <div className="w-full">
+                        <h1 className={VerifierCredentialsRequestCardStyles.verifierName}>{verifier?.name || t(`mainPage.unknownVerifier`)}</h1>
+                        <p className={VerifierCredentialsRequestCardStyles.credentialReqDesc}>{t('mainPage.description')}</p>
+                    </div>
+                </div>
+                <div className="w-full lg:pl-14">
+                    <div className={VerifierCredentialsRequestCardStyles.sharedCredentialsTiles}>
+                        {credentials?.map((cred, idx) => {
+                            const isSelected = selectedCredentialIds.includes(cred.credentialId);
+                            return (
+                                <SharedCredentialInfoTile key={cred.credentialId || idx} title={cred.credentialTypeDisplayName || 'Credential'} isSelected={isSelected} />
+                            );
+                        })}
+                    </div>
+                    <div className={VerifierCredentialsRequestCardStyles.actionButtons}>
+                        <div className={VerifierCredentialsRequestCardStyles.shareButtonCard}>
+                            <SolidButton
+                                testId="CredentialShareCard-ShareButton"
+                                onClick={() => onShareCredentials?.()}
+                                title={t("credentialTile.shareCredentialsButton")}
+                                className="h-12 py-0 break-words min-w-0 w-full"
+                                icon={
+                                    <div className="flex items-center gap-2">
+                                        <img src={shieldIcon} alt="shield" className="w-5 h-5" />
+                                    </div>
+                                }
+                                fullWidth
+                                disabled={selectedCredentialIds.length === 0}
+                                iconTwo={
+                                    <div className="flex items-center gap-2">
+                                        <img src={arrowRight} alt="arrow" className="w-5 h-5" />
+                                    </div>
+                                }
+                            />
+                        </div>
+                        <div className={VerifierCredentialsRequestCardStyles.declineButton}>
+                            <CancelActionButton
+                                title={t("credentialTile.shareCredentialsDeclineButton")}
+                                onClick={handleDecline}
+                                disabled={declineDisabled}
+
+                            />
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div className={VerifierCredentialsRequestCardStyles.footer}>
+                {t('mainPage.footerInfo')}
+            </div>
+        </div>
+    );
+}
+
+export default VerifierCredentialsRequestCard;

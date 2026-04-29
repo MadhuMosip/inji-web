@@ -491,6 +491,14 @@
     }
   },
   "VerifierTrustPage": {
+    "mainPage": {
+      "title": "البطاقات المطلوبة",
+      "unknownVerifier": "اسم الموثّق",
+      "description": "طلب الوصول إلى بيانات الاعتماد الخاصة بك",
+      "footerInfo": "حدد بيانات الاعتماد أدناه للموافقة على هذا الطلب",
+      "addCards": "إضافة بطاقات",
+      "searchPlaceholder": "ابحث في مستنداتك حسب الاسم"
+    },
     "modal": {
       "title": "موثّق غير معروف",
       "description": "تأكد من أنك تتعرّف على هذا الموثّق أو تثق به. \nبمجرد أن تثق بهذا الموثّق:",
@@ -528,6 +536,12 @@
     "loadingCard": {
       "title": "جلب معلومات المدقق...",
       "subtitle": "يرجى الانتظار بينما نتحقق من صحة الطلب ونجهز بيانات الاعتماد الخاصة بك."
+    },
+    "credentialTile": {
+      "unselectedTitle": "حدد بيانات الاعتماد للمشاركة",
+      "selectedTitle": "تم اختيار بيانات الاعتماد",
+      "shareCredentialsButton": "مشاركة بيانات الاعتماد",
+      "shareCredentialsDeclineButton": "انخفاض"
     }
   },
   "CredentialRequestModal": {

@@ -491,6 +491,14 @@
     }
   },
   "VerifierTrustPage": {
+    "mainPage": {
+      "title": "Cartões Solicitados",
+      "unknownVerifier": "Nome do Verificador",
+      "description": "Solicitando acesso às suas credenciais",
+      "footerInfo": "Selecione as credenciais abaixo para aprovar este pedido",
+      "addCards": "Adicionar Cartões",
+      "searchPlaceholder": "Pesquise os seus documentos por nome"
+    },
     "modal": {
       "title": "Verificador desconhecido",
       "description": "Certifique-se de que você reconhece ou confia neste Verificador. \nDepois que confiar neste verificador:",
@@ -528,6 +536,12 @@
     "loadingCard": {
       "title": "A buscar informações do verificador...",
       "subtitle": "Por favor, aguarde enquanto verificamos o pedido e preparamos as suas credenciais."
+    },
+    "credentialTile": {
+      "unselectedTitle": "Selecione a credencial a ser partilhada",
+      "selectedTitle": "Credencial selecionada",
+      "shareCredentialsButton": "Compartilhar credenciais",
+      "shareCredentialsDeclineButton": "Declínio"
     }
   },
   "CredentialRequestModal": {
