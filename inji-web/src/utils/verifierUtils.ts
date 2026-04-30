@@ -48,7 +48,7 @@ export const rejectVerifierRequest = async (options: RejectVerifierOptions): Pro
         return false;
     }
     
-    const redirectTarget = redirectUri || response.data?.redirectUri || "";
+    const redirectTarget = redirectUri ?? response.data?.redirectUri ?? "";
     if (redirectTarget) {
         window.location.href = redirectTarget;
         return true;

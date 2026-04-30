@@ -541,7 +541,7 @@
       "unselectedTitle": "حدد بيانات الاعتماد للمشاركة",
       "selectedTitle": "تم اختيار بيانات الاعتماد",
       "shareCredentialsButton": "مشاركة بيانات الاعتماد",
-      "shareCredentialsDeclineButton": "انخفاض"
+      "shareCredentialsDeclineButton": "رفض"
     }
   },
   "CredentialRequestModal": {

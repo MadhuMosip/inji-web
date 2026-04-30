@@ -71,7 +71,7 @@ describe("MatchingCredentials", () => {
     jest.clearAllMocks();
   });
 
-  it("renders NoMatchingCredentialsModal when credentials is an empty array and wires onGoToHome to navigate(ROOT)", () => {
+  it("forwards modal props when credentials is an empty array", () => {
     render(
       <MatchingCredentials
         credentials={[]}
@@ -90,6 +90,16 @@ describe("MatchingCredentials", () => {
         presentationId: "pid-123",
         onGoToHome: expect.any(Function),
       })
+    );
+  });
+
+  it("wires onGoToHome to navigate(ROOT) when credentials is an empty array", () => {
+    render(
+      <MatchingCredentials
+        credentials={[]}
+        missingClaims={["name", "dob"]}
+        presentationId="pid-123"
+      />
     );
 
     fireEvent.click(screen.getByTestId("btn-go-home"));

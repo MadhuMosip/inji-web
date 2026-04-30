@@ -43,11 +43,18 @@ function VerifierCredentialsRequestCard({ verifier, presentationId, credentials,
             return;
         }
 
-        await rejectVerifierRequest({
-            presentationId,
-            fetchData,
-            redirectUri: verifier?.redirectUri || null
-        });
+        try {
+            const ok = await rejectVerifierRequest({
+                presentationId,
+                fetchData,
+                redirectUri: verifier?.redirectUri || null
+            });
+            if (!ok) {
+                setDeclineDisabled(false);
+            }
+        } catch {
+            setDeclineDisabled(false);
+        }
     };
 
     return (

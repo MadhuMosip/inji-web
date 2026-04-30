@@ -536,12 +536,22 @@ describe("VPAuthorizationPage", () => {
     });
     
     expect(screen.getByTestId("mock-matching-credentials")).toBeInTheDocument();
+    const initialCalls = MockMatchingCredentials.mock.calls.length;
 
     const searchInput = screen.getByTestId("mock-search-bar");
     fireEvent.change(searchInput, { target: { value: "Mock" } });
     
     await waitFor(() => {
-      expect(MockMatchingCredentials).toHaveBeenCalled();
+      expect(MockMatchingCredentials.mock.calls.length).toBeGreaterThan(initialCalls);
+      const latestProps =
+        MockMatchingCredentials.mock.calls[MockMatchingCredentials.mock.calls.length - 1][0];
+      expect(latestProps.credentials).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            credentialTypeDisplayName: expect.stringContaining("Mock"),
+          }),
+        ])
+      );
     });
   });
 

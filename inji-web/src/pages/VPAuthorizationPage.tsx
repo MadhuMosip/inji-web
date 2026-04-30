@@ -172,8 +172,6 @@ export const VPAuthorizationPage: React.FC = () => {
                     url: api.fetchPresentationCredentials.url(presentationIdData),
                     apiConfig: api.fetchPresentationCredentials
                 });
-                console.log("Fetched credentials response:");
-                console.log(response);
 
                 if (response && response.ok()) {
                     const data = response.data;
@@ -183,25 +181,30 @@ export const VPAuthorizationPage: React.FC = () => {
                     setMissingClaimsData(
                         Array.isArray(raw) ? raw.map((c: unknown) => String(c)) : []
                     );
+                    fetchedCredentialsRef.current.add(presentationIdData);
                 } else {
-                    console.error("Failed to fetch credentials:", response?.error);
+                    fetchedCredentialsRef.current.delete(presentationIdData);
                     setCredentialsData([]);
+                    setFilteredCredentials([]);
                     setMissingClaimsData([]);
+                    handleApiError(
+                        response?.error ?? new Error("Failed to fetch credentials."),
+                        "fetchPresentationCredentials"
+                    );
                 }
                 setIsLoading(false);
             } catch (err) {
                 setIsLoading(false);
-                console.error("Error fetching credentials:", err);
+                fetchedCredentialsRef.current.delete(presentationIdData);
                 setCredentialsData([]);
                 setMissingClaimsData([]);
                 setFilteredCredentials([]);
+                handleApiError(err, "fetchPresentationCredentials");
             }
         };
 
-        // Mark as fetched
-        fetchedCredentialsRef.current.add(presentationIdData);
-        loadCredentials();
-    }, [presentationIdData, showCredentialRequest, fetchData]);
+        void loadCredentials();
+    }, [presentationIdData, showCredentialRequest, fetchData, handleApiError]);
 
     const handleShareCredentialsFromCard = useCallback(() => {
         if (!credentialsData?.length || selectedCredentialIds.length === 0) return;
