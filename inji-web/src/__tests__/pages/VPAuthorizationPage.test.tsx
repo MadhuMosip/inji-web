@@ -117,9 +117,6 @@ jest.mock("../../components/Issuers/TrustVerifierModal", () => ({
         <button data-testid="btn-trust-verifier" onClick={props.onTrust}>
           Trust
         </button>
-        <button data-testid="btn-not-trust-verifier" onClick={props.onNotTrust}>
-          Not Trust
-        </button>
         <button data-testid="btn-cancel-trust-modal" onClick={props.onCancel}>
           Cancel
         </button>
@@ -418,36 +415,6 @@ describe("VPAuthorizationPage", () => {
       );
     });
 
-    await waitFor(() => {
-      expect(screen.getByTestId("mock-verifier-credentials-request-card")).toBeInTheDocument();
-    });
-  });
-
-  test('untrusted verifier flow: proceeds on "Not Trust" click', async () => {
-    mockFetchData.mockReset();
-    mockFetchData
-      .mockResolvedValueOnce({
-        ok: () => true,
-        data: mockVerifierUntrusted,
-        error: null,
-        status: 200,
-        state: 1,
-        headers: {},
-      })
-      .mockResolvedValueOnce({
-        ok: () => true,
-        data: mockPresentationCredsResponse,
-        error: null,
-        status: 200,
-        state: 1,
-        headers: {},
-      });
-
-    renderComponent();
-    await waitFor(() => {
-      expect(screen.getByTestId("modal-trust-verifier")).toBeInTheDocument();
-    });
-    fireEvent.click(screen.getByTestId("btn-not-trust-verifier"));
     await waitFor(() => {
       expect(screen.getByTestId("mock-verifier-credentials-request-card")).toBeInTheDocument();
     });

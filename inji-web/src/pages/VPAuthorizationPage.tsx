@@ -39,6 +39,7 @@ export const VPAuthorizationPage: React.FC = () => {
     const [credentialsData, setCredentialsData] = useState<any[] | null>(null);
     const [missingClaimsData, setMissingClaimsData] = useState<string[]>([]);
     const fetchingRef = useRef<boolean>(false);
+    const isRejectingRef = useRef<boolean>(false);
     const fetchedCredentialsRef = useRef<Set<string>>(new Set());
     const [filteredCredentials, setFilteredCredentials] = useState<any[] | null>([]);
 
@@ -244,13 +245,15 @@ export const VPAuthorizationPage: React.FC = () => {
     };
 
     const handleBackBtn = async () => {
-        if (!presentationIdData) return;
+        if (!presentationIdData || isRejectingRef.current) return;
+        isRejectingRef.current = true;
         const ok = await rejectVerifierRequest({
             presentationId: presentationIdData,
             fetchData,
             redirectUri: Pages.ROOT
         });
         if (!ok) {
+            isRejectingRef.current = false;
             handleApiError(new Error("Failed to reject verifier request."), "rejectVerifierRequest");
         }
     };
