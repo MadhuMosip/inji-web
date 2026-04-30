@@ -241,19 +241,23 @@ export const VPAuthorizationPage: React.FC = () => {
 
     const filterCredentials = (searchText: string) => {
         if (!credentialsData) return;
+        const query = searchText.toLowerCase();
         const filtered = credentialsData.filter((credential) =>
-            credential.credentialTypeDisplayName.toLowerCase().includes(searchText.toLowerCase())
+            (credential?.credentialTypeDisplayName ?? "").toLowerCase().includes(query)
         );
         setFilteredCredentials(filtered);
     };
 
     const handleBackBtn = async () => {
         if (!presentationIdData) return;
-        await rejectVerifierRequest({
+        const ok = await rejectVerifierRequest({
             presentationId: presentationIdData,
             fetchData,
             redirectUri: Pages.ROOT
         });
+        if (!ok) {
+            handleApiError(new Error("Failed to reject verifier request."), "rejectVerifierRequest");
+        }
     };
 
     return (
@@ -268,7 +272,7 @@ export const VPAuthorizationPage: React.FC = () => {
                     />
                     <img
                         src={DashboardBgBottom}
-                        alt="Gardient Bottom Background"
+                        alt="Gradient Bottom Background"
                         className={VpAuthPageBackgroundStyles.backgroundBottom}
                     />
 
