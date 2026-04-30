@@ -13,9 +13,7 @@ interface TrustVerifierModalProps {
     isOpen: boolean;
     logo?: string | null;
     verifierName?: string;
-    verifierDomain?: string;
     onTrust: () => void;
-    onNotTrust: () => void;
     onCancel: () => void;
     testId: string;
 }
@@ -24,9 +22,7 @@ export const TrustVerifierModal: React.FC<TrustVerifierModalProps> = ({
     isOpen,
     logo,
     verifierName,
-    verifierDomain,
     onTrust,
-    onNotTrust,
     onCancel = () => { },
     testId,
 }) => {

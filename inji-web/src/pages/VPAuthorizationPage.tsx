@@ -154,11 +154,6 @@ export const VPAuthorizationPage: React.FC = () => {
         }
     }, [addTrustedVerifierCallback, handleApiError, handleTrustSuccess]);
 
-    const handleNoTrustButton = () => {
-        setShowTrustVerifier(false);
-        setShowCredentialRequest(true);
-    };
-
     useEffect(() => {
         if (!presentationIdData || !showCredentialRequest) return;
 
@@ -356,7 +351,6 @@ export const VPAuthorizationPage: React.FC = () => {
                                 logo={verifierData?.logo}
                                 verifierName={verifierData?.name}
                                 onTrust={handleTrustButton}
-                                onNotTrust={handleNoTrustButton}
                                 onCancel={() => {
                                     setShowTrustVerifier(false);
                                     setIsCancelConfirmation(true);
