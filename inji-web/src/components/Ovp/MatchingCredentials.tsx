@@ -30,7 +30,7 @@ function MatchingCredentials({
     const { t } = useTranslation("VerifierTrustPage");
 
     return (
-        <div className="my-[20px]">
+        <div className="my-[20px]" data-testid="matching-credentials-container">
             {credentials?.length === 0 ? (
                 <NoMatchingCredentialsModal
                     isVisible
@@ -40,12 +40,18 @@ function MatchingCredentials({
                     presentationId={presentationId}
                 />
              ) : 
-                <div className={MatchingCredentialsStyles.mainContainer}>
+                <div className={MatchingCredentialsStyles.mainContainer} data-testid="matching-credentials-list">
                     {credentials?.map((credential, index) => {
+                        const credentialKey = credential.credentialId || String(index);
                         const isSelected = selectedCredentialIds.includes(credential.credentialId);
                         return (
-                            <div key={credential.credentialId || index} className={`${MatchingCredentialsStyles.outerCredentialTile} ${isSelected ? 'border-iw-successBg' : 'border-iw-lightGrayBorder'}`}>
+                            <div
+                                key={credentialKey}
+                                data-testid={`matching-credentials-tile-${credentialKey}`}
+                                className={`${MatchingCredentialsStyles.outerCredentialTile} ${isSelected ? 'border-iw-successBg' : 'border-iw-lightGrayBorder'}`}
+                            >
                                 <div
+                                    data-testid={`matching-credentials-tile-header-${credentialKey}`}
                                     className={MatchingCredentialsStyles.innerCredentialTile}
                                     onClick={() => {
                                         if (onCredentialSelect) {
@@ -56,7 +62,7 @@ function MatchingCredentials({
                                     {isSelected ? (
                                         <>  
                                             <div className={MatchingCredentialsStyles.credentialCheckbox}>
-                                              <img src={checkCircle} alt="success" className="w-[14px] h-[14px]" />
+                                              <img data-testid={`matching-credentials-selected-icon-${credentialKey}`} src={checkCircle} alt="success" className="w-[14px] h-[14px]" />
                                             </div>
                                             <span className="text-iw-successText italic">{t("credentialTile.selectedTitle")}</span>
                                         </>

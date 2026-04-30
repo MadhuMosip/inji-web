@@ -51,21 +51,22 @@ function VerifierCredentialsRequestCard({ verifier, presentationId, credentials,
     };
 
     return (
-        <div className={VerifierCredentialsRequestCardStyles.mainContainer}>
+        <div className={VerifierCredentialsRequestCardStyles.mainContainer} data-testid="verifier-credentials-request-card">
             <div className={VerifierCredentialsRequestCardStyles.requestDetails}>
                 <div className={VerifierCredentialsRequestCardStyles.verifierDetails}>
                     <img
                         src={verifier?.logo || unknownVerifierLogo}
                         alt={verifier?.name || "Verifier Logo"}
                         className="h-12 w-12 rounded"
+                        data-testid="verifier-logo"
                     />
                     <div className="w-full">
-                        <h1 className={VerifierCredentialsRequestCardStyles.verifierName}>{verifier?.name || t(`mainPage.unknownVerifier`)}</h1>
+                        <h1 data-testid="verifier-name" className={VerifierCredentialsRequestCardStyles.verifierName}>{verifier?.name || t(`mainPage.unknownVerifier`)}</h1>
                         <p className={VerifierCredentialsRequestCardStyles.credentialReqDesc}>{t('mainPage.description')}</p>
                     </div>
                 </div>
                 <div className="w-full lg:pl-14">
-                    <div className={VerifierCredentialsRequestCardStyles.sharedCredentialsTiles}>
+                    <div className={VerifierCredentialsRequestCardStyles.sharedCredentialsTiles} data-testid="shared-credentials-tiles">
                         {credentials?.map((cred, idx) => {
                             const isSelected = selectedCredentialIds.includes(cred.credentialId);
                             return (
@@ -96,6 +97,7 @@ function VerifierCredentialsRequestCard({ verifier, presentationId, credentials,
                         </div>
                         <div className={VerifierCredentialsRequestCardStyles.declineButton}>
                             <CancelActionButton
+                                testId="verifier-decline-button"
                                 title={t("credentialTile.shareCredentialsDeclineButton")}
                                 onClick={handleDecline}
                                 disabled={declineDisabled}
