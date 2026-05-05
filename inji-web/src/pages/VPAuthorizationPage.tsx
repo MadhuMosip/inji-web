@@ -285,9 +285,6 @@ export const VPAuthorizationPage: React.FC = () => {
                                         <PageTitle value={t('mainPage.title')} testId={"stored-credentials"} />
                                     </div>
                                 </div>
-                                <div className="hidden sm:block">
-                                    {addCard()}
-                                </div>
                             </div>
                             <div className={StoredCardsPageStyles.searchContainer}>
                                 <SearchBar

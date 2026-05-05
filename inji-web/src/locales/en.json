@@ -543,6 +543,14 @@
         "selectedTitle": "Credential selected",
         "shareCredentialsButton": "Share Credentials",
         "shareCredentialsDeclineButton": "Decline"
+      },
+      "consentRequiredModal": {
+        "title": "Consent Required",
+        "description": "Make sure you recognize or trust {{verifierName}}.\nOnce you share:",
+        "credentialsTitle": "Credentials Being Shared ({{count}})",
+        "credentialsDescription": "They will be able to view your selected credentials, including all associated information and verification data.",
+        "consentButtonTitle": "Yes, I Consent to Share",
+        "backButtonTitle": "No, Take Me Back"
       }
   },
   "CredentialRequestModal": {

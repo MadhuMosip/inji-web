@@ -542,6 +542,14 @@
       "selectedTitle": "تم اختيار بيانات الاعتماد",
       "shareCredentialsButton": "مشاركة بيانات الاعتماد",
       "shareCredentialsDeclineButton": "رفض"
+    },
+    "consentRequiredModal": {
+      "title": "الموافقة مطلوبة",
+      "description": "تأكد من أنك تتعرف على {{verifierName}} أو تثق به.\nبمجرد المشاركة:",
+      "credentialsTitle": "بيانات الاعتماد التي تتم مشاركتها ({{count}})",
+      "credentialsDescription": "وسيكون بمقدورهم عرض بيانات الاعتماد التي حددتها، بما في ذلك جميع المعلومات المرتبطة وبيانات التحقق.",
+      "consentButtonTitle": "نعم أوافق على المشاركة",
+      "backButtonTitle": "لا، أعدني"
     }
   },
   "CredentialRequestModal": {

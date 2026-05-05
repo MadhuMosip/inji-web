@@ -542,6 +542,14 @@
       "selectedTitle": "நற்சான்றிதழ் தேர்ந்தெடுக்கப்பட்டது",
       "shareCredentialsButton": "நற்சான்றிதழ்களைப் பகிரவும்",
       "shareCredentialsDeclineButton": "நிராகரி"
+    },
+    "consentRequiredModal": {
+      "title": "ஒப்புதல் தேவை",
+      "description": "நீங்கள் {{verifierName}}ஐ அடையாளம் கண்டுகொள்வீர்களா அல்லது நம்புகிறீர்கள் என்பதை உறுதிப்படுத்திக் கொள்ளுங்கள்.\nபகிர்ந்ததும்:",
+      "credentialsTitle": "நற்சான்றிதழ்கள் பகிரப்படுகின்றன ({{count}})",
+      "credentialsDescription": "தொடர்புடைய அனைத்து தகவல் மற்றும் சரிபார்ப்புத் தரவு உட்பட நீங்கள் தேர்ந்தெடுத்த நற்சான்றிதழ்களை அவர்களால் பார்க்க முடியும்.",
+      "consentButtonTitle": "ஆம், பகிர்வதற்கு நான் சம்மதிக்கிறேன்",
+      "backButtonTitle": "இல்லை, என்னை திரும்ப அழைத்துச் செல்லுங்கள்"
     }
   },
   "CredentialRequestModal": {

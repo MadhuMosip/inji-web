@@ -177,10 +177,10 @@ describe("VerifierCredentialsRequestCard", () => {
       />
     );
 
-    expect(screen.getByTestId("CredentialShareCard-ShareButton")).toBeDisabled();
+    expect(screen.getByTestId("show-consent-modal-button")).toBeDisabled();
   });
 
-  it("calls onShareCredentials when Share button clicked and enabled", () => {
+  it("opens consent modal and calls onShareCredentials on confirm", () => {
     const onShareCredentials = jest.fn();
     render(
       <VerifierCredentialsRequestCard
@@ -192,6 +192,7 @@ describe("VerifierCredentialsRequestCard", () => {
       />
     );
 
+    fireEvent.click(screen.getByTestId("show-consent-modal-button"));
     fireEvent.click(screen.getByTestId("CredentialShareCard-ShareButton"));
     expect(onShareCredentials).toHaveBeenCalledTimes(1);
   });

@@ -542,6 +542,14 @@
       "selectedTitle": "Informations d'identification sélectionnées",
       "shareCredentialsButton": "Partager les identifiants",
       "shareCredentialsDeclineButton": "Déclin"
+    },
+    "consentRequiredModal": {
+      "title": "Consentement requis",
+      "description": "Assurez-vous de reconnaître ou de faire confiance à {{verifierName}}.\nUne fois que vous avez partagé :",
+      "credentialsTitle": "Identifiants partagés ({{count}})",
+      "credentialsDescription": "Ils pourront voir vos informations d'identification sélectionnées, y compris toutes les informations associées et les données de vérification.",
+      "consentButtonTitle": "Oui, j'accepte de partager",
+      "backButtonTitle": "Non, ramène-moi"
     }
   },
   "CredentialRequestModal": {

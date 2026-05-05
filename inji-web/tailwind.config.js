@@ -87,7 +87,8 @@ module.exports = {
                     mediumGrayText: 'var(--iw-color-mediumGrayText)',
                     lightGrayBorder: 'var(--iw-color-lightGrayBorder)',
                     successBg: 'var(--iw-color-successBg)',
-                    successText: 'var(--iw-color-successText)'
+                    successText: 'var(--iw-color-successText)',
+                    consentDescription: 'var(--iw-color-consentDescription)'
                 }
             },
             boxShadow: {

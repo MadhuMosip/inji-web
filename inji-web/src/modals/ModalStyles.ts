@@ -32,5 +32,15 @@ export const ModalStyles = {
         title: "text-xl justify-center font-montserrat text-center text-[--iw-color-title] font-bold",
         iconWrapper: "flex items-center justify-center",
         message: "text-[--iw-color-subTitle] font-montserrat font-light text-md text-center mt-2 break-words w-full sm:w-auto px-2",
+    },
+    consentRequiredModal: {
+        container: "max-h-[90vh] w-full max-w-[600px] py-7 px-10 text-center",
+        title: "text-iw-header font-bold text-[20px]",
+        description: "text-iw-consentDescription text-[14px] whitespace-pre-line",
+        credentialsContainer: "bg-iw-lightGrayBg border border-iw-lightGrayBorder rounded-lg p-4 my-4 text-center",
+        credentialsTitle: "text-iw-mediumGrayText text-[12px] flex items-center justify-center gap-2",
+        credentialsDescription: "text-iw-header text-[13px] mt-2",
+        confirmButton: "text-[13px]",
+        backButton: "mt-4 text-iw-tertiary text-[13px] font-bold"
     }
 }

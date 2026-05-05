@@ -10,6 +10,7 @@ import { useApi } from "../../hooks/useApi";
 import { rejectVerifierRequest } from "../../utils/verifierUtils";
 import { WalletCredential } from "../../types/data";
 import { VerifierCredentialsRequestCardStyles } from "./OvpPageStyles";
+import ConsentRequiredModal from "../../modals/ConsentRequiredModal";
 
 export interface Verifier {
     id: string;
@@ -32,6 +33,8 @@ function VerifierCredentialsRequestCard({ verifier, presentationId, credentials,
     const { t } = useTranslation("VerifierTrustPage");
     const { fetchData } = useApi();
     const [declineDisabled, setDeclineDisabled] = useState(false);
+    const [showConsentRequiredModal, setConsentRequiredModal] = useState(false);
+    const credentialCount = selectedCredentialIds.length;
 
     const handleDecline = async () => {
         if (!presentationId || declineDisabled) return;
@@ -55,6 +58,17 @@ function VerifierCredentialsRequestCard({ verifier, presentationId, credentials,
         } catch {
             setDeclineDisabled(false);
         }
+    };
+
+    const consentModalLabels = {
+        title: t("consentRequiredModal.title"),
+        description: t("consentRequiredModal.description", {
+            verifierName: verifier?.name || t("mainPage.unknownVerifier")
+        }),
+        credentialsTitle: t("consentRequiredModal.credentialsTitle", { count: credentialCount }),
+        credentialsDescription: t("consentRequiredModal.credentialsDescription"),
+        consentButtonTitle: t("consentRequiredModal.consentButtonTitle"),
+        backButtonTitle: t("consentRequiredModal.backButtonTitle")
     };
 
     return (
@@ -84,8 +98,8 @@ function VerifierCredentialsRequestCard({ verifier, presentationId, credentials,
                     <div className={VerifierCredentialsRequestCardStyles.actionButtons}>
                         <div className={VerifierCredentialsRequestCardStyles.shareButtonCard}>
                             <SolidButton
-                                testId="CredentialShareCard-ShareButton"
-                                onClick={() => onShareCredentials?.()}
+                                testId="show-consent-modal-button"
+                                onClick={() => setConsentRequiredModal(true)}
                                 title={t("credentialTile.shareCredentialsButton")}
                                 className="h-12 py-0 break-words min-w-0 w-full"
                                 icon={
@@ -118,6 +132,18 @@ function VerifierCredentialsRequestCard({ verifier, presentationId, credentials,
             <div className={VerifierCredentialsRequestCardStyles.footer}>
                 {t('mainPage.footerInfo')}
             </div>
+            {showConsentRequiredModal && (
+                <ConsentRequiredModal
+                    title={consentModalLabels.title}
+                    description={consentModalLabels.description}
+                    credentialsTitle={consentModalLabels.credentialsTitle}
+                    credentialsDescription={consentModalLabels.credentialsDescription}
+                    consentButtonTitle={consentModalLabels.consentButtonTitle}
+                    backButtonTitle={consentModalLabels.backButtonTitle}
+                    onConfirm={() => onShareCredentials?.()}
+                    onBack={() => setConsentRequiredModal(false)}
+                />
+            )}
         </div>
     );
 }

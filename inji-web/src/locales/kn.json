@@ -542,6 +542,14 @@
       "selectedTitle": "ರುಜುವಾತನ್ನು ಆಯ್ಕೆಮಾಡಲಾಗಿದೆ",
       "shareCredentialsButton": "ರುಜುವಾತುಗಳನ್ನು ಹಂಚಿಕೊಳ್ಳಿ",
       "shareCredentialsDeclineButton": "ನಿರಾಕರಿಸು"
+    },
+    "consentRequiredModal": {
+      "title": "ಒಪ್ಪಿಗೆ ಅಗತ್ಯವಿದೆ",
+      "description": "ನೀವು {{verifierName}} ಅನ್ನು ಗುರುತಿಸುತ್ತೀರಿ ಅಥವಾ ನಂಬುತ್ತೀರಿ ಎಂದು ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ.\nಒಮ್ಮೆ ನೀವು ಹಂಚಿಕೊಂಡರೆ:",
+      "credentialsTitle": "ರುಜುವಾತುಗಳನ್ನು ಹಂಚಿಕೊಳ್ಳಲಾಗುತ್ತಿದೆ ({{count}})",
+      "credentialsDescription": "ಎಲ್ಲಾ ಸಂಬಂಧಿತ ಮಾಹಿತಿ ಮತ್ತು ಪರಿಶೀಲನಾ ಡೇಟಾವನ್ನು ಒಳಗೊಂಡಂತೆ ಅವರು ನಿಮ್ಮ ಆಯ್ಕೆಮಾಡಿದ ರುಜುವಾತುಗಳನ್ನು ವೀಕ್ಷಿಸಲು ಸಾಧ್ಯವಾಗುತ್ತದೆ.",
+      "consentButtonTitle": "ಹೌದು, ನಾನು ಹಂಚಿಕೊಳ್ಳಲು ಸಮ್ಮತಿಸುತ್ತೇನೆ",
+      "backButtonTitle": "ಇಲ್ಲ, ನನ್ನನ್ನು ಹಿಂತಿರುಗಿಸು"
     }
   },
   "CredentialRequestModal": {
