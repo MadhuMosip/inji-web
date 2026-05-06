@@ -265,21 +265,21 @@ export const VPAuthorizationPage: React.FC = () => {
         if (!presentationIdData || isRejectingRef.current) return;
         isRejectingRef.current = true;
 
-        // We're leaving (likely full-page redirect). Remove the popstate handler to avoid loops.
-        if (removePopstateGuardRef.current) {
-            removePopstateGuardRef.current();
-            removePopstateGuardRef.current = null;
-        }
-
         const ok = await rejectVerifierRequest({
             presentationId: presentationIdData,
             fetchData,
-            redirectUri: verifierData?.redirectUri || null
+            redirectUri: verifierData?.redirectUri || null,
+            navigate
         });
         if (!ok) {
             isRejectingRef.current = false;
             handleApiError(new Error("Failed to reject verifier request."), "rejectVerifierRequest");
+            return;
         }
+
+        // Only remove the back-navigation guard after a successful reject path.
+        removePopstateGuardRef.current?.();
+        removePopstateGuardRef.current = null;
     };
 
     return (

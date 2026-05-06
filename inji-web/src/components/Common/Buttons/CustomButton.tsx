@@ -1,6 +1,7 @@
 function CustomButton({ testId, onClick, title, styles }: { testId: string; onClick: () => void; title: string, styles?: string }) {
     return (
         <button
+            type="button"
             id={testId}
             data-testid={testId}
             onClick={onClick}

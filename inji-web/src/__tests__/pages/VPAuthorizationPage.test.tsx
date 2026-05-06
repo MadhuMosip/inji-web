@@ -293,6 +293,9 @@ describe("VPAuthorizationPage", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Important: clear queued mockResolvedValueOnce / mockImplementationOnce.
+    // jest.clearAllMocks() does NOT drain one-time implementations.
+    mockFetchData.mockReset();
 
     mockRejectVerifierRequest.mockResolvedValue(true);
 
@@ -579,7 +582,13 @@ describe("VPAuthorizationPage", () => {
     });
     
     fireEvent.click(screen.getByTestId("mock-nav-back"));
-    expect(mockRejectVerifierRequest).not.toHaveBeenCalled();
+    // Clicking back only opens the modal; click confirm to exercise the reject path.
+    if (screen.queryByTestId("mock-leave-confirmation-modal")) {
+      fireEvent.click(screen.getByTestId("btn-leave-confirm"));
+    }
+    await waitFor(() => {
+      expect(mockRejectVerifierRequest).not.toHaveBeenCalled();
+    });
   });
 
   test("shows leave confirmation on browser back (popstate) and confirms leave", async () => {
