@@ -82,9 +82,10 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
 type SidebarProps = {
     disabled?: boolean;
     forceLeftPosition?: boolean;
+    topOffset?: number;
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ disabled = false, forceLeftPosition = false }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ disabled = false, forceLeftPosition = false, topOffset = 0 }) => {
     const {t} = useTranslation('User');
     const location = useLocation();
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -129,10 +130,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ disabled = false, forceLeftPos
             className={`bg-white h-full transition-all duration-300 shadow-iw-sidebar flex flex-col items-start ${
                 forceLeftPosition 
                     ? 'relative' 
-                    : 'absolute top-0 z-30 sm:relative sm:w-64'
+                    : 'absolute z-30 sm:relative sm:w-64'
             } ${
                 isRTL(language) ? 'right-0' : 'left-0'
             } ${isCollapsed ? 'w-5 sm:w-[96px]' : 'w-64'}`}
+            style={
+                forceLeftPosition
+                    ? undefined
+                    : { top: topOffset }
+            }
         >
             <CollapseButton
                 isCollapsed={isCollapsed}

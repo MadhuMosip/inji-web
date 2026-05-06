@@ -24,7 +24,7 @@ jest.mock("react-router-dom", () => ({
 }));
 
 jest.mock("../../utils/errorHandling", () => ({
-  withErrorHandling: (fn) => fn(),
+  withErrorHandling: (fn: any) => fn(),
   ERROR_TYPES: {},
   standardizeError: jest.fn(),
   logError: jest.fn(),
@@ -53,13 +53,13 @@ jest.mock("react-redux", () => ({
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key) => key,
+    t: (key: string) => key,
   }),
 }));
 
 jest.mock("../../utils/AppStorage", () => ({
   AppStorage: {
-    getItem: (key) => {
+    getItem: (key: string) => {
       if (key === "WALLET_ID") return "mock-wallet-id";
       return null;
     },
@@ -68,6 +68,10 @@ jest.mock("../../utils/AppStorage", () => ({
 
 jest.mock("../../components/User/Sidebar", () => ({
   Sidebar: () => <div data-testid="mock-sidebar">Sidebar</div>,
+}));
+
+jest.mock("../../components/User/Header", () => ({
+  Header: () => <div data-testid="mock-user-header">Header</div>,
 }));
 
 jest.mock("../../components/Common/SearchBar/SearchBar", () => ({
@@ -191,6 +195,20 @@ jest.mock("../../handlers/CredentialShareHandler", () => ({
 
 jest.mock("../../utils/verifierUtils", () => ({
   rejectVerifierRequest: jest.fn(),
+}));
+
+jest.mock("../../modals/LeaveConfirmationModal", () => ({
+  __esModule: true,
+  default: (props: any) => (
+    <div data-testid="mock-leave-confirmation-modal">
+      <button data-testid="btn-leave-confirm" onClick={props.confirmLeave}>
+        ConfirmLeave
+      </button>
+      <button data-testid="btn-leave-cancel" onClick={props.cancelLeave}>
+        CancelLeave
+      </button>
+    </div>
+  ),
 }));
 
 const mockUseUser = useUser as jest.Mock;
@@ -471,6 +489,11 @@ describe("VPAuthorizationPage", () => {
     await waitFor(() => {
         expect(screen.getByTestId("mock-verifier-credentials-request-card")).toBeInTheDocument();
     });
+
+    expect(mockHandleApiError).toHaveBeenCalledWith(
+      expect.any(Error),
+      "fetchPresentationCredentials"
+    );
   });
 
   test("handles fetch credentials throwing an error", async () => {
@@ -491,6 +514,11 @@ describe("VPAuthorizationPage", () => {
     await waitFor(() => {
         expect(screen.getByTestId("mock-verifier-credentials-request-card")).toBeInTheDocument();
     });
+
+    expect(mockHandleApiError).toHaveBeenCalledWith(
+      expect.any(Error),
+      "fetchPresentationCredentials"
+    );
   });
 
   test("filters credentials using search bar", async () => {
@@ -534,6 +562,8 @@ describe("VPAuthorizationPage", () => {
     expect(screen.getByTestId("mock-verifier-credentials-request-card")).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId("mock-nav-back"));
+    expect(screen.getByTestId("mock-leave-confirmation-modal")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("btn-leave-confirm"));
     await waitFor(() => {
       expect(mockRejectVerifierRequest).toHaveBeenCalled();
     });
@@ -550,6 +580,24 @@ describe("VPAuthorizationPage", () => {
     
     fireEvent.click(screen.getByTestId("mock-nav-back"));
     expect(mockRejectVerifierRequest).not.toHaveBeenCalled();
+  });
+
+  test("shows leave confirmation on browser back (popstate) and confirms leave", async () => {
+    renderComponent();
+    await waitFor(() => {
+      expect(mockFetchData).toHaveBeenCalledTimes(2);
+    });
+    await waitFor(() => {
+      expect(screen.queryByTestId("modal-loader")).not.toBeInTheDocument();
+    });
+
+    fireEvent.popState(window);
+    expect(screen.getByTestId("mock-leave-confirmation-modal")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("btn-leave-confirm"));
+
+    await waitFor(() => {
+      expect(mockRejectVerifierRequest).toHaveBeenCalled();
+    });
   });
 
   test("unselects a credential in MatchingCredentials", async () => {

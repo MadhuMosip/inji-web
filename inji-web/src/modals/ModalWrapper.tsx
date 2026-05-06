@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from "react-dom";
 import { ModalWrapperProps } from "../types/components";
 export const ModalWrapper: React.FC<ModalWrapperProps> = (props) => {
 
@@ -13,7 +14,10 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = (props) => {
     };
   }, []); // Empty dependency array ensures this runs on mount/unmount only
 
-  return <>
+  if (typeof document === "undefined") return null;
+
+  return createPortal((
+    <>
     <div data-testid="ModalWrapper-BackDrop" className={`fixed inset-0 ${props.zIndex === 50 ? 'z-40' : 'z-30'} bg-black/60 backdrop-blur-sm`}></div>
     <div data-testid="ModalWrapper-Outer-Container" className={`fixed inset-0 ${props.zIndex === 50 ? 'z-50' : 'z-40'} overflow-y-auto overflow-x-hidden`}>
       <div className="min-h-full p-4 flex items-center justify-center">
@@ -40,5 +44,6 @@ export const ModalWrapper: React.FC<ModalWrapperProps> = (props) => {
         </div>
       </div>
     </div>
-  </>;
+    </>
+  ), document.body);
 };

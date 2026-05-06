@@ -39,6 +39,7 @@ export const Layout: React.FC = () => {
     } = useDownloadSessionDetails();
     const { removeUser, isUserLoggedIn } = useUser();
     const logoutRequestApi = useApi();
+    const isAuthorizeRoute = location.pathname === ROUTES.USER_AUTHORIZE;
 
     const NAV_GUARD_SESSION_KEY = 'navGuardInstalled';
 
@@ -220,7 +221,7 @@ export const Layout: React.FC = () => {
             className={LayoutStyles.mainContainer}
             dir={getDirCurrentLanguage(language)}
         >
-            <Header headerRef={headerRef} headerHeight={headerHeight}/>
+            <Header headerRef={headerRef} headerHeight={headerHeight} disableProfileDropdown={isAuthorizeRoute}/>
 
             <div
                 className={LayoutStyles.contentContainer}
@@ -230,7 +231,7 @@ export const Layout: React.FC = () => {
                     zIndex: 0
                 }}
             >
-                <Sidebar/>
+                <Sidebar disabled={isAuthorizeRoute} />
                 <div
                     className={LayoutStyles.sidebarAndOutletContainer}
                     style={{zIndex: 1}}

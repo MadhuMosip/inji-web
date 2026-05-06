@@ -8,16 +8,12 @@ import { TrustRejectionModal } from "../components/Issuers/TrustRejectionModal";
 import { useApi } from "../hooks/useApi";
 import { useNavigate } from 'react-router-dom';
 import {OPENID4VP_AUTHORIZE_PREFIX, ROUTES} from "../utils/constants";
-import { Sidebar } from "../components/User/Sidebar";
 import { PresentationCredential } from "../types/components";
 import { CredentialShareHandler } from "../handlers/CredentialShareHandler";
 import { useApiErrorHandler } from "../hooks/useApiErrorHandler";
 import { useUser } from '../hooks/User/useUser';
 import VerifierCredentialsRequestCard from "../components/Ovp/VerifierCredentialRequestCard";
-import DashboardBgTop from "../assets/Background.svg";
-import DashboardBgBottom from "../assets/DashboardBgBottom.svg";
 import MatchingCredentials from "../components/Ovp/MatchingCredentials";
-import { SolidButton } from "../components/Common/Buttons/SolidButton";
 import { StoredCardsPageStyles } from "./User/StoredCards/StoredCardsPageStyles";
 import { NavBackArrowButton } from "../components/Common/Buttons/NavBackArrowButton";
 import { PageTitle } from "../components/Common/PageTitle/PageTitle";
@@ -25,6 +21,8 @@ import { SearchBar } from "../components/Common/SearchBar/SearchBar";
 import { VpAuthPageBackgroundStyles } from "../components/Ovp/OvpPageStyles";
 import { rejectVerifierRequest } from "../utils/verifierUtils";
 import { Pages } from "../utils/constants";
+import LeaveConfirmationModal from "../modals/LeaveConfirmationModal";
+import { createPopstateLeaveGuard } from "../utils/navigationUtils";
 
 export const VPAuthorizationPage: React.FC = () => {
     const { t } = useTranslation(["VerifierTrustPage", "CredentialRequestModal"]);
@@ -42,6 +40,9 @@ export const VPAuthorizationPage: React.FC = () => {
     const isRejectingRef = useRef<boolean>(false);
     const fetchedCredentialsRef = useRef<Set<string>>(new Set());
     const [filteredCredentials, setFilteredCredentials] = useState<any[] | null>([]);
+    const [showLeaveWarnPopup, setShowLeaveWarnPopup] = useState(false);
+    const showLeaveWarnPopupRef = useRef(false);
+    const removePopstateGuardRef = useRef<(() => void) | null>(null);
 
     const { fetchData } = useApi();
     const navigate = useNavigate();
@@ -230,10 +231,26 @@ export const VPAuthorizationPage: React.FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isUserLoggedIn]);
 
-    const isErrorActive = showError;
+    useEffect(() => {
+        showLeaveWarnPopupRef.current = showLeaveWarnPopup;
+    }, [showLeaveWarnPopup]);
 
-    const addCard = () => <SolidButton disabled={true} testId={"btn-add-cards"} onClick={() => { }}
-        title={t('mainPage.addCards')} />;
+    useEffect(() => {
+        // Intercept browser back/forward (POP) on this page:
+        // - Show LeaveConfirmationModal
+        // - Keep user on this URL until they confirm
+        const guard = createPopstateLeaveGuard({
+            isModalOpen: () => showLeaveWarnPopupRef.current,
+            onOpenModal: () => setShowLeaveWarnPopup(true),
+        });
+        removePopstateGuardRef.current = guard.remove;
+        return () => {
+            guard.remove();
+            removePopstateGuardRef.current = null;
+        };
+    }, []);
+
+    const isErrorActive = showError;
 
     const filterCredentials = (searchText: string) => {
         if (!credentialsData) return;
@@ -247,10 +264,17 @@ export const VPAuthorizationPage: React.FC = () => {
     const handleBackBtn = async () => {
         if (!presentationIdData || isRejectingRef.current) return;
         isRejectingRef.current = true;
+
+        // We're leaving (likely full-page redirect). Remove the popstate handler to avoid loops.
+        if (removePopstateGuardRef.current) {
+            removePopstateGuardRef.current();
+            removePopstateGuardRef.current = null;
+        }
+
         const ok = await rejectVerifierRequest({
             presentationId: presentationIdData,
             fetchData,
-            redirectUri: Pages.ROOT
+            redirectUri: verifierData?.redirectUri || null
         });
         if (!ok) {
             isRejectingRef.current = false;
@@ -259,71 +283,56 @@ export const VPAuthorizationPage: React.FC = () => {
     };
 
     return (
-        <div className={VpAuthPageBackgroundStyles.mainPage}>
-            <Sidebar disabled={true} />
-            <div className={VpAuthPageBackgroundStyles.mainBody}>
-                <div className={VpAuthPageBackgroundStyles.mainWithBackgrounds}>
-                    <img
-                        src={DashboardBgTop}
-                        alt="Gradient Top Background"
-                        className={VpAuthPageBackgroundStyles.backgroundTop}
+        <div className={VpAuthPageBackgroundStyles.contentOverlay}>
+            <div>
+                <div className={VpAuthPageBackgroundStyles.mainContainerTitle} data-testid={"page-title-container"}>
+                    <div className={StoredCardsPageStyles.navContainer}>
+                        <div className={StoredCardsPageStyles.navContainer}>
+                            <NavBackArrowButton onBackClick={() => setShowLeaveWarnPopup(true)} />
+                        </div>
+                        <div className={StoredCardsPageStyles.titleContainer}>
+                            <PageTitle value={t('mainPage.title')} testId={"stored-credentials"} />
+                        </div>
+                    </div>
+                </div>
+                <div className={StoredCardsPageStyles.searchContainer}>
+                    <SearchBar
+                        testId={"search-credentials"}
+                        placeholder={t('mainPage.searchPlaceholder')}
+                        filter={filterCredentials}
                     />
-                    <img
-                        src={DashboardBgBottom}
-                        alt="Gradient Bottom Background"
-                        className={VpAuthPageBackgroundStyles.backgroundBottom}
-                    />
+                </div>
 
-                    <div className={VpAuthPageBackgroundStyles.contentOverlay}>
-                        <div>
-                            <div className={VpAuthPageBackgroundStyles.mainContainerTitle} data-testid={"page-title-container"}>
-                                <div className={StoredCardsPageStyles.navContainer}>
-                                    <div className={StoredCardsPageStyles.navContainer}>
-                                        <NavBackArrowButton onBackClick={handleBackBtn} />
-                                    </div>
-                                    <div className={StoredCardsPageStyles.titleContainer}>
-                                        <PageTitle value={t('mainPage.title')} testId={"stored-credentials"} />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className={StoredCardsPageStyles.searchContainer}>
-                                <SearchBar
-                                    testId={"search-credentials"}
-                                    placeholder={t('mainPage.searchPlaceholder')}
-                                    filter={filterCredentials}
-                                />
-                            </div>
-
-                            <div
-                                className={VpAuthPageBackgroundStyles.credentialDetailsCard}
-                                data-testid="vp-authorization-content"
-                            >
-                                {showCredentialRequest && presentationIdData && verifierData && !isErrorActive && !isLoading && (
-                                    <>
-                                        <VerifierCredentialsRequestCard
-                                            verifier={verifierData}
-                                            presentationId={presentationIdData}
-                                            credentials={credentialsData}
-                                            selectedCredentialIds={selectedCredentialIds}
-                                            onShareCredentials={handleShareCredentialsFromCard}
-                                        />
-                                        <MatchingCredentials
-                                            credentials={filteredCredentials}
-                                            refreshCredentials={() => { }}
-                                            selectedCredentialIds={selectedCredentialIds}
-                                            onCredentialSelect={(id, isSelected) => {
-                                                setSelectedCredentialIds(prev =>
-                                                    isSelected
-                                                        ? [...prev, id]
-                                                        : prev.filter(cId => cId !== id)
-                                                );
-                                            }}
-                                            presentationId={presentationIdData}
-                                            redirectUri={verifierData?.redirectUri ?? null}
-                                            missingClaims={missingClaimsData}
-                                        />
-                                    </>
-                                )}
+                <div
+                    className={VpAuthPageBackgroundStyles.credentialDetailsCard}
+                    data-testid="vp-authorization-content"
+                >
+                    {showCredentialRequest && presentationIdData && verifierData && !isErrorActive && !isLoading && (
+                        <>
+                            <VerifierCredentialsRequestCard
+                                verifier={verifierData}
+                                presentationId={presentationIdData}
+                                credentials={credentialsData}
+                                selectedCredentialIds={selectedCredentialIds}
+                                onShareCredentials={handleShareCredentialsFromCard}
+                            />
+                            <MatchingCredentials
+                                credentials={filteredCredentials}
+                                refreshCredentials={() => { }}
+                                selectedCredentialIds={selectedCredentialIds}
+                                onCredentialSelect={(id, isSelected) => {
+                                    setSelectedCredentialIds(prev =>
+                                        isSelected
+                                            ? [...prev, id]
+                                            : prev.filter(cId => cId !== id)
+                                    );
+                                }}
+                                presentationId={presentationIdData}
+                                redirectUri={verifierData?.redirectUri ?? null}
+                                missingClaims={missingClaimsData}
+                            />
+                        </>
+                    )}
 
                                 {selectedCredentialsData && verifierData && presentationIdData && !isErrorActive && (
                                     <CredentialShareHandler
@@ -335,16 +344,16 @@ export const VPAuthorizationPage: React.FC = () => {
                                     />
                                 )}
 
-                            </div>
+                </div>
 
-                            <LoaderModal
+                <LoaderModal
                                 isOpen={isLoading || isRetrying}
                                 title={!showCredentialRequest ? t("loadingCard.title") : ''}
                                 subtitle={!showCredentialRequest ? t("loadingCard.subtitle") : ''}
                                 message={showCredentialRequest ? t('CredentialRequestModal:loading.message') : ''}
                                 size="xl-loading"
                                 testId="modal-loader"
-                            />
+                />
 
                             <TrustVerifierModal
                                 isOpen={showTrustVerifier && !isErrorActive}
@@ -383,9 +392,17 @@ export const VPAuthorizationPage: React.FC = () => {
                                     testId="modal-trust-rejection-modal"
                                 />
                             )}
-                        </div>
-                    </div>
-                </div>
+
+                {showLeaveWarnPopup && (
+                    <LeaveConfirmationModal
+                        confirmLeave={handleBackBtn}
+                        cancelLeave={() => setShowLeaveWarnPopup(false)}
+                        title={t("leaveConfirmation.title")}
+                        description={t("leaveConfirmation.description")}
+                        confirmBtnTitle={t("leaveConfirmation.confirmButton")}
+                        cancelBtnTitle={t("leaveConfirmation.cancelButton")}
+                    />
+                )}
             </div>
         </div>
     );

@@ -550,6 +550,12 @@
       "credentialsDescription": "Eles poderão visualizar suas credenciais selecionadas, incluindo todas as informações associadas e dados de verificação.",
       "consentButtonTitle": "Sim, eu concordo em compartilhar",
       "backButtonTitle": "Não, leve-me de volta"
+    },
+    "leaveConfirmation": {
+      "title": "Tem certeza de que deseja sair?",
+      "description": "Se você sair desta página, sairá do processo de envio de sua Credencial Verificável e seu progresso poderá ser perdido.",
+      "confirmButton": "Sim, sair",
+      "cancelButton": "Não, voltar"
     }
   },
   "CredentialRequestModal": {

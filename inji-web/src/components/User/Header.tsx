@@ -21,11 +21,13 @@ import {useApi} from "../../hooks/useApi";
 type UserHeaderProps = {
     headerRef: React.RefObject<HTMLDivElement>;
     headerHeight: number;
+    disableProfileDropdown?: boolean;
 };
 
 export const Header: React.FC<UserHeaderProps> = ({
     headerRef,
-    headerHeight
+    headerHeight,
+    disableProfileDropdown = false
 }) => {
     const language = useSelector((state: RootState) => state.common.language);
     const navigate = useNavigate();
@@ -120,6 +122,7 @@ export const Header: React.FC<UserHeaderProps> = ({
 
     const toggleProfileDropdown = (e: React.MouseEvent<HTMLDivElement>) => {
         e.stopPropagation(); // Prevent global click handler from immediately closing the dropdown
+        if (disableProfileDropdown) return;
         setIsProfileDropdownOpen(!isProfileDropdownOpen);
     };
 
@@ -215,7 +218,7 @@ export const Header: React.FC<UserHeaderProps> = ({
                     >
                         <div className="flex items-center space-x-2">
                             {getUserProfileIconWithName()}
-                            {!isLoading && (
+                            {!isLoading && !disableProfileDropdown && (
                                 <div
                                 className="relative inline-block cursor-pointer"
                                 onClick={toggleProfileDropdown}
@@ -225,7 +228,7 @@ export const Header: React.FC<UserHeaderProps> = ({
                             )}
                         </div>
 
-                        {isProfileDropdownOpen && (
+                        {isProfileDropdownOpen && !disableProfileDropdown && (
                             <div
                                 data-testid="profile-dropdown"
                                 className="absolute -right-7 top-100 mt-8 w-56 bg-white rounded-lg shadow-lg z-50 font-medium"
@@ -260,7 +263,7 @@ export const Header: React.FC<UserHeaderProps> = ({
                             <div className="flex items-center px-4 py-2">
                                 {getUserProfileIconWithName()}
                             </div>
-                            {dropdownItems.map((item, index) => (
+                            {!disableProfileDropdown && dropdownItems.map((item, index) => (
                                 <React.Fragment key={item.key}>
                                     <div
                                         className={`px-4 py-2 text-sm ${item.textColor} hover:bg-gray-100 cursor-pointer font-medium`}

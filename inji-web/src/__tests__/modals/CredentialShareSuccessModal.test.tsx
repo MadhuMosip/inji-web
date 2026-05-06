@@ -62,9 +62,8 @@ describe("CredentialShareSuccessModal", () => {
     });
 
     it("matches snapshot when open", () => {
-        let asFragment;
         act(() => {
-            const rendered = render(
+            render(
                 <CredentialShareSuccessModal
                     isOpen={true}
                     verifierName={verifierName}
@@ -72,9 +71,11 @@ describe("CredentialShareSuccessModal", () => {
                     returnUrl="/"
                 />
             );
-            asFragment = rendered.asFragment;
         });
-        expect(asFragment()).toMatchSnapshot();
+        // ModalWrapper uses a portal to document.body; snapshot only the modal nodes.
+        const backdrop = document.querySelector("[data-testid='ModalWrapper-BackDrop']") as HTMLElement;
+        const outer = document.querySelector("[data-testid='ModalWrapper-Outer-Container']") as HTMLElement;
+        expect({ backdrop: backdrop?.outerHTML, outer: outer?.outerHTML }).toMatchSnapshot();
     });
 
     it("renders all elements correctly", () => {

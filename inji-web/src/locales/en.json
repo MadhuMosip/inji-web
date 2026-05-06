@@ -551,6 +551,12 @@
         "credentialsDescription": "They will be able to view your selected credentials, including all associated information and verification data.",
         "consentButtonTitle": "Yes, I Consent to Share",
         "backButtonTitle": "No, Take Me Back"
+      },
+      "leaveConfirmation": {
+        "title": "Are you sure you want to leave?",
+        "description": "If you leave this page, you will exit the process of sending your Verifiable Credential and your progress may be lost.",
+        "confirmButton": "Yes, Leave",
+        "cancelButton": "No, back"
       }
   },
   "CredentialRequestModal": {

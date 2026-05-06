@@ -550,6 +550,12 @@
       "credentialsDescription": "वे सभी संबद्ध जानकारी और सत्यापन डेटा सहित आपके चयनित क्रेडेंशियल्स देख सकेंगे।",
       "consentButtonTitle": "हाँ, मैं साझा करने के लिए सहमति देता हूँ",
       "backButtonTitle": "नहीं, मुझे वापस ले जाओ"
+    },
+    "leaveConfirmation": {
+      "title": "क्या आप वाकई छोड़ना चाहते हैं?",
+      "description": "यदि आप इस पृष्ठ को छोड़ देते हैं, तो आप अपना सत्यापन योग्य क्रेडेंशियल (Verifiable Credential) भेजने की प्रक्रिया से बाहर हो जाएंगे और आपकी प्रगति खो सकती है।",
+      "confirmButton": "हाँ, छोड़ें",
+      "cancelButton": "नहीं, वापस जाएँ"
     }
   },
   "CredentialRequestModal": {

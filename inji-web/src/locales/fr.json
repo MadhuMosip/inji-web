@@ -550,6 +550,12 @@
       "credentialsDescription": "Ils pourront voir vos informations d'identification sélectionnées, y compris toutes les informations associées et les données de vérification.",
       "consentButtonTitle": "Oui, j'accepte de partager",
       "backButtonTitle": "Non, ramène-moi"
+    },
+    "leaveConfirmation": {
+      "title": "Voulez-vous vraiment quitter ?",
+      "description": "Si vous quittez cette page, vous interromprez le processus d'envoi de votre identifiant vérifiable et votre progression pourrait être perdue.",
+      "confirmButton": "Oui, quitter",
+      "cancelButton": "Non, retour"
     }
   },
   "CredentialRequestModal": {

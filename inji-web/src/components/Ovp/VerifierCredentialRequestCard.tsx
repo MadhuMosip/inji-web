@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { SharedCredentialInfoTile } from "./SharedCredentialInfoTile";
 import { SolidButton } from "../Common/Buttons/SolidButton";
-import { CancelActionButton } from "../Common/Buttons/CancelActionButton";
 import { useTranslation } from "react-i18next";
 import unknownVerifierLogo from "../../assets/unknown_verifier_logo.png";
 import shieldIcon from "../../assets/Sheild.svg";
@@ -11,6 +10,7 @@ import { rejectVerifierRequest } from "../../utils/verifierUtils";
 import { WalletCredential } from "../../types/data";
 import { VerifierCredentialsRequestCardStyles } from "./OvpPageStyles";
 import ConsentRequiredModal from "../../modals/ConsentRequiredModal";
+import { BorderedButton } from "../Common/Buttons/BorderedButton";
 
 export interface Verifier {
     id: string;
@@ -117,12 +117,12 @@ function VerifierCredentialsRequestCard({ verifier, presentationId, credentials,
                             />
                         </div>
                         <div className={VerifierCredentialsRequestCardStyles.declineButton}>
-                            <CancelActionButton
+                            <BorderedButton
                                 testId="verifier-decline-button"
                                 title={t("credentialTile.shareCredentialsDeclineButton")}
                                 onClick={handleDecline}
                                 disabled={declineDisabled}
-
+                                className="h-11 w-full lg:w-[133px] rounded-md py-2 border-1"
                             />
                         </div>
 

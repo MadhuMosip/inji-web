@@ -36,11 +36,18 @@ export const ModalStyles = {
     consentRequiredModal: {
         container: "max-h-[90vh] w-full max-w-[600px] py-7 px-10 text-center",
         title: "text-iw-header font-bold text-[20px]",
-        description: "text-iw-consentDescription text-[14px] whitespace-pre-line",
+        description: "text-iw-consentDescription text-[14px] whitespace-pre-line font-[500]",
         credentialsContainer: "bg-iw-lightGrayBg border border-iw-lightGrayBorder rounded-lg p-4 my-4 text-center",
-        credentialsTitle: "text-iw-mediumGrayText text-[12px] flex items-center justify-center gap-2",
-        credentialsDescription: "text-iw-header text-[13px] mt-2",
-        confirmButton: "text-[13px]",
+        credentialsTitle: "text-iw-mediumGrayText text-[12px] flex items-center justify-center gap-2 font-medium",
+        credentialsDescription: "text-iw-header text-[14px] mt-2",
+        confirmButton: "text-[13px] h-[47px]",
         backButton: "mt-4 text-iw-tertiary text-[13px] font-bold"
+    },
+    leaveConfirmationModal: {
+        container: "p-6 text-center",
+        title: "text-iw-header font-[600] text-[18px] leading-8",
+        description: "text-iw-mediumGrayText text-[14px] my-3",
+        leaveButton: "h-[52px] mb-3",
+        goBackButton: "border-2 border-iw-shieldLoadingIcon text-iw-shieldLoadingIcon h-[52px] w-full rounded-xl font-bold"
     }
 }
