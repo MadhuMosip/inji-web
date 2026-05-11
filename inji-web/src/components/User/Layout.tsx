@@ -43,15 +43,19 @@ export const Layout: React.FC = () => {
 
     const NAV_GUARD_SESSION_KEY = 'navGuardInstalled';
 
-    // Refs to avoid stale closure in popstate handler
-    const locationRef = useRef(location.pathname);
+    const historyUrl = `${location.pathname}${location.search ?? ''}${location.hash ?? ''}`;
+
+    // Refs to avoid stale closure in popstate handler (full URL for history API; pathname for route checks)
+    const historyUrlRef = useRef(historyUrl);
+    const pathnameRef = useRef(location.pathname);
     const isUserLoggedInRef = useRef(isUserLoggedIn);
 
     // Update refs when values change
     useEffect(() => {
-        locationRef.current = location.pathname;
+        historyUrlRef.current = `${location.pathname}${location.search ?? ''}${location.hash ?? ''}`;
+        pathnameRef.current = location.pathname;
         isUserLoggedInRef.current = isUserLoggedIn;
-    }, [location.pathname, isUserLoggedIn]);
+    }, [location.pathname, location.search, location.hash, isUserLoggedIn]);
 
     useEffect(() => {
         const updateHeights = () => {
@@ -69,7 +73,25 @@ export const Layout: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        let onPopState: ((e: PopStateEvent) => void) | undefined;
+        // `/user/authorize` has its own back-navigation leave warning guard.
+        // Layout-level back guard would override it (and can bounce to login flow),
+        // so skip installing the Layout guard on this route.
+        if (isAuthorizeRoute) return;
+
+        const onPopState = (e: PopStateEvent) => {
+            const state = e.state as any;
+
+            if (state?.logoutConfirmationGuard) {
+                if (pathnameRef.current === ROUTES.USER_HOME && isUserLoggedInRef.current?.()) {
+                    setShowLogoutModal(true);
+                    // Keep user on the active entry without growing history
+                    window.history.go(1);
+                    return;
+                }
+                // Other /user/* routes: silent bounce to block IdP exposure
+                window.history.go(1);
+            }
+        };
         try {
             let isGuardInstalledInSession = false;
             try {
@@ -83,13 +105,13 @@ export const Layout: React.FC = () => {
                 window.history.replaceState(
                     { logoutConfirmationGuard: true},
                     '',
-                    locationRef.current
+                    historyUrlRef.current
                 );
                 // push the actual visible page state (no extra flag) so Back lands on guard
                 window.history.pushState(
                     {},
                     '',
-                    locationRef.current
+                    historyUrlRef.current
                 );
                 try {
                     window.sessionStorage.setItem(NAV_GUARD_SESSION_KEY, 'true');
@@ -98,28 +120,13 @@ export const Layout: React.FC = () => {
                 }
             } 
 
-            onPopState = (e: PopStateEvent) => {
-                const state = e.state as any;
-                
-                if (state?.logoutConfirmationGuard) {
-                    if (locationRef.current === ROUTES.USER_HOME && isUserLoggedInRef.current?.()) {
-                        setShowLogoutModal(true);
-                        // Keep user on the active entry without growing history
-                        window.history.go(1);
-                        return;
-                    }
-                    // Other /user/* routes: silent bounce to block IdP exposure
-                    window.history.go(1);
-                }
-            };
-
             window.addEventListener('popstate', onPopState);
             return () => window.removeEventListener('popstate', onPopState);
         } catch (err) {
             console.warn('Navigation guard setup failed:', err);
         }
         // Install/refresh whenever the current /user/* location changes
-    }, [location.pathname]);
+    }, [location.pathname, isAuthorizeRoute]);
 
     const logoutCleanup = () => {
         window.sessionStorage.removeItem(NAV_GUARD_SESSION_KEY);
