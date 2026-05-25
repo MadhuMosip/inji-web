@@ -49,7 +49,7 @@ export const NoMatchingCredentialsModal: React.FC<NoMatchingCredentialsModalProp
     const rejectVerifierCallback = useCallback(async () => {
         const rejectPayload = {
             errorCode: "access_denied",
-            errorMessage: "No matching credentials available to satisfy the presentation request."
+            errorMessage: "No matching credentials found to fulfill the request."
         };
 
         const response = await rejectVerifier({

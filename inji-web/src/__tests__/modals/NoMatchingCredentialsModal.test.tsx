@@ -246,7 +246,7 @@ describe('NoMatchingCredentialsModal', () => {
                     apiConfig: expect.any(Object),
                     body: {
                         errorCode: 'access_denied',
-                        errorMessage: 'No matching credentials available to satisfy the presentation request.',
+                        errorMessage: 'No matching credentials found to fulfill the request.',
                     },
                 });
             });
@@ -277,7 +277,7 @@ describe('NoMatchingCredentialsModal', () => {
                     apiConfig: expect.any(Object),
                     body: {
                         errorCode: 'access_denied',
-                        errorMessage: 'No matching credentials available to satisfy the presentation request.',
+                        errorMessage: 'No matching credentials found to fulfill the request.',
                     },
                 });
             });
