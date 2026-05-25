@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { api } from "../utils/api";
 import { LoaderModal } from "../modals/LoaderModal";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import { useApi } from "../hooks/useApi";
 import { useNavigate } from 'react-router-dom';
 import {OPENID4VP_AUTHORIZE_PREFIX, ROUTES} from "../utils/constants";
 import { PresentationCredential } from "../types/components";
+import { SelectedSdClaimsMap } from "../types/data";
 import { CredentialShareHandler } from "../handlers/CredentialShareHandler";
 import { useApiErrorHandler } from "../hooks/useApiErrorHandler";
 import { useUser } from '../hooks/User/useUser';
@@ -34,6 +35,8 @@ export const VPAuthorizationPage: React.FC = () => {
     const [presentationIdData, setPresentationIdData] = useState<string | null>(null);
     const [selectedCredentialsData, setSelectedCredentialsData] = useState<PresentationCredential[] | null>(null);
     const [selectedCredentialIds, setSelectedCredentialIds] = useState<string[]>([]);
+    const [selectedSdClaimsByCredential, setSelectedSdClaimsByCredential] =
+        useState<SelectedSdClaimsMap>({});
     const [credentialsData, setCredentialsData] = useState<any[] | null>(null);
     const [missingClaimsData, setMissingClaimsData] = useState<string[]>([]);
     const fetchingRef = useRef<boolean>(false);
@@ -217,9 +220,27 @@ export const VPAuthorizationPage: React.FC = () => {
             }));
 
         if (selected.length === 0) return;
+
         setSelectedCredentialsData(selected);
         setShowCredentialRequest(false);
     }, [credentialsData, selectedCredentialIds]);
+
+    const presentationSelectedSdClaims = useMemo((): SelectedSdClaimsMap | undefined => {
+        if (!selectedCredentialsData?.length) {
+            return undefined;
+        }
+        const payload: SelectedSdClaimsMap = {};
+        selectedCredentialsData.forEach((credential) => {
+            if (!credential.format?.includes("sd-jwt")) {
+                return;
+            }
+            if (credential.credentialId in selectedSdClaimsByCredential) {
+                payload[credential.credentialId] =
+                    selectedSdClaimsByCredential[credential.credentialId];
+            }
+        });
+        return Object.keys(payload).length > 0 ? payload : undefined;
+    }, [selectedCredentialsData, selectedSdClaimsByCredential]);
 
     useEffect(() => {
         if (!isUserLoggedIn() || fetchingRef.current) {
@@ -320,12 +341,26 @@ export const VPAuthorizationPage: React.FC = () => {
                                 credentials={filteredCredentials}
                                 refreshCredentials={() => { }}
                                 selectedCredentialIds={selectedCredentialIds}
+                                selectedSdClaimsByCredential={selectedSdClaimsByCredential}
                                 onCredentialSelect={(id, isSelected) => {
-                                    setSelectedCredentialIds(prev =>
+                                    setSelectedCredentialIds((prev) =>
                                         isSelected
                                             ? [...prev, id]
-                                            : prev.filter(cId => cId !== id)
+                                            : prev.filter((cId) => cId !== id)
                                     );
+                                    if (!isSelected) {
+                                        setSelectedSdClaimsByCredential((prev) => {
+                                            const next = { ...prev };
+                                            delete next[id];
+                                            return next;
+                                        });
+                                    }
+                                }}
+                                onSdClaimsConfirm={(credentialId, selectedClaimPaths) => {
+                                    setSelectedSdClaimsByCredential((prev) => ({
+                                        ...prev,
+                                        [credentialId]: selectedClaimPaths,
+                                    }));
                                 }}
                                 presentationId={presentationIdData}
                                 redirectUri={verifierData?.redirectUri ?? null}
@@ -339,8 +374,13 @@ export const VPAuthorizationPage: React.FC = () => {
                                         verifierName={verifierData.name}
                                         returnUrl={verifierData.redirectUri || ROUTES.ROOT}
                                         selectedCredentials={selectedCredentialsData}
+                                        selectedSdClaims={presentationSelectedSdClaims}
                                         presentationId={presentationIdData}
-                                        onClose={() => { setSelectedCredentialsData(null); navigate(ROUTES.ROOT); }}
+                                        onClose={() => {
+                                            setSelectedCredentialsData(null);
+                                            setSelectedSdClaimsByCredential({});
+                                            navigate(ROUTES.ROOT);
+                                        }}
                                     />
                                 )}
 

@@ -108,6 +108,16 @@ export type WalletCredential = {
     credentialTypeDisplayName: string;
     credentialTypeLogo: string;
     credentialId: string;
+    format: string;
+    claims?: string[];
+    sdClaims?: string[];
+};
+
+export type SelectedSdClaimsMap = Record<string, string[]>;
+
+export type SubmitPresentationBody = {
+    selectedCredentials: string[];
+    selectedSdClaims?: SelectedSdClaimsMap;
 };
 
 export type FAQAccordionItemType = {

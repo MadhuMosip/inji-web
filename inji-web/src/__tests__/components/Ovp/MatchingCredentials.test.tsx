@@ -18,10 +18,20 @@ jest.mock("react-router-dom", () => {
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
+    i18n: { language: "en" },
   }),
+  initReactI18next: {
+    type: "3rdParty",
+    init: jest.fn(),
+  },
 }));
 
 jest.mock("../../../assets/checkCircleTwo.svg", () => "check-circle-two-mock.svg");
+
+jest.mock("../../../modals/SDClaimsSelectionModal", () => ({
+  __esModule: true,
+  default: () => <div data-testid="sd-claims-selection-modal" />,
+}));
 
 const MockNoMatchingCredentialsModal = jest.fn();
 jest.mock("../../../modals/NoMatchingCredentialsModal", () => ({
@@ -57,6 +67,7 @@ describe("MatchingCredentials", () => {
       issuerLogo: "issuer-1.png",
       credentialTypeDisplayName: "Type 1",
       credentialTypeLogo: "type-1.png",
+      format: "jwt",
     },
     {
       credentialId: "cred-2",
@@ -64,6 +75,7 @@ describe("MatchingCredentials", () => {
       issuerLogo: "issuer-2.png",
       credentialTypeDisplayName: "Type 2",
       credentialTypeLogo: "type-2.png",
+      format: "jwt",
     },
   ];
 

@@ -579,6 +579,19 @@
       "consentShare": "Eu consinto e partilho"
     }
   },
+  "SDClaimsSelectionModal": {
+    "backToCredentials": "Voltar para Credenciais",
+    "confirm": "Confirmar",
+    "searchPlaceholder": "Buscar credenciais por nome, valor ou categoria",
+    "selectAll": "Selecionar tudo",
+    "clearSelection": "Limpar seleção",
+    "infoTitle": "Selecionar Credenciais para Compartilhar",
+    "infoDescription": "Escolha quais credenciais você deseja compartilhar com o verificador solicitante. Você pode selecionar ou desmarcar qualquer credencial clicando nela.",
+    "selectedCount": "{{selected}} de {{total}} selecionados",
+    "fieldsCount": "{{count}} campos",
+    "expand": "Expandir",
+    "collapse": "Recolher"
+  },
   "NoMatchingCredentialsModal": {
     "title": "Nenhuma credencial correspondente encontrada",
     "description": "Por favor, descarregue as credenciais correspondentes e tente novamente o processo de partilha",

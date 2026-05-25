@@ -101,6 +101,76 @@ describe("CredentialShareHandler", () => {
         expect(screen.queryByTestId("modal-loader-card")).not.toBeInTheDocument();
     });
 
+    it("submits selectedSdClaims with empty array for sd-jwt credential", async () => {
+        mockFetchData.mockResolvedValueOnce({ ok: () => true });
+        render(
+            <CredentialShareHandler
+                {...defaultProps}
+                selectedCredentials={[
+                    {
+                        credentialId: "f392fa77-2b24-4bc1-9203-7162fcdaff02",
+                        credentialTypeDisplayName: "SD-JWT VC",
+                        credentialTypeLogo: "https://example.com/logo.png",
+                        format: "dc+sd-jwt",
+                    },
+                ]}
+                selectedSdClaims={{
+                    "f392fa77-2b24-4bc1-9203-7162fcdaff02": [],
+                }}
+            />
+        );
+
+        await waitFor(() =>
+            expect(screen.getByTestId("success-modal")).toBeInTheDocument()
+        );
+
+        expect(mockFetchData).toHaveBeenCalledWith(
+            expect.objectContaining({
+                body: {
+                    selectedCredentials: ["f392fa77-2b24-4bc1-9203-7162fcdaff02"],
+                    selectedSdClaims: {
+                        "f392fa77-2b24-4bc1-9203-7162fcdaff02": [],
+                    },
+                },
+            })
+        );
+    });
+
+    it("submits selectedSdClaims in presentation body when provided", async () => {
+        mockFetchData.mockResolvedValueOnce({ ok: () => true });
+        render(
+            <CredentialShareHandler
+                {...defaultProps}
+                selectedCredentials={[
+                    {
+                        credentialId: "cred-123",
+                        credentialTypeDisplayName: "SD-JWT VC",
+                        credentialTypeLogo: "https://example.com/logo.png",
+                        format: "dc+sd-jwt",
+                    },
+                ]}
+                selectedSdClaims={{
+                    "cred-123": ["$.name", "$.age"],
+                }}
+            />
+        );
+
+        await waitFor(() =>
+            expect(screen.getByTestId("success-modal")).toBeInTheDocument()
+        );
+
+        expect(mockFetchData).toHaveBeenCalledWith(
+            expect.objectContaining({
+                body: {
+                    selectedCredentials: ["cred-123"],
+                    selectedSdClaims: {
+                        "cred-123": ["$.name", "$.age"],
+                    },
+                },
+            })
+        );
+    });
+
     it("shows error card when API call fails (response error)", async () => {
         const errorResponse = {
             ok: () => false,

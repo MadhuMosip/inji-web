@@ -579,6 +579,19 @@
       "consentShare": "J'accepte et partage"
     }
   },
+  "SDClaimsSelectionModal": {
+    "backToCredentials": "Retour aux justificatifs",
+    "confirm": "Confirmer",
+    "searchPlaceholder": "Rechercher des justificatifs par nom, valeur ou catégorie",
+    "selectAll": "Tout sélectionner",
+    "clearSelection": "Effacer la sélection",
+    "infoTitle": "Sélectionner les justificatifs à partager",
+    "infoDescription": "Choisissez les justificatifs que vous souhaitez partager avec le vérificateur demandeur. Vous pouvez sélectionner ou désélectionner n'importe quel justificatif en cliquant dessus.",
+    "selectedCount": "{{selected}} sur {{total}} sélectionnés",
+    "fieldsCount": "{{count}} champs",
+    "expand": "Développer",
+    "collapse": "Réduire"
+  },
   "NoMatchingCredentialsModal": {
     "title": "Aucune information d'identification correspondante trouvée",
     "description": "Veuillez télécharger les informations d'identification correspondantes et réessayer le processus de partage",

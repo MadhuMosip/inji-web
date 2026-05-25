@@ -7,11 +7,13 @@ import { ErrorCard } from "../modals/ErrorCard";
 import { CredentialShareSuccessModal } from "../modals/CredentialShareSuccessModal";
 import { PresentationCredential, CredentialShareSuccessModalProps } from "../types/components";
 import { useApiErrorHandler } from "../hooks/useApiErrorHandler";
+import { SelectedSdClaimsMap, SubmitPresentationBody } from "../types/data";
 
 interface CredentialShareHandlerProps {
     verifierName: string;
     returnUrl: string;
     selectedCredentials: PresentationCredential[];
+    selectedSdClaims?: SelectedSdClaimsMap;
     presentationId: string;
     onClose?: () => void;
 }
@@ -20,6 +22,7 @@ export const CredentialShareHandler: React.FC<CredentialShareHandlerProps> = ({
                                                                                   verifierName,
                                                                                   returnUrl,
                                                                                   selectedCredentials,
+                                                                                  selectedSdClaims,
                                                                                   presentationId,
                                                                                   onClose
                                                                               }) => {
@@ -41,15 +44,21 @@ export const CredentialShareHandler: React.FC<CredentialShareHandlerProps> = ({
     } = useApiErrorHandler({ onClose });
 
     const submitPresentationCallback = useCallback(async () => {
+        const body: SubmitPresentationBody = {
+            selectedCredentials: selectedCredentials.map((c) => c.credentialId),
+        };
+
+        if (selectedSdClaims && Object.keys(selectedSdClaims).length > 0) {
+            body.selectedSdClaims = selectedSdClaims;
+        }
+
         const response = await fetchData({
             apiConfig: api.submitPresentation,
             url: api.submitPresentation.url(presentationId),
-            body: {
-                selectedCredentials: selectedCredentials.map(c => c.credentialId)
-            }
+            body,
         });
         return response;
-    }, [fetchData, presentationId, selectedCredentials]);
+    }, [fetchData, presentationId, selectedCredentials, selectedSdClaims]);
 
     const handleRetrySuccess = useCallback((response: any) => {
         const responseRedirectUri = response.data?.redirectUri;

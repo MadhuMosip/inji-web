@@ -579,6 +579,19 @@
       "consentShare": "أوافق وأشارك"
     }
   },
+  "SDClaimsSelectionModal": {
+    "backToCredentials": "العودة إلى وثائق التفويض",
+    "confirm": "تأكيد",
+    "searchPlaceholder": "البحث عن وثائق التفويض حسب الاسم أو القيمة أو الفئة",
+    "selectAll": "تحديد الكل",
+    "clearSelection": "مسح التحديد",
+    "infoTitle": "حدد وثائق التفويض للمشاركة",
+    "infoDescription": "اختر وثائق التفويض التي تريد مشاركتها مع جهة التحقق الطالبة. يمكنك تحديد أو إلغاء تحديد أي وثيقة تفويض بالضغط عليها.",
+    "selectedCount": "تم تحديد {{selected}} من إجمالي {{total}}",
+    "fieldsCount": "{{count}} حقول",
+    "expand": "توسيع",
+    "collapse": "طوي"
+  },
   "NoMatchingCredentialsModal": {
     "title": "لم يتم العثور على بيانات اعتماد مطابقة",
     "description": "يرجى تحميل بيانات الاعتماد المقابلة وإعادة محاولة عملية المشاركة",

@@ -1,17 +1,22 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {VCCardView} from "../VC/VCCardView";
-import {WalletCredential} from "../../types/data";
+import { SelectedSdClaimsMap, WalletCredential } from "../../types/data";
 import { NoMatchingCredentialsModal } from "../../modals/NoMatchingCredentialsModal";
 import { ROUTES } from "../../utils/constants";
 import checkCircle from "../../assets/checkCircleTwo.svg";
 import { useTranslation } from "react-i18next";
 import { MatchingCredentialsStyles } from "./OvpPageStyles"
+import { credentialsReducer } from "../../redux/reducers/credentialsReducer";
+import SDClaimsSelectionModal from "../../modals/SDClaimsSelectionModal";
 
 interface MatchingCredentialsProps {
     credentials?: WalletCredential[] | null;
     refreshCredentials?: () => void;
     selectedCredentialIds?: string[];
     onCredentialSelect?: (id: string, isSelected: boolean) => void;
+    onSdClaimsConfirm?: (credentialId: string, selectedClaimPaths: string[]) => void;
+    selectedSdClaimsByCredential?: SelectedSdClaimsMap;
     presentationId?: string;
     redirectUri?: string | null;
     missingClaims?: string[];
@@ -22,12 +27,28 @@ function MatchingCredentials({
     refreshCredentials,
     selectedCredentialIds = [],
     onCredentialSelect,
+    onSdClaimsConfirm,
+    selectedSdClaimsByCredential = {},
     presentationId,
     redirectUri,
     missingClaims = [],
 }: MatchingCredentialsProps) {
     const navigate = useNavigate();
     const { t } = useTranslation("VerifierTrustPage");
+    const [showSDClaimsSelectionModal, setShowSDClaimsSelectionModal] = useState(false);
+    const [seletedSDJWT, setSelectedSDJWT] = useState<WalletCredential | null>(null);
+    
+    const handleCredentialSelect = (credential: WalletCredential) => {
+        setSelectedSDJWT(credential);
+        if(credential.format.includes("sd-jwt")){
+            setShowSDClaimsSelectionModal(true);
+            return;
+        }
+        if (onCredentialSelect) {
+            const isSelected = selectedCredentialIds.includes(credential.credentialId);
+            onCredentialSelect(credential.credentialId, !isSelected);
+        }
+    };
 
     return (
         <div className="my-[20px]" data-testid="matching-credentials-container">
@@ -53,11 +74,7 @@ function MatchingCredentials({
                                 <div
                                     data-testid={`matching-credentials-tile-header-${credentialKey}`}
                                     className={MatchingCredentialsStyles.innerCredentialTile}
-                                    onClick={() => {
-                                        if (onCredentialSelect) {
-                                            onCredentialSelect(credential.credentialId, !isSelected);
-                                        }
-                                    }}
+                                    onClick={() => handleCredentialSelect(credential)}
                                 >
                                     {isSelected ? (
                                         <>  
@@ -84,6 +101,24 @@ function MatchingCredentials({
                     })}
                 </div>
             }
+            {showSDClaimsSelectionModal && (
+                <SDClaimsSelectionModal
+                    key={seletedSDJWT?.credentialId}
+                    seletedSDJWT={seletedSDJWT}
+                    closeModal={setShowSDClaimsSelectionModal}
+                    initialSelectedSdClaims={
+                        seletedSDJWT
+                            ? selectedSdClaimsByCredential[seletedSDJWT.credentialId]
+                            : undefined
+                    }
+                    onConfirm={(credentialId, selectedClaimPaths) => {
+                        onSdClaimsConfirm?.(credentialId, selectedClaimPaths);
+                        if (onCredentialSelect) {
+                            onCredentialSelect(credentialId, true);
+                        }
+                    }}
+                />
+            )}
         </div>
     )
 };
