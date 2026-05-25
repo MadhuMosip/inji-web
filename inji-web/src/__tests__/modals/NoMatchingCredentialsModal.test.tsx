@@ -244,7 +244,10 @@ describe('NoMatchingCredentialsModal', () => {
                 expect(mockFetchData).toHaveBeenCalledWith({
                     url: expect.stringContaining('/presentations/test-presentation-id'),
                     apiConfig: expect.any(Object),
-                    body: { errorCode: 'invalid_transaction_data', errorMessage: 'No matching credentials found to fulfill the request'},
+                    body: {
+                        errorCode: 'access_denied',
+                        errorMessage: 'No matching credentials available to satisfy the presentation request.',
+                    },
                 });
             });
             expect(window.location.href).toBe('https://example.com/redirect');
@@ -272,7 +275,10 @@ describe('NoMatchingCredentialsModal', () => {
                 expect(mockFetchData).toHaveBeenCalledWith({
                     url: expect.stringContaining('/presentations/test-presentation-id'),
                     apiConfig: expect.any(Object),
-                    body: { errorCode: 'invalid_transaction_data', errorMessage: 'No matching credentials found to fulfill the request' },
+                    body: {
+                        errorCode: 'access_denied',
+                        errorMessage: 'No matching credentials available to satisfy the presentation request.',
+                    },
                 });
             });
             expect(window.location.href).toBe('https://example.com/redirect');
