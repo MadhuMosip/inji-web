@@ -8,8 +8,7 @@ import { DcqlSelectionRadio } from "./DcqlSelectionRadio";
 
 export type DcqlCredentialActionVariant =
     | "shareableFields"
-    | "viewCard"
-    | "none";
+    | "viewCard";
 
 interface DcqlCredentialOptionCardProps {
     credential: WalletCredential;
@@ -44,10 +43,6 @@ export function DcqlCredentialOptionCard({
           }`;
 
     const renderAction = () => {
-        if (actionVariant === "none") {
-            return null;
-        }
-
         const isViewCard = actionVariant === "viewCard";
         const isShareableFields = actionVariant === "shareableFields";
         const actionSelected = isShareableFields && isSelected;

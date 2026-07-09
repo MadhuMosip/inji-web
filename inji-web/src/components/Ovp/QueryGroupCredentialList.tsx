@@ -72,14 +72,9 @@ export function QueryGroupCredentialList({
                     const isSelected = selectedCredentialIds.includes(
                         credential.credentialId
                     );
-                    const isRadio = !multiple;
-                    const controlClassName = isRadio
-                        ? isSelected
-                            ? "w-5 h-5 flex-shrink-0 rounded-full flex items-center justify-center bg-[#951F6F]"
-                            : "w-5 h-5 flex-shrink-0 rounded-full border-2 border-iw-mediumGrayText"
-                        : isSelected
-                          ? MatchingCredentialsStyles.credentialCheckbox
-                          : MatchingCredentialsStyles.credentialEmptyCheckbox;
+                    const controlClassName = isSelected
+                        ? MatchingCredentialsStyles.credentialCheckbox
+                        : MatchingCredentialsStyles.credentialEmptyCheckbox;
 
                     return (
                         <div
@@ -87,8 +82,8 @@ export function QueryGroupCredentialList({
                             data-testid={`query-group-credential-tile-${credentialKey}`}
                             className={`${MatchingCredentialsStyles.outerCredentialTile} ${
                                 isSelected
-                                    ? "border-[#951F6F]"
-                                    : "border-iw-lightGrayBorder"
+                                    ? MatchingCredentialsStyles.outerCredentialTileSelected
+                                    : MatchingCredentialsStyles.outerCredentialTileUnselected
                             }`}
                         >
                             <div
@@ -103,17 +98,17 @@ export function QueryGroupCredentialList({
                                                 data-testid={`query-group-credential-selected-icon-${credentialKey}`}
                                                 src={checkCircle}
                                                 alt="success"
-                                                className="w-[14px] h-[14px]"
+                                                className={MatchingCredentialsStyles.checkIconSize}
                                             />
                                         </div>
-                                        <span className="text-[#951F6F] italic">
+                                        <span className={MatchingCredentialsStyles.selectedTileLabel}>
                                             {t("credentialTile.selectedTitle")}
                                         </span>
                                     </>
                                 ) : (
                                     <>
                                         <div className={controlClassName} />
-                                        <span className="italic">
+                                        <span className={MatchingCredentialsStyles.unselectedTileLabel}>
                                             {t("credentialTile.unselectedTitle")}
                                         </span>
                                     </>
