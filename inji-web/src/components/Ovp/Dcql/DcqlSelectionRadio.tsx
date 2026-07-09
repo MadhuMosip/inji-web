@@ -6,12 +6,14 @@ interface DcqlSelectionRadioProps {
     checked: boolean;
     testId?: string;
     onClick?: () => void;
+    "aria-label"?: string;
 }
 
 export function DcqlSelectionRadio({
     checked,
     testId,
     onClick,
+    "aria-label": ariaLabel,
 }: DcqlSelectionRadioProps) {
     const className = `${DcqlDesignStyles.radioOuter} ${
         checked
@@ -27,6 +29,7 @@ export function DcqlSelectionRadio({
                 onClick={onClick}
                 data-testid={testId}
                 aria-pressed={checked}
+                aria-label={ariaLabel}
             >
                 {checked && (
                     <img
@@ -40,9 +43,8 @@ export function DcqlSelectionRadio({
     }
 
     return (
-        <div className={className} data-testid={testId}>
-            {/* {checked && <span className={DcqlDesignStyles.radioInner} />} */}
-            {checked && <img src={SelectedTickIcon} className="h-3 w-3" />}
+        <div className={className} data-testid={testId} aria-hidden>
+            {checked && <img src={SelectedTickIcon} alt="" className="h-3 w-3" />}
         </div>
     );
 }

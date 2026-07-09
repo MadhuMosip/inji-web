@@ -54,6 +54,8 @@ function CredentialPreviewModal({
                 if (!cancelled && response.ok()) {
                     setPreviewContent(response.data);
                 }
+            } catch {
+                // Fetch failure — previewContent stays null, UI shows "preview unavailable"
             } finally {
                 if (!cancelled) {
                     setIsPreviewLoading(false);

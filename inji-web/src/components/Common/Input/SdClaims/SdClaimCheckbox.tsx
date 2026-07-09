@@ -7,6 +7,7 @@ interface SdClaimCheckboxProps {
     onToggle?: () => void;
     testId?: string;
     readOnly?: boolean;
+    label?: string;
 }
 
 export const SdClaimCheckbox: React.FC<SdClaimCheckboxProps> = ({
@@ -14,6 +15,7 @@ export const SdClaimCheckbox: React.FC<SdClaimCheckboxProps> = ({
     onToggle,
     testId = "sd-claim-checkbox",
     readOnly = false,
+    label,
 }) => {
     if (readOnly) {
         if (selected) {
@@ -44,6 +46,7 @@ export const SdClaimCheckbox: React.FC<SdClaimCheckboxProps> = ({
                 onClick={onToggle}
                 className={SdClaimInputStyles.sdClaimCheckboxSelected}
                 aria-pressed="true"
+                aria-label={label}
                 data-testid={`${testId}-selected`}
             >
                 <img src={SelectedTickIcon} alt="" />
@@ -57,6 +60,7 @@ export const SdClaimCheckbox: React.FC<SdClaimCheckboxProps> = ({
             onClick={onToggle}
             className={SdClaimInputStyles.sdClaimCheckboxUnselected}
             aria-pressed="false"
+            aria-label={label}
             data-testid={`${testId}-unselected`}
         />
     );

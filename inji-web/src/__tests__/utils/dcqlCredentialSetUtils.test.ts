@@ -103,6 +103,35 @@ describe("dcqlCredentialSetUtils", () => {
         ).toEqual(["pan-cred"]);
     });
 
+    test("areRequiredCredentialSetsSatisfied uses original array index not filtered index", () => {
+        // Bug regression: optional set at index 0, required set at index 1.
+        // selectionState is keyed by original index (1), NOT filtered index (0).
+        // The old filter().every() would pass filtered index 0 to isCredentialSetSatisfied,
+        // causing it to look up selectionState[0] (empty) and return false incorrectly.
+        const mixedSets: DcqlCredentialSet[] = [
+            { required: false, options: [["pan"]] },   // original index 0 — optional
+            { required: true,  options: [["aadhaar"]] }, // original index 1 — required
+        ];
+        const selectionState = {
+            1: { 0: { aadhaar: ["aadhaar-cred"] } }, // keyed by original index 1
+        };
+        expect(
+            areRequiredCredentialSetsSatisfied(mixedSets, selectionState, queryGroups)
+        ).toBe(true);
+    });
+
+    test("areRequiredCredentialSetsSatisfied returns false when required set at non-zero index is unsatisfied", () => {
+        const mixedSets: DcqlCredentialSet[] = [
+            { required: false, options: [["pan"]] },
+            { required: true,  options: [["aadhaar"]] },
+        ];
+        // selectionState has nothing for original index 1
+        const emptyState = {};
+        expect(
+            areRequiredCredentialSetsSatisfied(mixedSets, emptyState, queryGroups)
+        ).toBe(false);
+    });
+
     test("areRequiredCredentialSetsSatisfied accepts one OR option", () => {
         const initial = buildInitialCredentialSetSelection(
             credentialSets,

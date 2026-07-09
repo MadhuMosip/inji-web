@@ -45,7 +45,7 @@ function ConsentRequiredModal({
                                 title={consentButtonTitle}
                                 className={ModalStyles.consentRequiredModal.confirmButton}
                         />
-                        <button className={ModalStyles.consentRequiredModal.backButton} onClick={() => onBack?.()}>{backButtonTitle}</button>
+                        <button type="button" className={ModalStyles.consentRequiredModal.backButton} onClick={() => onBack?.()}>{backButtonTitle}</button>
                     </div>
                 }
             />

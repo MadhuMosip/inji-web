@@ -48,6 +48,7 @@ export const ClaimLeafRow: React.FC<ClaimLeafRowProps> = ({
                 selected={isSelected}
                 readOnly={isToggleable}
                 testId={`claim-checkbox-${node.path}`}
+                label={node.label}
             />
         </button>
     );

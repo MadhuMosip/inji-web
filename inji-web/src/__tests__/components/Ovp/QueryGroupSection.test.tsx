@@ -11,9 +11,8 @@ jest.mock('react-i18next', () => ({
     }),
 }));
 
-const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
-    useNavigate: () => mockNavigate,
+    useNavigate: jest.fn(),
 }));
 
 jest.mock('../../../components/Ovp/QueryGroupCredentialList', () => ({
@@ -30,11 +29,6 @@ jest.mock('../../../components/Ovp/QueryGroupCredentialList', () => ({
             ))}
         </div>
     ),
-}));
-
-jest.mock('../../../modals/NoMatchingCredentialsModal', () => ({
-    NoMatchingCredentialsModal: ({ isVisible }: any) =>
-        isVisible ? <div data-testid="mock-no-matching-modal" /> : null,
 }));
 
 const makeCredential = (id: string): WalletCredential => ({
@@ -157,14 +151,15 @@ describe('QueryGroupSection', () => {
     });
 
     describe('No matching credentials', () => {
-        it('renders NoMatchingCredentialsModal when no credentials available', () => {
+        it('renders inline notice when no credentials available', () => {
             render(
                 <QueryGroupSection
                     {...defaultProps}
                     group={makeGroup({ availableCredentials: [] })}
                 />
             );
-            expect(screen.getByTestId('mock-no-matching-modal')).toBeInTheDocument();
+            expect(screen.getByTestId('query-group-no-credentials-driver-license')).toBeInTheDocument();
+            expect(screen.getByText('dcql.noSatisfiableOptions')).toBeInTheDocument();
         });
 
         it('does not render credential list when no credentials', () => {
@@ -175,6 +170,16 @@ describe('QueryGroupSection', () => {
                 />
             );
             expect(screen.queryByTestId('mock-credential-list-driver-license')).not.toBeInTheDocument();
+        });
+
+        it('does not render the NoMatchingCredentialsModal itself', () => {
+            render(
+                <QueryGroupSection
+                    {...defaultProps}
+                    group={makeGroup({ availableCredentials: [] })}
+                />
+            );
+            expect(screen.queryByTestId('mock-no-matching-modal')).not.toBeInTheDocument();
         });
     });
 });

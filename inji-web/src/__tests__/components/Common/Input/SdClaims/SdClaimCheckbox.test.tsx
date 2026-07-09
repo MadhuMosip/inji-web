@@ -38,6 +38,35 @@ describe("SdClaimCheckbox Component", () => {
       );
     });
 
+    it("sets aria-label on the unselected button when label is provided", () => {
+      render(
+        <SdClaimCheckbox
+          selected={false}
+          onToggle={mockOnToggle}
+          testId="claim-a"
+          label="Date of Birth"
+        />
+      );
+      expect(screen.getByTestId("claim-a-unselected")).toHaveAttribute("aria-label", "Date of Birth");
+    });
+
+    it("sets aria-label on the selected button when label is provided", () => {
+      render(
+        <SdClaimCheckbox
+          selected
+          onToggle={mockOnToggle}
+          testId="claim-a"
+          label="Date of Birth"
+        />
+      );
+      expect(screen.getByTestId("claim-a-selected")).toHaveAttribute("aria-label", "Date of Birth");
+    });
+
+    it("omits aria-label when label is not provided", () => {
+      render(<SdClaimCheckbox selected={false} onToggle={mockOnToggle} testId="claim-a" />);
+      expect(screen.getByTestId("claim-a-unselected")).not.toHaveAttribute("aria-label");
+    });
+
     it("calls onToggle when the unselected button is clicked", () => {
       render(<SdClaimCheckbox selected={false} onToggle={mockOnToggle} testId="claim-a" />);
 

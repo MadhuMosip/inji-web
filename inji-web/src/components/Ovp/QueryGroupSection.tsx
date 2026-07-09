@@ -1,12 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { DcqlQueryGroup } from "../../types/dcql";
 import { SelectedSdClaimsMap } from "../../types/data";
-import { NoMatchingCredentialsModal } from "../../modals/NoMatchingCredentialsModal";
-import { RequirementInfoVerifier } from "../../modals/CredentialRequirementInfoModal";
-import { ROUTES } from "../../utils/constants";
 import {
     formatQueryIdLabel,
     isCredentialDeselectionDisabled,
@@ -20,9 +16,6 @@ interface QueryGroupSectionProps {
     defaultExpanded?: boolean;
     refreshCredentials?: () => void;
     selectedSdClaimsByCredential?: SelectedSdClaimsMap;
-    presentationId?: string;
-    redirectUri?: string | null;
-    verifier?: RequirementInfoVerifier | null;
     onCredentialSelect: (
         queryId: string,
         credentialId: string,
@@ -37,13 +30,9 @@ export function QueryGroupSection({
     defaultExpanded = true,
     refreshCredentials,
     selectedSdClaimsByCredential,
-    presentationId,
-    redirectUri,
-    verifier,
     onCredentialSelect,
     onSdClaimsConfirm,
 }: QueryGroupSectionProps) {
-    const navigate = useNavigate();
     const { t } = useTranslation("VerifierTrustPage");
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
     const sectionTitle = formatQueryIdLabel(group.queryId);
@@ -89,15 +78,12 @@ export function QueryGroupSection({
             {(group.required || isExpanded) && (
                 <div className={DcqlQueryGroupsStyles.sectionBody}>
                     {!hasCredentials ? (
-                        <NoMatchingCredentialsModal
-                            isVisible
-                            missingClaims={group.missingClaims}
-                            verifier={verifier}
-                            verifierContactUrl={redirectUri}
-                            onGoToHome={() => navigate(ROUTES.ROOT)}
-                            redirectUri={redirectUri ?? null}
-                            presentationId={presentationId}
-                        />
+                        <p
+                            className="text-sm text-iw-mediumGrayText px-1 py-2"
+                            data-testid={`query-group-no-credentials-${group.queryId}`}
+                        >
+                            {t("dcql.noSatisfiableOptions")}
+                        </p>
                     ) : (
                         <QueryGroupCredentialList
                             queryId={group.queryId}

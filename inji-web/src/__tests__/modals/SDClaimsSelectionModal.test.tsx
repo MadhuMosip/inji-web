@@ -101,6 +101,20 @@ jest.mock("react-i18next", () => ({
 
 jest.mock("../../assets/SelectedTickIcon.svg", () => "selected-tick-mock.svg");
 
+jest.mock("../../utils/sdClaimsTree", () => ({
+  buildClaimTree: jest.fn((_claims: string[], sdClaims: string[]) =>
+    (sdClaims ?? []).map((path: string) => ({
+      kind: "leaf",
+      path,
+      label: path.replace(/^\$\./, ""),
+      claimType: "sdClaim",
+    }))
+  ),
+  filterClaimTree: jest.fn((_nodes: unknown[], _q: string) => _nodes),
+  collectSdClaimPaths: jest.fn((nodes: { path: string }[]) => nodes.map((n) => n.path)),
+  collectClaimLeaves: jest.fn((nodes: unknown[]) => nodes),
+}));
+
 const mockGetDirCurrentLanguage = getDirCurrentLanguage as jest.Mock;
 
 describe("SDClaimsSelectionModal", () => {

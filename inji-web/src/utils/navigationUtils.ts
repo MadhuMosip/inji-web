@@ -3,6 +3,22 @@ import {ROUTES} from "./constants";
 export const navigateToUserHome = (navigate: any) =>
     navigate(ROUTES.USER_HOME);
 
+/**
+ * Validates that a URL uses http: or https: scheme before assigning it to
+ * window.location.href. Rejects javascript:, data:, and other schemes that
+ * could lead to XSS when the URL originates from an external API response.
+ */
+export function safeExternalRedirect(url: string): void {
+    try {
+        const parsed = new URL(url);
+        if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+            window.location.href = url;
+        }
+    } catch {
+        // Malformed URL — do nothing
+    }
+}
+
 export type PopstateLeaveGuard = {
     remove: () => void;
 };

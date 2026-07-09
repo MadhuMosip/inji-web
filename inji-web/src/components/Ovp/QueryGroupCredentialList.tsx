@@ -86,9 +86,10 @@ export function QueryGroupCredentialList({
                                     : MatchingCredentialsStyles.outerCredentialTileUnselected
                             }`}
                         >
-                            <div
+                            <button
+                                type="button"
                                 data-testid={`query-group-credential-header-${credentialKey}`}
-                                className={MatchingCredentialsStyles.innerCredentialTile}
+                                className={`w-full ${MatchingCredentialsStyles.innerCredentialTile}`}
                                 onClick={() => handleCredentialSelect(credential)}
                             >
                                 {isSelected ? (
@@ -113,7 +114,7 @@ export function QueryGroupCredentialList({
                                         </span>
                                     </>
                                 )}
-                            </div>
+                            </button>
                             <div className={MatchingCredentialsStyles.vcViewCard}>
                                 <VCCardView
                                     credential={credential}

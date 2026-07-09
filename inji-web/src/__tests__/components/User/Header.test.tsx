@@ -75,7 +75,23 @@ describe('Header', () => {
     it('navigates home when logo is clicked', () => {
         render(<Header headerRef={mockHeaderRef} headerHeight={50} />);
 
-        fireEvent.mouseDown(screen.getByTestId('header-injiWeb-logo').parentElement!);
+        fireEvent.click(screen.getByTestId('header-injiWeb-logo').parentElement!);
+
+        expect(navigateToUserHome).toHaveBeenCalledWith(mockNavigateFn);
+    });
+
+    it('navigates home when logo Enter key is pressed', () => {
+        render(<Header headerRef={mockHeaderRef} headerHeight={50} />);
+
+        fireEvent.keyDown(screen.getByTestId('header-injiWeb-logo').parentElement!, { key: 'Enter' });
+
+        expect(navigateToUserHome).toHaveBeenCalledWith(mockNavigateFn);
+    });
+
+    it('navigates home when logo Space key is pressed', () => {
+        render(<Header headerRef={mockHeaderRef} headerHeight={50} />);
+
+        fireEvent.keyDown(screen.getByTestId('header-injiWeb-logo').parentElement!, { key: ' ' });
 
         expect(navigateToUserHome).toHaveBeenCalledWith(mockNavigateFn);
     });
@@ -90,10 +106,11 @@ describe('Header', () => {
         );
 
         const logoContainer = screen.getByTestId('header-injiWeb-logo').parentElement!;
+        expect(logoContainer).toHaveAttribute('role', 'img');
         expect(logoContainer).not.toHaveAttribute('role', 'button');
 
-        fireEvent.mouseDown(logoContainer);
-        fireEvent.keyUp(logoContainer, {key: 'Enter'});
+        fireEvent.click(logoContainer);
+        fireEvent.keyDown(logoContainer, { key: 'Enter' });
 
         expect(navigateToUserHome).not.toHaveBeenCalled();
     });

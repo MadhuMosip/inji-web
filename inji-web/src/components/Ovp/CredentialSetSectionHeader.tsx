@@ -70,7 +70,7 @@ export function CredentialSetSectionHeader({
                         <button
                             type="button"
                             className={`${DcqlDesignStyles.statusBadge} ${DcqlDesignStyles.statusBadgeOptional}`}
-                            data-testid={`${testId}-optinal-badge`}
+                            data-testid={`${testId}-optional-badge`}
                             onClick={openInfo}
                             aria-label={t("dcql.requirementInfo.optionalAriaLabel")}
                         >

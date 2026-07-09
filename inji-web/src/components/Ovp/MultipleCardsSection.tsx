@@ -43,6 +43,7 @@ export function MultipleCardsSection({
                     checked={checked}
                     onClick={onToggle}
                     testId={`${testId}-option-${optionIndex}-select-all`}
+                    aria-label={t("dcql.credentialsCount", { count: credentialCount })}
                 />
             </div>
             <div className={DcqlDesignStyles.multipleCardsBody}>{children}</div>

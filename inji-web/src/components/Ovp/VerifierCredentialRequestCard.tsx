@@ -6,6 +6,7 @@ import TrustedIcon from "../../assets/TrustedIcon.svg";
 import LockIcon from "../../assets/LockIcon.svg";
 import { useApi } from "../../hooks/useApi";
 import { rejectVerifierRequest } from "../../utils/verifierUtils";
+import { safeExternalRedirect } from "../../utils/navigationUtils";
 import { VerifierCredentialsRequestCardStyles } from "./OvpPageStyles";
 import ConsentRequiredModal from "../../modals/ConsentRequiredModal";
 import { PlainButton } from "../Common/Buttons/PlainButton";
@@ -118,7 +119,7 @@ export function VerifierRequestActionPanel({
         setDeclineDisabled(true);
 
         if (verifier?.redirectUri) {
-            window.location.href = verifier.redirectUri;
+            safeExternalRedirect(verifier.redirectUri);
             return;
         }
 

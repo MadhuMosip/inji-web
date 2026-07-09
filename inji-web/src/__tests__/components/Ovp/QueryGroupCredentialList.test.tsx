@@ -90,6 +90,13 @@ describe('QueryGroupCredentialList', () => {
         expect(screen.getByTestId('query-group-credential-selected-icon-cred-1')).toBeInTheDocument();
     });
 
+    it('credential header is a focusable button element', () => {
+        render(<QueryGroupCredentialList {...defaultProps} />);
+        const header = screen.getByTestId('query-group-credential-header-cred-1');
+        expect(header.tagName).toBe('BUTTON');
+        expect(header).toHaveAttribute('type', 'button');
+    });
+
     describe('Single-select mode', () => {
         it('calls onCredentialSelect with isSelected=true when credential is clicked', () => {
             render(<QueryGroupCredentialList {...defaultProps} multiple={false} />);

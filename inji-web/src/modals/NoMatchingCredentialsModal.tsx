@@ -15,6 +15,7 @@ import { RequirementInfoVerifier } from "./CredentialRequirementInfoModal";
 import { PresentationCredential } from "../types/components";
 import { MissingClaimsListModal } from "./MissingClaimsListModal";
 import { formatMissingClaimLabel } from "../utils/dcqlSelectionUtils";
+import { safeExternalRedirect } from "../utils/navigationUtils";
 import Shield from "../assets/FullRedShield.svg";
 import emptyLeftArrow from "../assets/emptyLeftArrow.svg";
 
@@ -87,7 +88,7 @@ export const NoMatchingCredentialsModal: React.FC<NoMatchingCredentialsModalProp
     const handleExit = useCallback(
         (nextRedirectUri = "") => {
             if (nextRedirectUri) {
-                window.location.href = nextRedirectUri;
+                safeExternalRedirect(nextRedirectUri);
             } else if (onGoToHome) {
                 onGoToHome();
             }

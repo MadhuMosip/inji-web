@@ -243,11 +243,10 @@ export function areRequiredCredentialSetsSatisfied(
     selectionState: DcqlCredentialSetSelectionState,
     queryGroups: DcqlQueryGroup[]
 ): boolean {
-    return credentialSets
-        .filter((set) => set.required)
-        .every((set, index) =>
-            isCredentialSetSatisfied(set, index, selectionState, queryGroups)
-        );
+    return credentialSets.every((set, setIndex) =>
+        !set.required ||
+        isCredentialSetSatisfied(set, setIndex, selectionState, queryGroups)
+    );
 }
 
 export type DcqlNoMatchState = {

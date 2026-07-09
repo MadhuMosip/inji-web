@@ -178,11 +178,12 @@ export const Header: React.FC<UserHeaderProps> = ({
         navigateToUserHome(navigate);
     };
 
-    const handleLogoKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const handleLogoKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
         if (disableLogoNavigation) {
             return;
         }
         if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
             navigateToUserHome(navigate);
         }
     };
@@ -212,13 +213,13 @@ export const Header: React.FC<UserHeaderProps> = ({
                         className={`w-[130px] sm:w-[160px] md:w-[170px] ${
                             disableLogoNavigation ? "" : "cursor-pointer"
                         }`}
-                        role={disableLogoNavigation ? undefined : "button"}
+                        role={disableLogoNavigation ? "img" : "button"}
                         tabIndex={disableLogoNavigation ? undefined : 0}
-                        onMouseDown={
+                        onClick={
                             disableLogoNavigation ? undefined : handleLogoNavigate
                         }
-                        onKeyUp={
-                            disableLogoNavigation ? undefined : handleLogoKeyUp
+                        onKeyDown={
+                            disableLogoNavigation ? undefined : handleLogoKeyDown
                         }
                         aria-disabled={disableLogoNavigation || undefined}
                     >

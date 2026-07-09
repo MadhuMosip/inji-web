@@ -9,6 +9,7 @@ interface ClaimCheckboxProps {
     onToggle?: () => void;
     testId?: string;
     readOnly?: boolean;
+    label?: string;
 }
 
 export const ClaimCheckbox: React.FC<ClaimCheckboxProps> = ({
@@ -17,6 +18,7 @@ export const ClaimCheckbox: React.FC<ClaimCheckboxProps> = ({
     onToggle,
     testId,
     readOnly = false,
+    label,
 }) => {
     if (claimType === "claim") {
         return <RequiredClaimCheckbox />;
@@ -28,6 +30,7 @@ export const ClaimCheckbox: React.FC<ClaimCheckboxProps> = ({
             onToggle={onToggle}
             testId={testId}
             readOnly={readOnly}
+            label={label}
         />
     );
 };

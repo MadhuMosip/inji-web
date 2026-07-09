@@ -7,6 +7,7 @@ import unknownVerifierLogo from "../../assets/unknown_verifier_logo.png";
 import { CredentialShareSuccessViewProps } from "../../types/components";
 import { CredentialShareSuccessStyles } from "./CredentialShareSuccessStyles";
 import { SolidButton } from "../Common/Buttons/SolidButton";
+import { safeExternalRedirect } from "../../utils/navigationUtils";
 
 function formatSharedTimestamp(
     date: Date,
@@ -71,7 +72,7 @@ export function CredentialShareSuccessView({
         const navigationTimer = setTimeout(() => {
             onClose?.();
             if (returnUrl) {
-                window.location.href = returnUrl;
+                safeExternalRedirect(returnUrl);
             }
         }, countdownStart * 1000);
 
@@ -85,7 +86,7 @@ export function CredentialShareSuccessView({
     const handleReturnClick = () => {
         onClose?.();
         if (returnUrl) {
-            window.location.href = returnUrl;
+            safeExternalRedirect(returnUrl);
         }
     };
 

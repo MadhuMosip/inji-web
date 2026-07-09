@@ -5,6 +5,10 @@ import DcqlQueryGroups from '../../../components/Ovp/DcqlQueryGroups';
 import { DcqlQueryGroup } from '../../../types/dcql';
 import { WalletCredential } from '../../../types/data';
 
+jest.mock('react-router-dom', () => ({
+    useNavigate: jest.fn(),
+}));
+
 jest.mock('../../../components/Ovp/QueryGroupSection', () => ({
     QueryGroupSection: ({ group, defaultExpanded }: any) => (
         <div
@@ -12,6 +16,16 @@ jest.mock('../../../components/Ovp/QueryGroupSection', () => ({
             data-expanded={String(defaultExpanded)}
         />
     ),
+}));
+
+jest.mock('../../../modals/NoMatchingCredentialsModal', () => ({
+    NoMatchingCredentialsModal: ({ isVisible, missingClaims }: any) =>
+        isVisible ? (
+            <div
+                data-testid="mock-no-matching-modal"
+                data-missing-count={missingClaims?.length ?? 0}
+            />
+        ) : null,
 }));
 
 const makeCredential = (id: string): WalletCredential => ({
@@ -23,12 +37,16 @@ const makeCredential = (id: string): WalletCredential => ({
     format: 'ldp_vc',
 });
 
-const makeGroup = (queryId: string, required: boolean): DcqlQueryGroup => ({
+const makeGroup = (
+    queryId: string,
+    required: boolean,
+    empty = false
+): DcqlQueryGroup => ({
     queryId,
     required,
     multiple: false,
-    availableCredentials: [makeCredential(`${queryId}-cred`)],
-    missingClaims: [],
+    availableCredentials: empty ? [] : [makeCredential(`${queryId}-cred`)],
+    missingClaims: empty ? ['claim-a'] : [],
 });
 
 describe('DcqlQueryGroups', () => {
@@ -90,5 +108,41 @@ describe('DcqlQueryGroups', () => {
         render(<DcqlQueryGroups {...defaultProps} queryGroups={[]} />);
         expect(screen.getByTestId('dcql-query-groups')).toBeInTheDocument();
         expect(screen.queryByTestId(/mock-query-group-section/)).not.toBeInTheDocument();
+    });
+
+    describe('Single NoMatchingCredentialsModal', () => {
+        it('does not render the modal when all groups have credentials', () => {
+            render(<DcqlQueryGroups {...defaultProps} />);
+            expect(screen.queryByTestId('mock-no-matching-modal')).not.toBeInTheDocument();
+        });
+
+        it('renders exactly one modal when one mandatory group has no credentials', () => {
+            const groups = [makeGroup('national-id', true, true), makeGroup('insurance', false)];
+            render(<DcqlQueryGroups {...defaultProps} queryGroups={groups} />);
+            expect(screen.getAllByTestId('mock-no-matching-modal')).toHaveLength(1);
+        });
+
+        it('renders exactly one modal even when multiple groups have no credentials', () => {
+            const groups = [
+                makeGroup('national-id', true, true),
+                makeGroup('insurance', false, true),
+            ];
+            render(<DcqlQueryGroups {...defaultProps} queryGroups={groups} />);
+            expect(screen.getAllByTestId('mock-no-matching-modal')).toHaveLength(1);
+        });
+
+        it('prioritises the mandatory no-match group over an optional one', () => {
+            const groups = [
+                makeGroup('optional-first', false, true),
+                makeGroup('mandatory-empty', true, true),
+                makeGroup('has-creds', true),
+            ];
+            render(<DcqlQueryGroups {...defaultProps} queryGroups={groups} />);
+            // mandatory groups are checked first; modal gets the mandatory group's missingClaims
+            expect(screen.getByTestId('mock-no-matching-modal')).toHaveAttribute(
+                'data-missing-count',
+                '1'
+            );
+        });
     });
 });

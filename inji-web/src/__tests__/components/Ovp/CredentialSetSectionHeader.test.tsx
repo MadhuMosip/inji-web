@@ -63,7 +63,7 @@ describe('CredentialSetSectionHeader', () => {
 
         it('does not render optional badge for required section', () => {
             render(<CredentialSetSectionHeader {...defaultRequiredProps} />);
-            expect(screen.queryByTestId('credential-set-0-optinal-badge')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('credential-set-0-optional-badge')).not.toBeInTheDocument();
         });
 
         it('does not render clearAll button when showClearAll is false', () => {
@@ -94,12 +94,12 @@ describe('CredentialSetSectionHeader', () => {
 
         it('renders optional badge', () => {
             render(<CredentialSetSectionHeader {...defaultOptionalProps} />);
-            expect(screen.getByTestId('credential-set-1-optinal-badge')).toBeInTheDocument();
+            expect(screen.getByTestId('credential-set-1-optional-badge')).toBeInTheDocument();
         });
 
         it('renders optional badge label', () => {
             render(<CredentialSetSectionHeader {...defaultOptionalProps} />);
-            expect(screen.getByTestId('credential-set-1-optinal-badge')).toHaveTextContent('dcql.optionalSection');
+            expect(screen.getByTestId('credential-set-1-optional-badge')).toHaveTextContent('dcql.optionalSection');
         });
 
         it('does not render required badge for optional section', () => {
@@ -114,7 +114,7 @@ describe('CredentialSetSectionHeader', () => {
 
         it('opens info modal when optional badge is clicked', () => {
             render(<CredentialSetSectionHeader {...defaultOptionalProps} />);
-            fireEvent.click(screen.getByTestId('credential-set-1-optinal-badge'));
+            fireEvent.click(screen.getByTestId('credential-set-1-optional-badge'));
             expect(screen.getByTestId('mock-requirement-info-modal')).toBeInTheDocument();
         });
     });

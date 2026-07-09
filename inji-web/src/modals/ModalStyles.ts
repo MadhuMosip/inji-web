@@ -96,7 +96,7 @@ export const ModalStyles = {
         headerRow: "flex items-start justify-between gap-4 mb-4 shrink-0",
         title: "text-[20px] font-semibold text-[#2B011C] text-start break-words",
         closeButton:
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E5E7EB] bg-white bg-[#7878801F]",
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E5E7EB] bg-[#7878801F]",
         previewPanel:
             "flex flex-col flex-1 min-h-0 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] overflow-hidden",
         previewScrollArea:

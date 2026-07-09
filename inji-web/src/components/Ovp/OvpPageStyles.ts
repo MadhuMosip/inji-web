@@ -21,7 +21,7 @@ export const MatchingCredentialsStyles = {
     outerCredentialTile: "flex flex-col rounded-xl border-[2px] bg-white shadow-sm transition-colors",
     outerCredentialTileSelected: "border-[#951F6F]",
     outerCredentialTileUnselected: "border-iw-lightGrayBorder",
-    innerCredentialTile: "text-[12px] font-medium bg-iw-lightGrayBg text-iw-mediumGrayText h-[37px] border-iw-lightGrayBorder border-b px-4 flex items-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors rounded-t-[10px] h-auto py-1.5",
+    innerCredentialTile: "text-[12px] font-medium bg-iw-lightGrayBg text-iw-mediumGrayText border-iw-lightGrayBorder border-b px-4 flex items-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors rounded-t-[10px] h-auto py-1.5",
     credentialCheckbox: "w-5 h-5 flex-shrink-0 rounded-full flex items-center justify-center bg-[#951F6F]",
     credentialEmptyCheckbox: "w-5 h-5 flex-shrink-0 rounded-full border-2 border-iw-mediumGrayText",
     checkIconSize: "w-[14px] h-[14px]",
