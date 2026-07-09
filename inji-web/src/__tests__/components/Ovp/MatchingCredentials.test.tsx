@@ -2,7 +2,6 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import MatchingCredentials from "../../../components/Ovp/MatchingCredentials";
-import { ROUTES } from "../../../utils/constants";
 import { WalletCredential } from "../../../types/data";
 
 const mockNavigate = jest.fn();
@@ -33,18 +32,11 @@ jest.mock("../../../modals/SDClaimsSelectionModal", () => ({
   default: () => <div data-testid="sd-claims-selection-modal" />,
 }));
 
-const MockNoMatchingCredentialsModal = jest.fn();
-jest.mock("../../../modals/NoMatchingCredentialsModal", () => ({
-  NoMatchingCredentialsModal: (props: any) => {
-    MockNoMatchingCredentialsModal(props);
-    return (
-      <div data-testid="no-matching-modal">
-        <button type="button" data-testid="btn-go-home" onClick={props.onGoToHome}>
-          GoHome
-        </button>
-      </div>
-    );
-  },
+jest.mock("../../../modals/CredentialPreviewModal", () => ({
+  __esModule: true,
+  default: ({ credential }: { credential: { credentialId: string } }) => (
+    <div data-testid="credential-preview-modal">{credential.credentialId}</div>
+  ),
 }));
 
 const MockVCCardView = jest.fn();
@@ -83,8 +75,8 @@ describe("MatchingCredentials", () => {
     jest.clearAllMocks();
   });
 
-  it("forwards modal props when credentials is an empty array", () => {
-    render(
+  it("renders nothing when credentials is an empty array", () => {
+    const { container } = render(
       <MatchingCredentials
         credentials={[]}
         missingClaims={["name", "dob"]}
@@ -93,51 +85,23 @@ describe("MatchingCredentials", () => {
       />
     );
 
-    expect(screen.getByTestId("no-matching-modal")).toBeInTheDocument();
-    expect(MockNoMatchingCredentialsModal).toHaveBeenCalledWith(
-      expect.objectContaining({
-        isVisible: true,
-        missingClaims: ["name", "dob"],
-        redirectUri: "https://example.com/cb",
-        presentationId: "pid-123",
-        onGoToHome: expect.any(Function),
-      })
-    );
+    expect(container).toBeEmptyDOMElement();
   });
 
-  it("wires onGoToHome to navigate(ROOT) when credentials is an empty array", () => {
-    render(
-      <MatchingCredentials
-        credentials={[]}
-        missingClaims={["name", "dob"]}
-        presentationId="pid-123"
-      />
-    );
-
-    fireEvent.click(screen.getByTestId("btn-go-home"));
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.ROOT);
-  });
-
-  it("renders tiles for credentials and shows selected/unselected labels", () => {
+  it("renders credential option cards in a responsive grid", () => {
     render(<MatchingCredentials credentials={creds} selectedCredentialIds={["cred-2"]} />);
 
     expect(screen.getByTestId("matching-credentials-container")).toBeInTheDocument();
     expect(screen.getByTestId("matching-credentials-list")).toBeInTheDocument();
     expect(screen.getByTestId("matching-credentials-tile-cred-1")).toBeInTheDocument();
     expect(screen.getByTestId("matching-credentials-tile-cred-2")).toBeInTheDocument();
-    expect(screen.getByTestId("vc-card-cred-1")).toBeInTheDocument();
-    expect(screen.getByTestId("vc-card-cred-2")).toBeInTheDocument();
-
-    // One selected, one unselected.
-    expect(screen.getByText("credentialTile.selectedTitle")).toBeInTheDocument();
-    expect(screen.getByText("credentialTile.unselectedTitle")).toBeInTheDocument();
-
-    // Selected branch renders the check icon with alt="success".
-    expect(screen.getByAltText("success")).toBeInTheDocument();
-    expect(screen.getByTestId("matching-credentials-selected-icon-cred-2")).toBeInTheDocument();
+    expect(screen.getByText("Type 1")).toBeInTheDocument();
+    expect(screen.getByText("Type 2")).toBeInTheDocument();
+    expect(screen.getByTestId("matching-credentials-tile-cred-1-select")).toBeInTheDocument();
+    expect(screen.getByTestId("matching-credentials-tile-cred-2-select")).toBeInTheDocument();
   });
 
-  it("calls onCredentialSelect(id, !isSelected) when clicking a tile header", () => {
+  it("calls onCredentialSelect(id, !isSelected) when clicking a card", () => {
     const onCredentialSelect = jest.fn();
     render(
       <MatchingCredentials
@@ -147,29 +111,29 @@ describe("MatchingCredentials", () => {
       />
     );
 
-    // Click the unselected label (belongs to cred-2): should select it.
-    fireEvent.click(screen.getByText("credentialTile.unselectedTitle"));
+    fireEvent.click(screen.getByTestId("matching-credentials-tile-cred-2-select"));
     expect(onCredentialSelect).toHaveBeenCalledWith("cred-2", true);
 
-    // Click the selected label (belongs to cred-1): should unselect it.
-    fireEvent.click(screen.getByText("credentialTile.selectedTitle"));
+    fireEvent.click(screen.getByTestId("matching-credentials-tile-cred-1-select"));
     expect(onCredentialSelect).toHaveBeenCalledWith("cred-1", false);
   });
 
   it("does not throw when onCredentialSelect is not provided", () => {
     render(<MatchingCredentials credentials={creds} selectedCredentialIds={[]} />);
-    expect(() => fireEvent.click(screen.getAllByText("credentialTile.unselectedTitle")[0])).not.toThrow();
+    expect(() =>
+      fireEvent.click(screen.getByTestId("matching-credentials-tile-cred-1-select"))
+    ).not.toThrow();
   });
 
-  it("renders VCCardView with a non-null refreshCredentials (falls back to noop)", () => {
-    render(<MatchingCredentials credentials={creds} />);
-    expect(MockVCCardView).toHaveBeenCalledTimes(2);
-    expect(MockVCCardView).toHaveBeenCalledWith(
-      expect.objectContaining({
-        credential: expect.objectContaining({ credentialId: "cred-1" }),
-        refreshCredentials: expect.any(Function),
-      })
+  it("opens pdf preview modal via action button for non sd-jwt credentials", () => {
+    render(<MatchingCredentials credentials={creds} refreshCredentials={jest.fn()} />);
+
+    fireEvent.click(screen.getByTestId("matching-credentials-tile-cred-1-action"));
+
+    expect(screen.getByTestId("credential-preview-modal")).toBeInTheDocument();
+    expect(screen.getByTestId("credential-preview-modal")).toHaveTextContent(
+      "cred-1"
     );
+    expect(MockVCCardView).not.toHaveBeenCalled();
   });
 });
-

@@ -4,7 +4,6 @@ import "@testing-library/jest-dom";
 import VerifierCredentialsRequestCard, {
   Verifier,
 } from "../../../components/Ovp/VerifierCredentialRequestCard";
-import { WalletCredential } from "../../../types/data";
 import { rejectVerifierRequest } from "../../../utils/verifierUtils";
 
 const mockFetchData = jest.fn();
@@ -27,7 +26,6 @@ jest.mock("../../../utils/verifierUtils", () => ({
 
 jest.mock("../../../assets/unknown_verifier_logo.png", () => "unknown-verifier-mock.png");
 jest.mock("../../../assets/Sheild.svg", () => "shield-mock.svg");
-jest.mock("../../../assets/arrowRight.svg", () => "arrow-right-mock.svg");
 
 const MockSolidButton = jest.fn();
 jest.mock("../../../components/Common/Buttons/SolidButton", () => ({
@@ -42,18 +40,6 @@ jest.mock("../../../components/Common/Buttons/SolidButton", () => ({
       >
         {props.title}
       </button>
-    );
-  },
-}));
-
-const MockSharedCredentialInfoTile = jest.fn();
-jest.mock("../../../components/Ovp/SharedCredentialInfoTile", () => ({
-  SharedCredentialInfoTile: (props: any) => {
-    MockSharedCredentialInfoTile(props);
-    return (
-      <div data-testid="shared-cred-tile">
-        {props.title}:{String(!!props.isSelected)}
-      </div>
     );
   },
 }));
@@ -83,23 +69,6 @@ const setupWindowLocationMock = (initialHref: string = "") => {
 };
 
 describe("VerifierCredentialsRequestCard", () => {
-  const credentials: WalletCredential[] = [
-    {
-      credentialId: "cred-1",
-      issuerDisplayName: "Issuer 1",
-      issuerLogo: "issuer-1.png",
-      credentialTypeDisplayName: "Type 1",
-      credentialTypeLogo: "type-1.png",
-    },
-    {
-      credentialId: "cred-2",
-      issuerDisplayName: "Issuer 2",
-      issuerLogo: "issuer-2.png",
-      credentialTypeDisplayName: "Type 2",
-      credentialTypeLogo: "type-2.png",
-    },
-  ];
-
   const baseVerifier: Verifier = {
     id: "verifier-1",
     name: "Verifier One",
@@ -118,7 +87,6 @@ describe("VerifierCredentialsRequestCard", () => {
       <VerifierCredentialsRequestCard
         verifier={baseVerifier}
         presentationId="pid-123"
-        credentials={credentials}
         selectedCredentialIds={[]}
       />
     );
@@ -134,7 +102,6 @@ describe("VerifierCredentialsRequestCard", () => {
       <VerifierCredentialsRequestCard
         verifier={null}
         presentationId="pid-123"
-        credentials={credentials}
         selectedCredentialIds={[]}
       />
     );
@@ -142,29 +109,34 @@ describe("VerifierCredentialsRequestCard", () => {
     expect(screen.getByTestId("verifier-name")).toHaveTextContent("mainPage.unknownVerifier");
   });
 
-  it("renders shared credential tiles and sets selection based on selectedCredentialIds", () => {
+  it("renders trusted badge and request details panel", () => {
     render(
       <VerifierCredentialsRequestCard
         verifier={baseVerifier}
         presentationId="pid-123"
-        credentials={credentials}
-        selectedCredentialIds={["cred-2"]}
+        selectedCredentialIds={[]}
       />
     );
 
-    expect(MockSharedCredentialInfoTile).toHaveBeenCalledTimes(2);
-    expect(MockSharedCredentialInfoTile).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: "Type 1",
-        isSelected: false,
-      })
+    expect(screen.getByTestId("verifier-trusted-badge")).toHaveTextContent(
+      "mainPage.trustedLabel"
     );
-    expect(MockSharedCredentialInfoTile).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: "Type 2",
-        isSelected: true,
-      })
+    expect(screen.getByTestId("verifier-request-panel")).toBeInTheDocument();
+    expect(screen.getByText("mainPage.description")).toBeInTheDocument();
+    expect(screen.getByText("mainPage.descriptionSubtext")).toBeInTheDocument();
+    expect(screen.queryByTestId("shared-credentials-tiles")).not.toBeInTheDocument();
+  });
+
+  it("does not render trusted badge when verifier is not trusted", () => {
+    render(
+      <VerifierCredentialsRequestCard
+        verifier={{ ...baseVerifier, trusted: false }}
+        presentationId="pid-123"
+        selectedCredentialIds={[]}
+      />
     );
+
+    expect(screen.queryByTestId("verifier-trusted-badge")).not.toBeInTheDocument();
   });
 
   it("disables Share button when no credentials are selected", () => {
@@ -172,7 +144,6 @@ describe("VerifierCredentialsRequestCard", () => {
       <VerifierCredentialsRequestCard
         verifier={baseVerifier}
         presentationId="pid-123"
-        credentials={credentials}
         selectedCredentialIds={[]}
       />
     );
@@ -186,7 +157,6 @@ describe("VerifierCredentialsRequestCard", () => {
       <VerifierCredentialsRequestCard
         verifier={baseVerifier}
         presentationId="pid-123"
-        credentials={credentials}
         selectedCredentialIds={["cred-1"]}
         onShareCredentials={onShareCredentials}
       />
@@ -208,14 +178,11 @@ describe("VerifierCredentialsRequestCard", () => {
       <VerifierCredentialsRequestCard
         verifier={verifierWithRedirect}
         presentationId="pid-123"
-        credentials={credentials}
         selectedCredentialIds={["cred-1"]}
       />
     );
 
-    fireEvent.click(
-      screen.getByTestId("verifier-decline-button")
-    );
+    fireEvent.click(screen.getByTestId("verifier-decline-button"));
 
     await waitFor(() => {
       expect(window.location.href).toBe("https://verifier.example/callback");
@@ -230,14 +197,11 @@ describe("VerifierCredentialsRequestCard", () => {
       <VerifierCredentialsRequestCard
         verifier={{ ...baseVerifier, redirectUri: null }}
         presentationId="pid-123"
-        credentials={credentials}
         selectedCredentialIds={["cred-1"]}
       />
     );
 
-    fireEvent.click(
-      screen.getByTestId("verifier-decline-button")
-    );
+    fireEvent.click(screen.getByTestId("verifier-decline-button"));
 
     await waitFor(() => {
       expect(rejectVerifierRequest).toHaveBeenCalledWith(
@@ -257,7 +221,6 @@ describe("VerifierCredentialsRequestCard", () => {
       <VerifierCredentialsRequestCard
         verifier={{ ...baseVerifier, redirectUri: null }}
         presentationId="pid-123"
-        credentials={credentials}
         selectedCredentialIds={["cred-1"]}
       />
     );
@@ -280,15 +243,11 @@ describe("VerifierCredentialsRequestCard", () => {
       <VerifierCredentialsRequestCard
         verifier={{ ...baseVerifier, redirectUri: null }}
         presentationId={null}
-        credentials={credentials}
         selectedCredentialIds={["cred-1"]}
       />
     );
 
-    fireEvent.click(
-      screen.getByTestId("verifier-decline-button")
-    );
+    fireEvent.click(screen.getByTestId("verifier-decline-button"));
     expect(rejectVerifierRequest).not.toHaveBeenCalled();
   });
 });
-

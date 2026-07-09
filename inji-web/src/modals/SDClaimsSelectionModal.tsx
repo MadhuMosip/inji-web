@@ -1,18 +1,22 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
 import { getDirCurrentLanguage } from "../utils/i18n";
 import { ModalWrapper } from "./ModalWrapper";
+import { ModalStyles } from "./ModalStyles";
 import { WalletCredential } from "../types/data";
-import ArrowNarrowLeftTwo from "../assets/ArrowNarrowLeftTwo.png";
+import { RootState } from "../types/redux";
 import { SolidButton } from "../components/Common/Buttons/SolidButton";
-import { SearchBar } from "../components/Common/SearchBar/SearchBar";
-import CustomButton from "../components/Common/Buttons/CustomButton";
-import InfoRevIcon from "../assets/InfoRevIcon.svg";
-import { ClaimTreeItem } from "../components/Common/Input/SdClaims/sdClaimInputs";
+import { CloseIconButton } from "../components/Common/Buttons/CloseIconButton";
+import { ClaimLeafRow } from "../components/Common/Input/SdClaims/ClaimLeafRow";
+import { PDFViewer } from "../components/Preview/PDFViewer";
+import { SpinningLoader } from "../components/Common/SpinningLoader";
+import { useApi } from "../hooks/useApi";
+import { api } from "../utils/api";
 import {
     buildClaimTree,
+    collectClaimLeaves,
     collectSdClaimPaths,
-    filterClaimTree,
 } from "../utils/sdClaimsTree";
 
 interface SDClaimsSelectionModalProps {
@@ -20,51 +24,94 @@ interface SDClaimsSelectionModalProps {
     closeModal: (isOpen: boolean) => void;
     onConfirm: (credentialId: string, selectedClaimPaths: string[]) => void;
     initialSelectedSdClaims?: string[];
+    /** When true, all sdClaims are pre-selected and non-interactive (DCQL mode). */
+    readOnly?: boolean;
 }
-
-const emptySelectionState = () => ({
-    selectedSdClaims: new Set<string>(),
-    expandedGroups: new Set<string>(),
-    searchQuery: "",
-});
 
 function SDClaimsSelectionModal({
     seletedSDJWT,
     closeModal,
     onConfirm,
     initialSelectedSdClaims = [],
+    readOnly = false,
 }: SDClaimsSelectionModalProps) {
     const { t, i18n } = useTranslation("SDClaimsSelectionModal");
     const dir = getDirCurrentLanguage(i18n.language);
+    const language = useSelector((state: RootState) => state.common.language);
+    const previewApi = useApi<Blob>();
+    const styles = ModalStyles.sdClaimsSelectionModal;
+
     const claims = seletedSDJWT?.claims ?? [];
     const sdClaims = seletedSDJWT?.sdClaims ?? [];
     const claimTree = useMemo(() => buildClaimTree(claims, sdClaims), [claims, sdClaims]);
     const allSdClaimPaths = useMemo(() => collectSdClaimPaths(claimTree), [claimTree]);
-
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedSdClaims, setSelectedSdClaims] = useState<Set<string>>(
-        () => new Set(initialSelectedSdClaims)
+    const allLeaves = useMemo(() => collectClaimLeaves(claimTree), [claimTree]);
+    const disclosableLeaves = useMemo(
+        () => allLeaves.filter((leaf) => leaf.claimType === "sdClaim"),
+        [allLeaves]
     );
-    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set());
+    const defaultShareableLeaves = useMemo(
+        () => allLeaves.filter((leaf) => leaf.claimType === "claim"),
+        [allLeaves]
+    );
+
+    const [selectedSdClaims, setSelectedSdClaims] = useState<Set<string>>(
+        () => new Set(readOnly ? allSdClaimPaths : initialSelectedSdClaims)
+    );
+    const [previewContent, setPreviewContent] = useState<Blob | null>(null);
+    const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
+    useEffect(() => {
+        if (!seletedSDJWT?.credentialId) {
+            setPreviewContent(null);
+            return;
+        }
+
+        let cancelled = false;
+
+        const loadPreview = async () => {
+            setIsPreviewLoading(true);
+            setPreviewContent(null);
+
+            try {
+                const response = await previewApi.fetchData({
+                    url: api.fetchWalletCredentialPreview.url(
+                        seletedSDJWT.credentialId
+                    ),
+                    headers: api.fetchWalletCredentialPreview.headers(language),
+                    apiConfig: api.fetchWalletCredentialPreview,
+                });
+
+                if (!cancelled && response.ok()) {
+                    setPreviewContent(response.data);
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsPreviewLoading(false);
+                }
+            }
+        };
+
+        void loadPreview();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [language, seletedSDJWT?.credentialId]);
+
+    const allDisclosableSelected =
+        disclosableLeaves.length > 0 &&
+        disclosableLeaves.every((leaf) => selectedSdClaims.has(leaf.path));
 
     const resetSelectionState = () => {
-        const cleared = emptySelectionState();
-        setSelectedSdClaims(cleared.selectedSdClaims);
-        setExpandedGroups(cleared.expandedGroups);
-        setSearchQuery(cleared.searchQuery);
+        setSelectedSdClaims(new Set());
+        setPreviewContent(null);
     };
 
     const handleClose = () => {
         resetSelectionState();
         closeModal(false);
     };
-
-    const filteredTree = useMemo(
-        () => filterClaimTree(claimTree, searchQuery),
-        [claimTree, searchQuery]
-    );
-
-    const selectedSdCount = allSdClaimPaths.filter((path) => selectedSdClaims.has(path)).length;
 
     const toggleSdClaim = (path: string) => {
         setSelectedSdClaims((prev) => {
@@ -78,122 +125,167 @@ function SDClaimsSelectionModal({
         });
     };
 
-    const toggleGroup = (groupKey: string) => {
-        setExpandedGroups((prev) => {
-            const next = new Set(prev);
-            if (next.has(groupKey)) {
-                next.delete(groupKey);
-            } else {
-                next.add(groupKey);
-            }
-            return next;
-        });
-    };
-
-    const handleSelectAll = () => {
+    const handleCheckAll = () => {
+        if (allDisclosableSelected) {
+            setSelectedSdClaims(new Set());
+            return;
+        }
         setSelectedSdClaims(new Set(allSdClaimPaths));
-    };
-
-    const handleClearSelection = () => {
-        setSelectedSdClaims(new Set());
     };
 
     const handleConfirm = () => {
         if (!seletedSDJWT) {
             return;
         }
-        onConfirm(seletedSDJWT.credentialId, Array.from(selectedSdClaims));
+        if (!readOnly) {
+            onConfirm(seletedSDJWT.credentialId, Array.from(selectedSdClaims));
+        }
         closeModal(false);
+    };
+
+    const renderPreviewPanel = () => {
+        if (isPreviewLoading) {
+            return (
+                <div
+                    className={styles.previewLoading}
+                    data-testid="sd-claims-preview-loading"
+                >
+                    <SpinningLoader />
+                </div>
+            );
+        }
+
+        if (previewContent) {
+            return <PDFViewer previewContent={previewContent} />;
+        }
+
+        return (
+            <p className="text-sm text-[#64748B] text-center px-4">
+                {t("previewUnavailable")}
+            </p>
+        );
     };
 
     return (
         <div>
             <ModalWrapper
                 zIndex={50}
-                size={"6xl"}
+                size={"7xl"}
                 header={<></>}
                 footer={<></>}
                 content={
-                    <div className="p-6" dir={dir}>
-                        <div className="flex justify-between items-center w-full gap-4">
-                            <div className="text-start min-w-0 flex-1">
-                                <button
-                                    type="button"
-                                    onClick={handleClose}
-                                    className="flex items-center gap-2 text-[#7C0195] text-[14px] font-medium mb-2"
-                                >
-                                    <img
-                                        src={ArrowNarrowLeftTwo}
-                                        alt=""
-                                        className="rtl:rotate-180 shrink-0"
-                                    />
-                                    <span>{t("backToCredentials")}</span>
-                                </button>
-                                <h1 className="text-[20px] text-[#101828] font-medium text-start break-words leading-snug">
+                    <div
+                        className={styles.content}
+                        dir={dir}
+                        data-testid="sd-claims-modal-content"
+                    >
+                        <div className={styles.headerRow}>
+                            <div className="min-w-0 flex-1 text-start">
+                                <h1 className={styles.title}>
                                     {seletedSDJWT?.credentialTypeDisplayName}
                                 </h1>
-                            </div>
-                            <SolidButton
-                                testId="show-consent-modal-button"
-                                onClick={handleConfirm}
-                                title={t("confirm")}
-                                className="h-10 py-0 break-words min-w-0 w-[126px] shrink-0"
-                            />
-                        </div>
-                        <div className="-ms-2 mt-2">
-                            <SearchBar
-                                testId="serch-claims"
-                                placeholder={t("searchPlaceholder")}
-                                filter={(value) => setSearchQuery(value)}
-                            />
-                        </div>
-                        <div className="text-end my-4 flex flex-wrap justify-end gap-2">
-                            <CustomButton
-                                testId="selectAllClaims"
-                                onClick={handleSelectAll}
-                                title={t("selectAll")}
-                                styles="h-[38px] text-[14px] font-medium w-[147px] text-[#ffffff] bg-[#7C1389] rounded-md"
-                            />
-                            <CustomButton
-                                testId="clearSelectionClaims"
-                                onClick={handleClearSelection}
-                                title={t("clearSelection")}
-                                styles="h-[38px] text-[14px] font-medium w-[147px] text-[#ffffff] bg-[#7C1389] rounded-md"
-                            />
-                        </div>
-                        <div className="border-2 border-[#7C1389] rounded-lg p-4 flex items-start gap-2 text-start">
-                            <div className="min-h-[28px] min-w-[28px] mt-[2px] bg-[#F8C0FF] rounded-full flex items-center justify-center shrink-0">
-                                <img src={InfoRevIcon} className="h-[16px] w-[16px]" alt="" />
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-[#101828] text-[15px] font-medium text-start">
-                                    {t("infoTitle")}
-                                </p>
-                                <p className="text-[#4A5565] text-[13px] text-start">
-                                    {t("infoDescription")}
+                                <p className={styles.subtitle}>
+                                    {readOnly ? t("subtitleReadOnly") : t("subtitle")}
                                 </p>
                             </div>
+                            <CloseIconButton
+                                onClick={handleClose}
+                                btnClassName={styles.closeButton}
+                                iconClassName="h-4 w-4"
+                                btnTestId="btn-close-sd-claims-modal"
+                            />
                         </div>
-                        <div className="mt-4 border border-[#E5E7EB] shadow-sm rounded-md p-4 text-start">
-                            <p className="text-[#101828] text-[14px] font-[500] text-start">
-                                {t("selectedCount", {
-                                    selected: selectedSdCount,
-                                    total: allSdClaimPaths.length,
-                                })}
-                            </p>
-                        </div>
-                        <div>
-                            {filteredTree.map((node) => (
-                                <ClaimTreeItem
-                                    key={node.kind === "group" ? node.key : node.path}
-                                    node={node}
-                                    expandedGroups={expandedGroups}
-                                    selectedSdClaims={selectedSdClaims}
-                                    groupPathPrefix=""
-                                    onToggleGroup={toggleGroup}
-                                    onToggleSdClaim={toggleSdClaim}
-                                />
-                            ))}
+
+                        <div className={styles.splitContainer}>
+                            <section
+                                className={styles.previewPanel}
+                                data-testid="sd-claims-preview-panel"
+                                aria-label={t("credentialPreview")}
+                            >
+                                <div className={styles.previewScrollArea}>
+                                    {renderPreviewPanel()}
+                                </div>
+                            </section>
+
+                            <section
+                                className={styles.claimsPanel}
+                                data-testid="sd-claims-details-panel"
+                                aria-label={t("shareableFields")}
+                            >
+                                <div className={styles.claimsScrollArea}>
+                                    {disclosableLeaves.length > 0 && (
+                                        <div className={styles.fieldsSection}>
+                                            <div className={styles.sectionHeader}>
+                                                <span className={styles.sectionTitle}>
+                                                    {t("disclosableFields")}
+                                                </span>
+                                                {!readOnly && (
+                                                    <button
+                                                        type="button"
+                                                        data-testid="checkAllClaims"
+                                                        className={styles.checkAllButton}
+                                                        onClick={handleCheckAll}
+                                                    >
+                                                        {allDisclosableSelected
+                                                            ? t("clearAll")
+                                                            : t("checkAll")}
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className={styles.fieldsSectionCard}>
+                                                {disclosableLeaves.map((leaf) => (
+                                                    <ClaimLeafRow
+                                                        key={leaf.path}
+                                                        node={leaf}
+                                                        variant="modal"
+                                                        isSelected={selectedSdClaims.has(
+                                                            leaf.path
+                                                        )}
+                                                        onToggle={
+                                                            readOnly
+                                                                ? undefined
+                                                                : () => toggleSdClaim(leaf.path)
+                                                        }
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {defaultShareableLeaves.length > 0 && (
+                                        <div className={styles.fieldsSection}>
+                                            <div className={styles.sectionHeader}>
+                                                <span className={styles.sectionTitle}>
+                                                    {t("defaultShareable")}
+                                                </span>
+                                            </div>
+                                            <div className={styles.defaultShareableSectionCard}>
+                                                {defaultShareableLeaves.map((leaf) => (
+                                                    <ClaimLeafRow
+                                                        key={leaf.path}
+                                                        node={leaf}
+                                                        variant="modal"
+                                                        isSelected
+                                                    />
+                                                ))}
+                                            </div>
+                                            <p className={styles.defaultShareableNote}>
+                                                {t("defaultShareableNote")}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className={styles.footerRow}>
+                                    <SolidButton
+                                        testId="show-consent-modal-button"
+                                        onClick={handleConfirm}
+                                        title={readOnly ? t("done") : t("confirmProceed")}
+                                        className={styles.confirmButton}
+                                        fullWidth
+                                    />
+                                </div>
+                            </section>
                         </div>
                     </div>
                 }

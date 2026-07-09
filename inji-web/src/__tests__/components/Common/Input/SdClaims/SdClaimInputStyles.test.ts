@@ -7,6 +7,8 @@ describe("SdClaimInputStyles", () => {
     "sdClaimCheckboxUnselected",
     "leafRow",
     "leafLabel",
+    "leafRowModal",
+    "leafLabelModal",
     "groupContainer",
     "groupContainerExpanded",
     "groupContainerCollapsed",

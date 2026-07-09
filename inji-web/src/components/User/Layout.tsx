@@ -8,7 +8,6 @@ import {getCredentialTypeDisplayObjectForCurrentLanguage, getDirCurrentLanguage}
 import {Outlet, useLocation} from 'react-router-dom';
 import DashboardBgTop from '../../assets/Background.svg';
 import DashboardBgBottom from '../../assets/DashboardBgBottom.svg';
-import 'react-toastify/dist/ReactToastify.css';
 import {CrossIconButton} from '../Common/Buttons/CrossIconButton';
 import LayoutStyles from "../Common/LayoutStyles";
 import {useDownloadSessionDetails} from '../../hooks/User/useDownloadSession';
@@ -228,7 +227,12 @@ export const Layout: React.FC = () => {
             className={LayoutStyles.mainContainer}
             dir={getDirCurrentLanguage(language)}
         >
-            <Header headerRef={headerRef} headerHeight={headerHeight} disableProfileDropdown={isAuthorizeRoute}/>
+            <Header
+                headerRef={headerRef}
+                headerHeight={headerHeight}
+                disableProfileDropdown={isAuthorizeRoute}
+                disableLogoNavigation={isAuthorizeRoute}
+            />
 
             <div
                 className={LayoutStyles.contentContainer}
@@ -255,7 +259,7 @@ export const Layout: React.FC = () => {
                         className={LayoutStyles.dashboardBgBottom}
                     />
 
-                    <div className={LayoutStyles.outletWrapper}>
+                    <div className={LayoutStyles.outletWrapper} data-vp-scroll-container>
                         <div className={LayoutStyles.outletInner}>
                             <Outlet />
                         </div>

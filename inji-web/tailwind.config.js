@@ -7,7 +7,8 @@ module.exports = {
     theme: {
         extend: {
             screens: {
-                'sm-md': {min: '640px', max: '1024px'}
+                'sm-md': {min: '640px', max: '1024px'},
+                '3xl': '1800px',
             },
             fontFamily: {
                 base: 'var(--iw-font-montserrat)',

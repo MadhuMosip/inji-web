@@ -138,3 +138,8 @@ export const collectSdClaimPaths = (nodes: ClaimNode[]): string[] =>
               ? collectSdClaimPaths(node.children)
               : []
     );
+
+export const collectClaimLeaves = (nodes: ClaimNode[]): ClaimLeaf[] =>
+    nodes.flatMap((node) =>
+        node.kind === "leaf" ? [node] : collectClaimLeaves(node.children)
+    );

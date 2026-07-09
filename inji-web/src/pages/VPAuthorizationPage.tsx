@@ -10,19 +10,46 @@ import { useNavigate } from 'react-router-dom';
 import {OPENID4VP_AUTHORIZE_PREFIX, ROUTES} from "../utils/constants";
 import { PresentationCredential } from "../types/components";
 import { SelectedSdClaimsMap } from "../types/data";
-import { CredentialShareHandler } from "../handlers/CredentialShareHandler";
+import { CredentialShareHandler, CredentialShareSuccessPayload } from "../handlers/CredentialShareHandler";
+import { CredentialShareSuccessView } from "../components/Ovp/CredentialShareSuccessView";
 import { useApiErrorHandler } from "../hooks/useApiErrorHandler";
 import { useUser } from '../hooks/User/useUser';
-import VerifierCredentialsRequestCard from "../components/Ovp/VerifierCredentialRequestCard";
+import {
+    VerifierRequestActionPanel,
+    VerifierRequestInfoPanel,
+} from "../components/Ovp/VerifierCredentialRequestCard";
 import MatchingCredentials from "../components/Ovp/MatchingCredentials";
+import DcqlQueryGroups from "../components/Ovp/DcqlQueryGroups";
+import DcqlCredentialSets from "../components/Ovp/DcqlCredentialSets";
+import {
+    DcqlCredentialSet,
+    DcqlCredentialSetSelectionState,
+    DcqlQueryGroup,
+    DcqlSelectionState,
+} from "../types/dcql";
+import {
+    areRequiredQueryGroupsSatisfied,
+    buildInitialDcqlSelection,
+    filterQueryGroupsBySearch,
+    flattenQueryGroupCredentials,
+    getSelectedCredentialIdsFlat,
+    isDcqlCredentialsResponse,
+    updateDcqlCredentialSelection,
+} from "../utils/dcqlSelectionUtils";
+import {
+    areRequiredCredentialSetsSatisfied,
+    buildInitialCredentialSetSelection,
+    flattenCredentialSetSelectionToDcqlState,
+    getDcqlNoMatchState,
+    hasCredentialSets,
+} from "../utils/dcqlCredentialSetUtils";
 import { StoredCardsPageStyles } from "./User/StoredCards/StoredCardsPageStyles";
-import { NavBackArrowButton } from "../components/Common/Buttons/NavBackArrowButton";
-import { PageTitle } from "../components/Common/PageTitle/PageTitle";
 import { SearchBar } from "../components/Common/SearchBar/SearchBar";
 import { VpAuthPageBackgroundStyles } from "../components/Ovp/OvpPageStyles";
 import { rejectVerifierRequest } from "../utils/verifierUtils";
 import { Pages } from "../utils/constants";
 import LeaveConfirmationModal from "../modals/LeaveConfirmationModal";
+import { NoMatchingCredentialsModal } from "../modals/NoMatchingCredentialsModal";
 import { createPopstateLeaveGuard } from "../utils/navigationUtils";
 
 export const VPAuthorizationPage: React.FC = () => {
@@ -34,11 +61,23 @@ export const VPAuthorizationPage: React.FC = () => {
     const [verifierData, setVerifierData] = useState<any>(null);
     const [presentationIdData, setPresentationIdData] = useState<string | null>(null);
     const [selectedCredentialsData, setSelectedCredentialsData] = useState<PresentationCredential[] | null>(null);
+    const [shareSuccessPayload, setShareSuccessPayload] =
+        useState<CredentialShareSuccessPayload | null>(null);
     const [selectedCredentialIds, setSelectedCredentialIds] = useState<string[]>([]);
     const [selectedSdClaimsByCredential, setSelectedSdClaimsByCredential] =
         useState<SelectedSdClaimsMap>({});
     const [credentialsData, setCredentialsData] = useState<any[] | null>(null);
     const [missingClaimsData, setMissingClaimsData] = useState<string[]>([]);
+    const [isPartialNoMatchDismissed, setIsPartialNoMatchDismissed] =
+        useState(false);
+    const [isDcqlPresentation, setIsDcqlPresentation] = useState<boolean>(false);
+    const [queryGroupsData, setQueryGroupsData] = useState<DcqlQueryGroup[]>([]);
+    const [filteredQueryGroups, setFilteredQueryGroups] = useState<DcqlQueryGroup[]>([]);
+    const [credentialSetsData, setCredentialSetsData] = useState<DcqlCredentialSet[]>([]);
+    const [hasDcqlCredentialSets, setHasDcqlCredentialSets] = useState<boolean>(false);
+    const [dcqlCredentialSetSelection, setDcqlCredentialSetSelection] =
+        useState<DcqlCredentialSetSelectionState>({});
+    const [dcqlSelection, setDcqlSelection] = useState<DcqlSelectionState>({});
     const fetchingRef = useRef<boolean>(false);
     const isRejectingRef = useRef<boolean>(false);
     const fetchedCredentialsRef = useRef<Set<string>>(new Set());
@@ -175,15 +214,88 @@ export const VPAuthorizationPage: React.FC = () => {
 
                 if (response && response.ok()) {
                     const data = response.data;
-                    setCredentialsData(data?.availableCredentials ?? []);
-                    setFilteredCredentials(data?.availableCredentials ?? []);
-                    const raw = data?.missingClaims;
-                    setMissingClaimsData(
-                        Array.isArray(raw) ? raw.map((c: unknown) => String(c)) : []
-                    );
+
+                    if (isDcqlCredentialsResponse(data)) {
+                        const groups = data.queryGroups;
+                        const credentialSets = hasCredentialSets(data)
+                            ? data.credentialSets
+                            : [];
+                        const usesCredentialSets = credentialSets.length > 0;
+                        const initialCredentialSetSelection = usesCredentialSets
+                            ? buildInitialCredentialSetSelection(
+                                  credentialSets,
+                                  groups
+                              )
+                            : {};
+                        const initialSelection = usesCredentialSets
+                            ? flattenCredentialSetSelectionToDcqlState(
+                                  initialCredentialSetSelection
+                              )
+                            : buildInitialDcqlSelection(groups);
+                        const flatCredentials = flattenQueryGroupCredentials(groups);
+
+                        // Auto-select all sdClaims for SD-JWT credentials in DCQL — user
+                        // does not pick disclosures manually; all available claims are shared.
+                        const autoSdClaims: SelectedSdClaimsMap = {};
+                        flatCredentials.forEach((credential) => {
+                            if (
+                                credential.format?.includes("sd-jwt") &&
+                                Array.isArray(credential.sdClaims) &&
+                                credential.sdClaims.length > 0
+                            ) {
+                                autoSdClaims[credential.credentialId] = credential.sdClaims;
+                            }
+                        });
+                        setSelectedSdClaimsByCredential(autoSdClaims);
+
+                        setIsDcqlPresentation(true);
+                        setHasDcqlCredentialSets(usesCredentialSets);
+                        setCredentialSetsData(credentialSets);
+                        setDcqlCredentialSetSelection(initialCredentialSetSelection);
+                        setQueryGroupsData(groups);
+                        setFilteredQueryGroups(groups);
+                        setDcqlSelection(initialSelection);
+                        setCredentialsData(flatCredentials);
+                        setFilteredCredentials(flatCredentials);
+                        setSelectedCredentialIds(
+                            getSelectedCredentialIdsFlat(initialSelection)
+                        );
+                        setMissingClaimsData(
+                            groups.flatMap((group) =>
+                                group.availableCredentials.length === 0 &&
+                                Array.isArray(group.missingClaims)
+                                    ? group.missingClaims.map((claim) =>
+                                          String(claim)
+                                      )
+                                    : []
+                            )
+                        );
+                        setIsPartialNoMatchDismissed(false);
+                    } else {
+                        setIsDcqlPresentation(false);
+                        setHasDcqlCredentialSets(false);
+                        setCredentialSetsData([]);
+                        setDcqlCredentialSetSelection({});
+                        setQueryGroupsData([]);
+                        setFilteredQueryGroups([]);
+                        setDcqlSelection({});
+                        setCredentialsData(data?.availableCredentials ?? []);
+                        setFilteredCredentials(data?.availableCredentials ?? []);
+                        const raw = data?.missingClaims;
+                        setMissingClaimsData(
+                            Array.isArray(raw) ? raw.map((c: unknown) => String(c)) : []
+                        );
+                    }
                     fetchedCredentialsRef.current.add(presentationIdData);
                 } else {
                     fetchedCredentialsRef.current.delete(presentationIdData);
+                    setIsDcqlPresentation(false);
+                    setHasDcqlCredentialSets(false);
+                    setCredentialSetsData([]);
+                    setDcqlCredentialSetSelection({});
+                    setQueryGroupsData([]);
+                    setFilteredQueryGroups([]);
+                    setDcqlSelection({});
                     setCredentialsData([]);
                     setFilteredCredentials([]);
                     setMissingClaimsData([]);
@@ -196,6 +308,13 @@ export const VPAuthorizationPage: React.FC = () => {
             } catch (err) {
                 setIsLoading(false);
                 fetchedCredentialsRef.current.delete(presentationIdData);
+                setIsDcqlPresentation(false);
+                setHasDcqlCredentialSets(false);
+                setCredentialSetsData([]);
+                setDcqlCredentialSetSelection({});
+                setQueryGroupsData([]);
+                setFilteredQueryGroups([]);
+                setDcqlSelection({});
                 setCredentialsData([]);
                 setMissingClaimsData([]);
                 setFilteredCredentials([]);
@@ -207,9 +326,13 @@ export const VPAuthorizationPage: React.FC = () => {
     }, [presentationIdData, showCredentialRequest, fetchData, handleApiError]);
 
     const handleShareCredentialsFromCard = useCallback(() => {
-        if (!credentialsData?.length || selectedCredentialIds.length === 0) return;
+        const selectedIds = isDcqlPresentation
+            ? getSelectedCredentialIdsFlat(dcqlSelection)
+            : selectedCredentialIds;
 
-        const selected: PresentationCredential[] = selectedCredentialIds
+        if (!credentialsData?.length || selectedIds.length === 0) return;
+
+        const selected: PresentationCredential[] = selectedIds
             .map((id) => credentialsData.find((c) => c.credentialId === id))
             .filter((c): c is PresentationCredential => Boolean(c))
             .map((c) => ({
@@ -223,7 +346,178 @@ export const VPAuthorizationPage: React.FC = () => {
 
         setSelectedCredentialsData(selected);
         setShowCredentialRequest(false);
-    }, [credentialsData, selectedCredentialIds]);
+    }, [
+        credentialsData,
+        dcqlSelection,
+        isDcqlPresentation,
+        selectedCredentialIds,
+    ]);
+
+    const isDcqlShareEnabled = useMemo(() => {
+        if (!isDcqlPresentation) {
+            return selectedCredentialIds.length > 0;
+        }
+        if (hasDcqlCredentialSets) {
+            return areRequiredCredentialSetsSatisfied(
+                credentialSetsData,
+                dcqlCredentialSetSelection,
+                queryGroupsData
+            );
+        }
+        return areRequiredQueryGroupsSatisfied(queryGroupsData, dcqlSelection);
+    }, [
+        credentialSetsData,
+        dcqlCredentialSetSelection,
+        dcqlSelection,
+        hasDcqlCredentialSets,
+        isDcqlPresentation,
+        queryGroupsData,
+        selectedCredentialIds.length,
+    ]);
+
+    const displayedSelectedCredentialIds = useMemo(() => {
+        if (!isDcqlPresentation) {
+            return selectedCredentialIds;
+        }
+        return getSelectedCredentialIdsFlat(dcqlSelection);
+    }, [dcqlSelection, isDcqlPresentation, selectedCredentialIds]);
+
+    const dcqlNoMatchState = useMemo(
+        () =>
+            isDcqlPresentation && queryGroupsData.length > 0
+                ? getDcqlNoMatchState(
+                      queryGroupsData,
+                      credentialSetsData,
+                      hasDcqlCredentialSets
+                  )
+                : { showModal: false, blockCredentialSelection: false },
+        [
+            credentialSetsData,
+            hasDcqlCredentialSets,
+            isDcqlPresentation,
+            queryGroupsData,
+        ]
+    );
+
+    const hasNoMatchingCredentials = useMemo(() => {
+        if (!showCredentialRequest || isLoading || showError) {
+            return false;
+        }
+        if (!credentialsData) {
+            return false;
+        }
+        if (!isDcqlPresentation) {
+            return credentialsData.length === 0;
+        }
+        if (queryGroupsData.length === 0) {
+            return credentialsData.length === 0;
+        }
+        return dcqlNoMatchState.blockCredentialSelection;
+    }, [
+        showCredentialRequest,
+        isLoading,
+        showError,
+        credentialsData,
+        isDcqlPresentation,
+        queryGroupsData,
+        dcqlNoMatchState.blockCredentialSelection,
+    ]);
+
+    const showNoMatchModal = useMemo(() => {
+        if (!showCredentialRequest || isLoading || showError) {
+            return false;
+        }
+        if (!credentialsData) {
+            return false;
+        }
+        if (!isDcqlPresentation) {
+            return credentialsData.length === 0;
+        }
+        if (queryGroupsData.length === 0) {
+            return credentialsData.length === 0;
+        }
+        if (!dcqlNoMatchState.showModal) {
+            return false;
+        }
+        return (
+            dcqlNoMatchState.blockCredentialSelection ||
+            !isPartialNoMatchDismissed
+        );
+    }, [
+        showCredentialRequest,
+        isLoading,
+        showError,
+        credentialsData,
+        isDcqlPresentation,
+        queryGroupsData,
+        dcqlNoMatchState,
+        isPartialNoMatchDismissed,
+    ]);
+
+    const noMatchModalCredentials = useMemo(
+        (): PresentationCredential[] =>
+            (credentialsData ?? []).map((credential) => ({
+                credentialId: credential.credentialId,
+                credentialTypeDisplayName: credential.credentialTypeDisplayName,
+                credentialTypeLogo: credential.credentialTypeLogo,
+                format:
+                    typeof credential.format === "string"
+                        ? credential.format
+                        : "",
+            })),
+        [credentialsData]
+    );
+
+    const handleDcqlCredentialSetSelectionChange = useCallback(
+        (selectionState: DcqlCredentialSetSelectionState) => {
+            const flatSelection =
+                flattenCredentialSetSelectionToDcqlState(selectionState);
+            setDcqlCredentialSetSelection(selectionState);
+            setDcqlSelection(flatSelection);
+            setSelectedCredentialIds(getSelectedCredentialIdsFlat(flatSelection));
+        },
+        []
+    );
+
+    const handleDcqlCredentialSelect = useCallback(
+        (queryId: string, credentialId: string, isSelected: boolean) => {
+            setDcqlSelection((prev) => {
+                const next = updateDcqlCredentialSelection(
+                    queryGroupsData,
+                    prev,
+                    queryId,
+                    credentialId,
+                    isSelected
+                );
+                setSelectedCredentialIds(getSelectedCredentialIdsFlat(next));
+                return next;
+            });
+
+            if (!isSelected) {
+                setSelectedSdClaimsByCredential((prev) => {
+                    const next = { ...prev };
+                    delete next[credentialId];
+                    return next;
+                });
+            } else {
+                // Re-add all sdClaims when an SD-JWT credential is re-selected in DCQL.
+                const credential = credentialsData?.find(
+                    (c) => c.credentialId === credentialId
+                );
+                if (
+                    credential?.format?.includes("sd-jwt") &&
+                    Array.isArray(credential.sdClaims) &&
+                    credential.sdClaims.length > 0
+                ) {
+                    setSelectedSdClaimsByCredential((prev) => ({
+                        ...prev,
+                        [credentialId]: credential.sdClaims!,
+                    }));
+                }
+            }
+        },
+        [queryGroupsData, credentialsData]
+    );
 
     const presentationSelectedSdClaims = useMemo((): SelectedSdClaimsMap | undefined => {
         if (!selectedCredentialsData?.length) {
@@ -274,6 +568,11 @@ export const VPAuthorizationPage: React.FC = () => {
     const isErrorActive = showError;
 
     const filterCredentials = (searchText: string) => {
+        if (isDcqlPresentation) {
+            setFilteredQueryGroups(filterQueryGroupsBySearch(queryGroupsData, searchText));
+            return;
+        }
+
         if (!credentialsData) return;
         const query = searchText.toLowerCase();
         const filtered = credentialsData.filter((credential) =>
@@ -303,26 +602,33 @@ export const VPAuthorizationPage: React.FC = () => {
         removePopstateGuardRef.current = null;
     };
 
+    const handleShareSuccess = useCallback((payload: CredentialShareSuccessPayload) => {
+        setShareSuccessPayload(payload);
+        setSelectedCredentialsData(null);
+        setSelectedSdClaimsByCredential({});
+    }, []);
+
+    if (shareSuccessPayload) {
+        return (
+            <CredentialShareSuccessView
+                {...shareSuccessPayload}
+                onClose={() => navigate(ROUTES.ROOT)}
+            />
+        );
+    }
+
     return (
         <div className={VpAuthPageBackgroundStyles.contentOverlay}>
-            <div>
-                <div className={VpAuthPageBackgroundStyles.mainContainerTitle} data-testid={"page-title-container"}>
-                    <div className={StoredCardsPageStyles.navContainer}>
-                        <div className={StoredCardsPageStyles.navContainer}>
-                            <NavBackArrowButton onBackClick={() => setShowLeaveWarnPopup(true)} />
-                        </div>
-                        <div className={StoredCardsPageStyles.titleContainer}>
-                            <PageTitle value={t('mainPage.title')} testId={"stored-credentials"} />
-                        </div>
+            <div className="w-full min-w-0">
+                {!hasNoMatchingCredentials && (
+                    <div className={StoredCardsPageStyles.searchContainer}>
+                        <SearchBar
+                            testId={"search-credentials"}
+                            placeholder={t('mainPage.searchPlaceholder')}
+                            filter={filterCredentials}
+                        />
                     </div>
-                </div>
-                <div className={StoredCardsPageStyles.searchContainer}>
-                    <SearchBar
-                        testId={"search-credentials"}
-                        placeholder={t('mainPage.searchPlaceholder')}
-                        filter={filterCredentials}
-                    />
-                </div>
+                )}
 
                 <div
                     className={VpAuthPageBackgroundStyles.credentialDetailsCard}
@@ -330,52 +636,166 @@ export const VPAuthorizationPage: React.FC = () => {
                 >
                     {showCredentialRequest && presentationIdData && verifierData && !isErrorActive && !isLoading && (
                         <>
-                            <VerifierCredentialsRequestCard
-                                verifier={verifierData}
-                                presentationId={presentationIdData}
-                                credentials={credentialsData}
-                                selectedCredentialIds={selectedCredentialIds}
-                                onShareCredentials={handleShareCredentialsFromCard}
-                            />
-                            <MatchingCredentials
-                                credentials={filteredCredentials}
-                                refreshCredentials={() => { }}
-                                selectedCredentialIds={selectedCredentialIds}
-                                selectedSdClaimsByCredential={selectedSdClaimsByCredential}
-                                onCredentialSelect={(id, isSelected) => {
-                                    setSelectedCredentialIds((prev) =>
-                                        isSelected
-                                            ? [...prev, id]
-                                            : prev.filter((cId) => cId !== id)
-                                    );
-                                    if (!isSelected) {
-                                        setSelectedSdClaimsByCredential((prev) => {
-                                            const next = { ...prev };
-                                            delete next[id];
-                                            return next;
-                                        });
+                            {showNoMatchModal && (
+                                <NoMatchingCredentialsModal
+                                    isVisible
+                                    missingClaims={missingClaimsData}
+                                    matchingCredentials={noMatchModalCredentials}
+                                    verifier={verifierData}
+                                    verifierContactUrl={verifierData?.redirectUri}
+                                    onGoToHome={() => navigate(ROUTES.ROOT)}
+                                    onClose={
+                                        dcqlNoMatchState.blockCredentialSelection
+                                            ? undefined
+                                            : () =>
+                                                  setIsPartialNoMatchDismissed(
+                                                      true
+                                                  )
                                     }
-                                }}
-                                onSdClaimsConfirm={(credentialId, selectedClaimPaths) => {
-                                    setSelectedSdClaimsByCredential((prev) => ({
-                                        ...prev,
-                                        [credentialId]: selectedClaimPaths,
-                                    }));
-                                }}
-                                presentationId={presentationIdData}
-                                redirectUri={verifierData?.redirectUri ?? null}
-                                missingClaims={missingClaimsData}
-                            />
+                                    redirectUri={verifierData?.redirectUri ?? null}
+                                    presentationId={presentationIdData}
+                                />
+                            )}
+                        {!hasNoMatchingCredentials && (
+                        <>
+                            <div
+                                className={VpAuthPageBackgroundStyles.credentialSelectionLayout}
+                                data-testid="vp-credential-selection-layout"
+                            >
+                                <VerifierRequestInfoPanel
+                                    verifier={verifierData}
+                                    className={VpAuthPageBackgroundStyles.credentialSelectionMain}
+                                />
+                                <div
+                                    className={
+                                        VpAuthPageBackgroundStyles.credentialSelectionActionsCell
+                                    }
+                                >
+                                    <VerifierRequestActionPanel
+                                        verifier={verifierData}
+                                        presentationId={presentationIdData}
+                                        selectedCredentialIds={displayedSelectedCredentialIds}
+                                        isShareEnabled={isDcqlShareEnabled}
+                                        onShareCredentials={handleShareCredentialsFromCard}
+                                        stickyBelowHeader
+                                    />
+                                </div>
+                                <div
+                                    className={
+                                        VpAuthPageBackgroundStyles.credentialSelectionList
+                                    }
+                                >
+                            {isDcqlPresentation ? (
+                                hasDcqlCredentialSets ? (
+                                    <DcqlCredentialSets
+                                        credentialSets={credentialSetsData}
+                                        queryGroups={filteredQueryGroups}
+                                        selectionState={dcqlCredentialSetSelection}
+                                        refreshCredentials={() => { }}
+                                        selectedSdClaimsByCredential={
+                                            selectedSdClaimsByCredential
+                                        }
+                                        onSelectionStateChange={
+                                            handleDcqlCredentialSetSelectionChange
+                                        }
+                                        onSdClaimsConfirm={(
+                                            credentialId,
+                                            selectedClaimPaths
+                                        ) => {
+                                            setSelectedSdClaimsByCredential(
+                                                (prev) => ({
+                                                    ...prev,
+                                                    [credentialId]:
+                                                        selectedClaimPaths,
+                                                })
+                                            );
+                                        }}
+                                        presentationId={presentationIdData}
+                                        redirectUri={
+                                            verifierData?.redirectUri ?? null
+                                        }
+                                        verifier={verifierData}
+                                    />
+                                ) : (
+                                    <DcqlQueryGroups
+                                        queryGroups={filteredQueryGroups}
+                                        selection={dcqlSelection}
+                                        refreshCredentials={() => { }}
+                                        selectedSdClaimsByCredential={
+                                            selectedSdClaimsByCredential
+                                        }
+                                        onCredentialSelect={
+                                            handleDcqlCredentialSelect
+                                        }
+                                        onSdClaimsConfirm={(
+                                            credentialId,
+                                            selectedClaimPaths
+                                        ) => {
+                                            setSelectedSdClaimsByCredential(
+                                                (prev) => ({
+                                                    ...prev,
+                                                    [credentialId]:
+                                                        selectedClaimPaths,
+                                                })
+                                            );
+                                        }}
+                                        presentationId={presentationIdData}
+                                        redirectUri={
+                                            verifierData?.redirectUri ?? null
+                                        }
+                                        verifier={verifierData}
+                                    />
+                                )
+                            ) : (
+                                <MatchingCredentials
+                                    credentials={filteredCredentials}
+                                    refreshCredentials={() => { }}
+                                    selectedCredentialIds={selectedCredentialIds}
+                                    selectedSdClaimsByCredential={selectedSdClaimsByCredential}
+                                    onCredentialSelect={(id, isSelected) => {
+                                        setSelectedCredentialIds((prev) =>
+                                            isSelected
+                                                ? prev.includes(id) ? prev : [...prev, id]
+                                                : prev.filter((cId) => cId !== id)
+                                        );
+                                        if (!isSelected) {
+                                            setSelectedSdClaimsByCredential((prev) => {
+                                                const next = { ...prev };
+                                                delete next[id];
+                                                return next;
+                                            });
+                                        }
+                                    }}
+                                    onSdClaimsConfirm={(credentialId, selectedClaimPaths) => {
+                                        setSelectedSdClaimsByCredential((prev) => ({
+                                            ...prev,
+                                            [credentialId]: selectedClaimPaths,
+                                        }));
+                                    }}
+                                    presentationId={presentationIdData}
+                                    redirectUri={verifierData?.redirectUri ?? null}
+                                    missingClaims={missingClaimsData}
+                                />
+                            )}
+                                </div>
+                            </div>
+                        </>
+                        )}
                         </>
                     )}
 
                                 {selectedCredentialsData && verifierData && presentationIdData && !isErrorActive && (
                                     <CredentialShareHandler
                                         verifierName={verifierData.name}
+                                        verifierLogo={verifierData.logo}
+                                        verifierTrusted={verifierData.trusted}
                                         returnUrl={verifierData.redirectUri || ROUTES.ROOT}
                                         selectedCredentials={selectedCredentialsData}
                                         selectedSdClaims={presentationSelectedSdClaims}
                                         presentationId={presentationIdData}
+                                        isDcqlPresentation={isDcqlPresentation}
+                                        dcqlSelection={dcqlSelection}
+                                        onShareSuccess={handleShareSuccess}
                                         onClose={() => {
                                             setSelectedCredentialsData(null);
                                             setSelectedSdClaimsByCredential({});

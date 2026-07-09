@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import SDClaimsSelectionModal from "../../modals/SDClaimsSelectionModal";
 import { WalletCredential } from "../../types/data";
@@ -27,21 +27,40 @@ jest.mock("../../components/Common/Buttons/SolidButton", () => ({
   ),
 }));
 
-jest.mock("../../components/Common/Buttons/CustomButton", () => ({
-  __esModule: true,
-  default: ({
-    testId,
+jest.mock("../../components/Common/Buttons/CloseIconButton", () => ({
+  CloseIconButton: ({
     onClick,
-    title,
+    btnTestId,
   }: {
-    testId: string;
     onClick: () => void;
-    title: string;
+    btnTestId?: string;
   }) => (
-    <button data-testid={testId} type="button" onClick={onClick}>
-      {title}
+    <button data-testid={btnTestId ?? "btn-close"} type="button" onClick={onClick}>
+      Close
     </button>
   ),
+}));
+
+jest.mock("../../components/Preview/PDFViewer", () => ({
+  PDFViewer: () => (
+    <div data-testid="mock-pdf-viewer">
+      PDF Preview
+    </div>
+  ),
+}));
+
+jest.mock("../../hooks/useApi", () => ({
+  useApi: () => ({
+    fetchData: jest.fn().mockResolvedValue({
+      ok: () => true,
+      data: new Blob(["pdf"], { type: "application/pdf" }),
+    }),
+  }),
+}));
+
+jest.mock("react-redux", () => ({
+  useSelector: (selector: (state: unknown) => unknown) =>
+    selector({ common: { language: "en" } }),
 }));
 
 jest.mock("../../utils/i18n", () => ({
@@ -50,23 +69,22 @@ jest.mock("../../utils/i18n", () => ({
 
 jest.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, opts?: { selected?: number; total?: number; count?: number }) => {
+    t: (key: string, opts?: { count?: number }) => {
       const labels: Record<string, string> = {
-        backToCredentials: "Back to Credentials",
-        confirm: "Confirm",
-        searchPlaceholder: "Search credentials by name, value, or category",
-        selectAll: "Select All",
-        clearSelection: "Clear selection",
-        infoTitle: "Select Credentials to Share",
-        infoDescription:
-          "Choose which credentials you want to share with the requesting verifier.",
+        subtitle: "Credential preview · select fields to share",
+        confirmProceed: "Confirm & Proceed",
+        disclosableFields: "Disclosable Fields",
+        defaultShareable: "Default Shareable",
+        defaultShareableNote: "Included · cannot be deselected.",
+        checkAll: "Check All",
+        clearAll: "Clear All",
+        credentialPreview: "Credential preview",
+        shareableFields: "Shareable fields",
+        previewUnavailable: "Preview is not available for this credential.",
         expand: "Expand",
         collapse: "Collapse",
       };
 
-      if (key === "selectedCount") {
-        return `${opts?.selected ?? 0} to ${opts?.total ?? 0} selected`;
-      }
       if (key === "fieldsCount") {
         return `${opts?.count ?? 0} fields`;
       }
@@ -81,11 +99,7 @@ jest.mock("react-i18next", () => ({
   },
 }));
 
-jest.mock("../../assets/ArrowNarrowLeftTwo.png", () => "arrow-back-mock.png");
-jest.mock("../../assets/InfoRevIcon.svg", () => "info-rev-mock.svg");
 jest.mock("../../assets/SelectedTickIcon.svg", () => "selected-tick-mock.svg");
-jest.mock("../../assets/ArrowBack.svg", () => "arrow-back-mock.svg");
-jest.mock("../../assets/ArrowOpen.svg", () => "arrow-open-mock.svg");
 
 const mockGetDirCurrentLanguage = getDirCurrentLanguage as jest.Mock;
 
@@ -113,95 +127,94 @@ describe("SDClaimsSelectionModal", () => {
   const renderModal = (props: Partial<typeof defaultProps> = {}) =>
     render(<SDClaimsSelectionModal {...defaultProps} {...props} />);
 
-  const getSearchInput = () => {
-    const container = screen.getByTestId("serch-claims-container");
-    return within(container).getByTestId("input-search");
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetDirCurrentLanguage.mockReturnValue("ltr");
   });
 
   describe("rendering", () => {
-    it("renders inside the modal wrapper with credential title and actions", () => {
+    it("renders inside the modal wrapper with credential title and actions", async () => {
       renderModal();
 
       expect(screen.getByTestId("mock-modal-wrapper")).toBeInTheDocument();
       expect(screen.getByText("MOSIP ID")).toBeInTheDocument();
-      expect(screen.getByText("Back to Credentials")).toBeInTheDocument();
-      expect(screen.getByTestId("show-consent-modal-button")).toHaveTextContent("Confirm");
-      expect(screen.getByTestId("selectAllClaims")).toHaveTextContent("Select All");
-      expect(screen.getByTestId("clearSelectionClaims")).toHaveTextContent("Clear selection");
+      expect(
+        screen.getByText("Credential preview · select fields to share")
+      ).toBeInTheDocument();
+      expect(screen.getByTestId("show-consent-modal-button")).toHaveTextContent(
+        "Confirm & Proceed"
+      );
+      expect(screen.getByTestId("checkAllClaims")).toHaveTextContent("Check All");
+      expect(screen.getByText("Disclosable Fields")).toBeInTheDocument();
+      expect(screen.getByText("Default Shareable")).toBeInTheDocument();
+      expect(
+        screen.getByText("Included · cannot be deselected.")
+      ).toBeInTheDocument();
     });
 
-    it("renders info section and search placeholder", () => {
+    it("renders preview and claims panels", async () => {
       renderModal();
 
-      expect(screen.getByText("Select Credentials to Share")).toBeInTheDocument();
-      expect(
-        screen.getByText(
-          "Choose which credentials you want to share with the requesting verifier."
-        )
-      ).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText("Search credentials by name, value, or category")
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("sd-claims-preview-panel")).toBeInTheDocument();
+      expect(screen.getByTestId("sd-claims-details-panel")).toBeInTheDocument();
+      expect(await screen.findByTestId("mock-pdf-viewer")).toBeInTheDocument();
     });
 
     it("applies text direction from getDirCurrentLanguage", () => {
       mockGetDirCurrentLanguage.mockReturnValue("rtl");
       renderModal();
 
-      const content = screen.getByText("MOSIP ID").closest(".p-6");
+      const content = screen.getByTestId("sd-claims-modal-content");
 
       expect(mockGetDirCurrentLanguage).toHaveBeenCalledWith("en");
       expect(content).toHaveAttribute("dir", "rtl");
     });
 
-    it("renders claim tree leaves for sd and required claims", () => {
+    it("renders flat claim rows for sd and required claims", () => {
       renderModal();
 
       expect(screen.getByTestId("claim-leaf-$.name")).toBeInTheDocument();
       expect(screen.getByTestId("claim-leaf-$.address.city")).toBeInTheDocument();
       expect(screen.getByTestId("claim-leaf-$.nationalId")).toBeInTheDocument();
-      expect(screen.getByTestId("claim-group-address")).toBeInTheDocument();
-    });
-
-    it("shows selected count as zero of total sd claims initially", () => {
-      renderModal();
-
-      expect(screen.getByText("0 to 2 selected")).toBeInTheDocument();
+      expect(screen.queryByTestId("claim-group-address")).not.toBeInTheDocument();
     });
 
     it("initializes selection from initialSelectedSdClaims", () => {
       renderModal({ initialSelectedSdClaims: ["$.name"] });
 
-      expect(screen.getByText("1 to 2 selected")).toBeInTheDocument();
-      expect(screen.getByTestId("claim-leaf-$.name")).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByTestId("claim-leaf-$.name")).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
     });
   });
 
   describe("close and confirm", () => {
-    it("calls closeModal(false) when back is clicked", () => {
+    it("calls closeModal(false) when close button is clicked", () => {
       renderModal();
 
-      fireEvent.click(screen.getByRole("button", { name: "Back to Credentials" }));
+      fireEvent.click(screen.getByTestId("btn-close-sd-claims-modal"));
 
       expect(mockCloseModal).toHaveBeenCalledWith(false);
     });
 
-    it("resets selection when closed after select all", () => {
+    it("resets selection when closed after check all", () => {
       const { unmount } = renderModal();
 
-      fireEvent.click(screen.getByTestId("selectAllClaims"));
-      expect(screen.getByText("2 to 2 selected")).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("checkAllClaims"));
+      expect(screen.getByTestId("claim-leaf-$.name")).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
 
-      fireEvent.click(screen.getByRole("button", { name: "Back to Credentials" }));
+      fireEvent.click(screen.getByTestId("btn-close-sd-claims-modal"));
       unmount();
 
       renderModal();
-      expect(screen.getByText("0 to 2 selected")).toBeInTheDocument();
+      expect(screen.getByTestId("claim-leaf-$.name")).toHaveAttribute(
+        "aria-pressed",
+        "false"
+      );
     });
 
     it("calls onConfirm with credential id and selected paths on confirm", () => {
@@ -209,7 +222,10 @@ describe("SDClaimsSelectionModal", () => {
 
       fireEvent.click(screen.getByTestId("show-consent-modal-button"));
 
-      expect(mockOnConfirm).toHaveBeenCalledWith("cred-sd-1", ["$.name", "$.address.city"]);
+      expect(mockOnConfirm).toHaveBeenCalledWith("cred-sd-1", [
+        "$.name",
+        "$.address.city",
+      ]);
       expect(mockCloseModal).toHaveBeenCalledWith(false);
     });
 
@@ -224,36 +240,48 @@ describe("SDClaimsSelectionModal", () => {
   });
 
   describe("selection actions", () => {
-    it("selects all sd claims when Select All is clicked", () => {
+    it("selects all sd claims when Check All is clicked", () => {
       renderModal();
 
-      fireEvent.click(screen.getByTestId("selectAllClaims"));
+      fireEvent.click(screen.getByTestId("checkAllClaims"));
 
-      expect(screen.getByText("2 to 2 selected")).toBeInTheDocument();
-      expect(screen.getByTestId("claim-leaf-$.name")).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByTestId("claim-leaf-$.name")).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
       expect(screen.getByTestId("claim-leaf-$.address.city")).toHaveAttribute(
         "aria-pressed",
         "true"
       );
+      expect(screen.getByTestId("checkAllClaims")).toHaveTextContent("Clear All");
     });
 
-    it("clears sd claim selection when Clear selection is clicked", () => {
+    it("clears sd claim selection when Clear All is clicked", () => {
       renderModal({ initialSelectedSdClaims: ["$.name", "$.address.city"] });
 
-      fireEvent.click(screen.getByTestId("clearSelectionClaims"));
+      fireEvent.click(screen.getByTestId("checkAllClaims"));
 
-      expect(screen.getByText("0 to 2 selected")).toBeInTheDocument();
-      expect(screen.getByTestId("claim-leaf-$.name")).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByTestId("claim-leaf-$.name")).toHaveAttribute(
+        "aria-pressed",
+        "false"
+      );
+      expect(screen.getByTestId("checkAllClaims")).toHaveTextContent("Check All");
     });
 
     it("toggles an individual sd claim when its row is clicked", () => {
       renderModal();
 
       fireEvent.click(screen.getByTestId("claim-leaf-$.name"));
-      expect(screen.getByText("1 to 2 selected")).toBeInTheDocument();
+      expect(screen.getByTestId("claim-leaf-$.name")).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
 
       fireEvent.click(screen.getByTestId("claim-leaf-$.name"));
-      expect(screen.getByText("0 to 2 selected")).toBeInTheDocument();
+      expect(screen.getByTestId("claim-leaf-$.name")).toHaveAttribute(
+        "aria-pressed",
+        "false"
+      );
     });
 
     it("does not change selection when a required claim row is clicked", () => {
@@ -261,47 +289,7 @@ describe("SDClaimsSelectionModal", () => {
 
       fireEvent.click(screen.getByTestId("claim-leaf-$.nationalId"));
 
-      expect(screen.getByText("0 to 2 selected")).toBeInTheDocument();
       expect(screen.getByTestId("claim-leaf-$.nationalId")).toBeDisabled();
-    });
-  });
-
-  describe("search filtering", () => {
-    it("filters visible claims when search text is entered", () => {
-      renderModal();
-
-      fireEvent.change(getSearchInput(), { target: { value: "name" } });
-
-      expect(screen.getByTestId("claim-leaf-$.name")).toBeInTheDocument();
-      expect(screen.queryByTestId("claim-leaf-$.address.city")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("claim-leaf-$.nationalId")).not.toBeInTheDocument();
-    });
-
-    it("shows all claims again when search is cleared", () => {
-      renderModal();
-
-      const input = getSearchInput();
-      fireEvent.change(input, { target: { value: "name" } });
-      fireEvent.change(input, { target: { value: "" } });
-
-      expect(screen.getByTestId("claim-leaf-$.name")).toBeInTheDocument();
-      expect(screen.getByTestId("claim-leaf-$.address.city")).toBeInTheDocument();
-      expect(screen.getByTestId("claim-leaf-$.nationalId")).toBeInTheDocument();
-    });
-  });
-
-  describe("group expand", () => {
-    it("expands a group when its header is clicked", () => {
-      renderModal();
-
-      expect(screen.getByTestId("claim-group-address")).toHaveAttribute(
-        "aria-expanded",
-        "false"
-      );
-
-      fireEvent.click(screen.getByTestId("claim-group-address"));
-
-      expect(screen.getByTestId("claim-group-address")).toHaveAttribute("aria-expanded", "true");
     });
   });
 
@@ -315,8 +303,8 @@ describe("SDClaimsSelectionModal", () => {
         },
       });
 
-      expect(screen.getByText("0 to 0 selected")).toBeInTheDocument();
       expect(screen.queryByTestId(/claim-leaf/)).not.toBeInTheDocument();
+      expect(screen.queryByTestId("checkAllClaims")).not.toBeInTheDocument();
     });
 
     it("confirm passes an empty array when nothing is selected", () => {

@@ -402,9 +402,12 @@
     "message": "Préparation de votre présentation d’identifiants sécurisée..."
   },
   "CredentialShareSuccessModal": {
-    "sharedWith": "Partagé avec {{verifierName}}",
-    "credentialsPresented": "Vos informations d'identification ont été présentées avec succès à {{verifierName}}",
-    "redirectMessage": "Redirection vers le vérificateur dans {{count}} secondes..."
+    "title": "Identifiants partagés",
+    "subtitle": "Partagés avec succès avec {{verifierName}}",
+    "cardsShared": "CARTES PARTAGÉES ({{count}})",
+    "sharedTodayAt": "Aujourd'hui à {{time}}",
+    "trustedLabel": "Fiable",
+    "redirectMessage": "Retour vers le vérificateur dans {{count}} secondes..."
   },
   "User": {
     "Home": {
@@ -494,7 +497,9 @@
     "mainPage": {
       "title": "Cartes demandées",
       "unknownVerifier": "Nom du vérificateur",
-      "description": "Demande d'accès à vos informations d'identification",
+      "description": "Demande d'accès à votre(vos) carte(s)",
+      "descriptionSubtext": "Examinez les informations demandées et choisissez la ou les cartes que vous souhaitez partager. Seules les informations sélectionnées de la carte choisie seront partagées avec le vérificateur.",
+      "trustedLabel": "Fiable",
       "footerInfo": "Sélectionnez les informations d'identification ci-dessous pour approuver cette demande",
       "addCards": "Ajouter des cartes",
       "searchPlaceholder": "Recherchez vos documents par nom"
@@ -507,6 +512,7 @@
       "benefitSkipReviewFuture": "Les futures demandes de vérification de ce Vérificateur seront automatiquement approuvées.",
       "trustButton": "Oui, je fais confiance à ce Vérificateur",
       "notTrustButton": "Non, je ne fais pas confiance à ce Vérificateur",
+      "cancelButton": "Annuler",
       "infoTooltipButton": "Que signifie faire confiance ?",
       "infoTooltipText": "Faire confiance à un vérificateur leur permet de demander vos informations d'identification. Vous choisirez toujours les informations d'identification à partager à l'étape suivante."
     },
@@ -540,15 +546,15 @@
     "credentialTile": {
       "unselectedTitle": "Sélectionnez les informations d'identification à partager",
       "selectedTitle": "Informations d'identification sélectionnées",
-      "shareCredentialsButton": "Partager les identifiants",
+      "shareCredentialsButton": "Confirmer et partager",
       "shareCredentialsDeclineButton": "Déclin"
     },
     "consentRequiredModal": {
       "title": "Consentement requis",
-      "description": "Assurez-vous de reconnaître ou de faire confiance à {{verifierName}}.\nUne fois que vous avez partagé :",
+      "description": "Veuillez vérifier votre sélection avant de continuer.",
       "credentialsTitle": "Identifiants partagés ({{count}})",
-      "credentialsDescription": "Ils pourront voir vos informations d'identification sélectionnées, y compris toutes les informations associées et les données de vérification.",
-      "consentButtonTitle": "Oui, j'accepte de partager",
+      "credentialsDescription": "Seules les informations sélectionnées des cartes choisies seront partagées avec le vérificateur. Aucune information supplémentaire ne sera partagée.",
+      "consentButtonTitle": "Confirmer et partager",
       "backButtonTitle": "Non, ramène-moi"
     },
     "leaveConfirmation": {
@@ -556,6 +562,43 @@
       "description": "Si vous quittez cette page, vous interromprez le processus d'envoi de votre identifiant vérifiable et votre progression pourrait être perdue.",
       "confirmButton": "Oui, quitter",
       "cancelButton": "Non, retour"
+    },
+    "dcql": {
+      "mandatorySection": "Obligatoire",
+      "optionalSection": "Facultatif",
+      "mandatoryCards": "CARTES OBLIGATOIRES",
+      "optionalCards": "Cartes facultatives",
+      "optionalAddOns": "OPTIONS FACULTATIVES",
+      "required": "Obligatoire",
+      "multipleCards": "Plusieurs cartes",
+      "allRequired": "Toutes les cartes de cette option sont obligatoires",
+      "credentialsCount": "{{count}} justificatifs",
+      "or": "OU",
+      "instruction": "Sélectionnez un justificatif dans la liste pour le partager en toute sécurité avec le vérificateur.",
+      "instructionSelectOne": "Sélectionnez une carte parmi les options disponibles.",
+      "instructionSelectAll": "Sélectionnez toutes les cartes requises pour continuer.",
+      "instructionSelectCount": "Sélectionnez {{count}} cartes parmi les options disponibles.",
+      "instructionOnePerSet": "Sélectionnez une carte dans chaque groupe.",
+      "instructionComplex": "Suivez les instructions de sélection pour répondre à la demande du vérificateur.",
+      "selectShareableFields": "Champs obligatoires",
+      "selectRequiredClaims": "Sélectionner les informations requises",
+      "viewCard": "Voir la carte",
+      "showAllCards": "Afficher les {{count}} cartes",
+      "clearAll": "Tout effacer",
+      "unknownCredential": "Justificatif",
+      "noSatisfiableOptions": "Aucun justificatif correspondant n'est disponible pour cette demande.",
+      "requirementInfo": {
+        "title": "Demande de justificatifs",
+        "description": "{{verifierName}} demande l'accès à vos justificatifs d'identité afin de vérifier votre identité et d'ouvrir votre compte en toute sécurité.",
+        "requiredTitle": "Cartes requises",
+        "requiredDescription": "Ces cartes sont incluses dans la ou les demandes requises par le vérificateur. Suivez les instructions de sélection indiquées pour chaque demande afin de poursuivre.",
+        "optionalTitle": "Cartes optionnelles",
+        "optionalDescription": "Ces cartes sont incluses dans les demandes facultatives du vérificateur. Vous pouvez choisir de les partager ou non.",
+        "footerNote": "Seules les informations demandées provenant des cartes que vous avez sélectionnées seront partagées avec le vérificateur. Veuillez vérifier votre sélection avant de confirmer.","close": "Fermer",
+        "securityFooter": "Chiffré de bout en bout · Vérifié par {{verifierName}}",
+        "requiredAriaLabel": "En savoir plus sur les justificatifs obligatoires",
+        "optionalAriaLabel": "En savoir plus sur les options facultatives"
+      }
     }
   },
   "CredentialRequestModal": {
@@ -580,22 +623,39 @@
     }
   },
   "SDClaimsSelectionModal": {
-    "backToCredentials": "Retour aux justificatifs",
-    "confirm": "Confirmer",
-    "searchPlaceholder": "Rechercher des justificatifs par nom, valeur ou catégorie",
-    "selectAll": "Tout sélectionner",
-    "clearSelection": "Effacer la sélection",
-    "infoTitle": "Sélectionner les justificatifs à partager",
-    "infoDescription": "Choisissez les justificatifs que vous souhaitez partager avec le vérificateur demandeur. Vous pouvez sélectionner ou désélectionner n'importe quel justificatif en cliquant dessus.",
-    "selectedCount": "{{selected}} sur {{total}} sélectionnés",
+    "subtitle": "Aperçu du justificatif · sélectionnez les champs à partager",
+    "subtitleReadOnly": "Aperçu des justificatifs · tous les champs seront partagés",
+    "confirmProceed": "Confirmer et continuer",
+    "done": "Terminé",
+    "disclosableFields": "Champs divulgables",
+    "defaultShareable": "Champs partageables par défaut",
+    "defaultShareableNote": "Inclus · ne peut pas être désélectionné.",
+    "checkAll": "Tout sélectionner",
+    "clearAll": "Tout désélectionner",
+    "credentialPreview": "Aperçu du justificatif",
+    "shareableFields": "Champs partageables",
+    "previewUnavailable": "L'aperçu n'est pas disponible pour ce justificatif.",
     "fieldsCount": "{{count}} champs",
     "expand": "Développer",
     "collapse": "Réduire"
   },
   "NoMatchingCredentialsModal": {
-    "title": "Aucune information d'identification correspondante trouvée",
-    "description": "Veuillez télécharger les informations d'identification correspondantes et réessayer le processus de partage",
-    "goToHomeButton": "Retourner"
+    "title": "Aucune carte correspondante trouvée",
+    "claimsIntro": "Votre portefeuille ne contient pas toutes les cartes ou informations requises pour répondre à la demande du vérificateur.",
+    "missingInfoLabel": "Informations manquantes :",
+    "showMore": "Afficher plus (+{{count}}) >",
+    "whatYouCanDo": "CE QUE VOUS POUVEZ FAIRE",
+    "contactVerifier": "Contacter le vérificateur",
+    "verifierHelp": "Contactez ce vérificateur pour obtenir plus d'informations sur les cartes requises pour continuer.",
+    "matchingCards": "CARTES PARTIELLEMENT CORRESPONDANTES",
+    "goToHomeButton": "Aller à l'accueil",
+    "continueWithAvailableButton": "Continuer avec les cartes disponibles",
+    "trustedLabel": "Fiable",
+    "unknownVerifier": "Vérificateur inconnu"
+  },
+  "MissingClaimsListModal": {
+    "title": "Informations manquantes",
+    "requiredCount": "{{count}} obligatoires"
   },
   "LogoutConfirmation": {
     "title": "Êtes-vous sûr de vouloir partir ?",

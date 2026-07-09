@@ -22,12 +22,14 @@ type UserHeaderProps = {
     headerRef: React.RefObject<HTMLDivElement>;
     headerHeight: number;
     disableProfileDropdown?: boolean;
+    disableLogoNavigation?: boolean;
 };
 
 export const Header: React.FC<UserHeaderProps> = ({
     headerRef,
     headerHeight,
-    disableProfileDropdown = false
+    disableProfileDropdown = false,
+    disableLogoNavigation = false,
 }) => {
     const language = useSelector((state: RootState) => state.common.language);
     const navigate = useNavigate();
@@ -169,6 +171,22 @@ export const Header: React.FC<UserHeaderProps> = ({
           );
         };
 
+    const handleLogoNavigate = () => {
+        if (disableLogoNavigation) {
+            return;
+        }
+        navigateToUserHome(navigate);
+    };
+
+    const handleLogoKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (disableLogoNavigation) {
+            return;
+        }
+        if (event.key === "Enter" || event.key === " ") {
+            navigateToUserHome(navigate);
+        }
+    };
+
     return (
         <header
             ref={headerRef}
@@ -191,17 +209,24 @@ export const Header: React.FC<UserHeaderProps> = ({
                         />
                     </div>
                     <div
-                        className="w-[130px] sm:w-[160px] md:w-[170px]"
-                        role={'button'}
-                        tabIndex={0}
-                        onMouseDown={() => navigateToUserHome(navigate)}
-                        onKeyUp={() => navigateToUserHome(navigate)}
+                        className={`w-[130px] sm:w-[160px] md:w-[170px] ${
+                            disableLogoNavigation ? "" : "cursor-pointer"
+                        }`}
+                        role={disableLogoNavigation ? undefined : "button"}
+                        tabIndex={disableLogoNavigation ? undefined : 0}
+                        onMouseDown={
+                            disableLogoNavigation ? undefined : handleLogoNavigate
+                        }
+                        onKeyUp={
+                            disableLogoNavigation ? undefined : handleLogoKeyUp
+                        }
+                        aria-disabled={disableLogoNavigation || undefined}
                     >
                         <img
                             src={require('../../assets/InjiWebLogo.png')}
-                            className={`max-w-full h-auto object-contain cursor-pointer ${
-                                isRTL(language) ? 'mr-4' : ''
-                            }`}
+                            className={`max-w-full h-auto object-contain ${
+                                disableLogoNavigation ? "" : "cursor-pointer"
+                            } ${isRTL(language) ? 'mr-4' : ''}`}
                             data-testid="header-injiWeb-logo"
                             alt="Inji Web Logo"
                         />

@@ -8,6 +8,7 @@ interface ClaimLeafRowProps {
     depth?: number;
     isSelected: boolean;
     onToggle?: () => void;
+    variant?: "default" | "modal";
 }
 
 export const ClaimLeafRow: React.FC<ClaimLeafRowProps> = ({
@@ -15,25 +16,39 @@ export const ClaimLeafRow: React.FC<ClaimLeafRowProps> = ({
     depth = 0,
     isSelected,
     onToggle,
+    variant = "default",
 }) => {
     const isToggleable = node.claimType === "sdClaim" && !!onToggle;
+    const isModalVariant = variant === "modal";
 
     return (
         <button
             type="button"
-            className={SdClaimInputStyles.leafRow}
+            className={
+                isModalVariant
+                    ? SdClaimInputStyles.leafRowModal
+                    : SdClaimInputStyles.leafRow
+            }
             data-testid={`claim-leaf-${node.path}`}
             onClick={isToggleable ? onToggle : undefined}
             disabled={!isToggleable}
             aria-pressed={isToggleable ? isSelected : undefined}
         >
+            <p
+                className={
+                    isModalVariant
+                        ? SdClaimInputStyles.leafLabelModal
+                        : SdClaimInputStyles.leafLabel
+                }
+            >
+                {node.label}
+            </p>
             <ClaimCheckbox
                 claimType={node.claimType}
                 selected={isSelected}
                 readOnly={isToggleable}
                 testId={`claim-checkbox-${node.path}`}
             />
-            <p className={SdClaimInputStyles.leafLabel}>{node.label}</p>
         </button>
     );
 };

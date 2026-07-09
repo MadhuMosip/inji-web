@@ -131,6 +131,7 @@ jest.mock("../../components/Issuers/TrustVerifierModal", () => ({
 
 // New OVP UI mocks (replaces old CredentialRequestModal-based tests)
 const MockVerifierCredentialsRequestCard = jest.fn();
+const MockVerifierRequestActionPanel = jest.fn();
 jest.mock("../../components/Ovp/VerifierCredentialRequestCard", () => ({
   __esModule: true,
   default: (props: any) => {
@@ -149,6 +150,50 @@ jest.mock("../../components/Ovp/VerifierCredentialRequestCard", () => ({
       </div>
     );
   },
+  VerifierRequestInfoPanel: (props: any) => (
+    <div data-testid="mock-verifier-request-info-panel">
+      <span>{props.verifier?.name}</span>
+    </div>
+  ),
+  VerifierRequestActionPanel: (props: any) => {
+    MockVerifierRequestActionPanel(props);
+    return (
+      <div data-testid="mock-verifier-credentials-request-card">
+        <button
+          type="button"
+          data-testid="btn-share-from-card"
+          onClick={props.onShareCredentials}
+          disabled={
+            !props.selectedCredentialIds || props.selectedCredentialIds.length === 0
+          }
+        >
+          Share
+        </button>
+      </div>
+    );
+  },
+}));
+
+jest.mock("../../components/Ovp/DcqlQueryGroups", () => ({
+  __esModule: true,
+  default: (props: any) => (
+    <div data-testid="mock-dcql-query-groups">
+      {props.queryGroups?.map((group: { queryId: string }) => (
+        <div key={group.queryId} data-testid={`mock-dcql-group-${group.queryId}`} />
+      ))}
+    </div>
+  ),
+}));
+
+jest.mock("../../components/Ovp/DcqlCredentialSets", () => ({
+  __esModule: true,
+  default: (props: any) => (
+    <div data-testid="mock-dcql-credential-sets">
+      {props.credentialSets?.map((_set: unknown, index: number) => (
+        <div key={index} data-testid={`mock-dcql-credential-set-${index}`} />
+      ))}
+    </div>
+  ),
 }));
 
 const MockMatchingCredentials = jest.fn();
@@ -488,9 +533,9 @@ describe("VPAuthorizationPage", () => {
     await waitFor(() => {
       expect(mockFetchData).toHaveBeenCalledTimes(2);
     });
-    
+
     await waitFor(() => {
-        expect(screen.getByTestId("mock-verifier-credentials-request-card")).toBeInTheDocument();
+      expect(screen.queryByTestId("modal-loader")).not.toBeInTheDocument();
     });
 
     expect(mockHandleApiError).toHaveBeenCalledWith(
@@ -513,9 +558,9 @@ describe("VPAuthorizationPage", () => {
     await waitFor(() => {
       expect(mockFetchData).toHaveBeenCalledTimes(2);
     });
-    
+
     await waitFor(() => {
-        expect(screen.getByTestId("mock-verifier-credentials-request-card")).toBeInTheDocument();
+      expect(screen.queryByTestId("modal-loader")).not.toBeInTheDocument();
     });
 
     expect(mockHandleApiError).toHaveBeenCalledWith(
@@ -561,10 +606,10 @@ describe("VPAuthorizationPage", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("modal-loader")).not.toBeInTheDocument();
     });
-    
+
     expect(screen.getByTestId("mock-verifier-credentials-request-card")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId("mock-nav-back"));
+    fireEvent.popState(window);
     expect(screen.getByTestId("mock-leave-confirmation-modal")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("btn-leave-confirm"));
     await waitFor(() => {
@@ -576,12 +621,12 @@ describe("VPAuthorizationPage", () => {
     mockFetchData.mockReset();
     mockFetchData.mockRejectedValueOnce(new Error("validation error"));
     renderComponent();
-    
+
     await waitFor(() => {
-      expect(screen.getByTestId("mock-nav-back")).toBeInTheDocument();
+      expect(mockHandleApiError).toHaveBeenCalled();
     });
-    
-    fireEvent.click(screen.getByTestId("mock-nav-back"));
+
+    fireEvent.popState(window);
     // Clicking back only opens the modal; click confirm to exercise the reject path.
     if (screen.queryByTestId("mock-leave-confirmation-modal")) {
       fireEvent.click(screen.getByTestId("btn-leave-confirm"));
@@ -665,5 +710,110 @@ describe("VPAuthorizationPage", () => {
     await waitFor(() => {
         expect(screen.queryByTestId("mock-trust-rejection-modal")).not.toBeInTheDocument();
     });
+  });
+
+  test("renders DCQL query groups when credentials response contains queryGroups", async () => {
+    mockFetchData.mockReset();
+    mockFetchData
+      .mockResolvedValueOnce({
+        ok: () => true,
+        data: mockVerifierTrusted,
+      })
+      .mockResolvedValueOnce({
+        ok: () => true,
+        data: {
+          queryGroups: [
+            {
+              queryId: "government-identity",
+              required: true,
+              multiple: false,
+              availableCredentials: [],
+              missingClaims: ["$.type"],
+            },
+            {
+              queryId: "age-proof",
+              required: true,
+              multiple: false,
+              availableCredentials: [
+                {
+                  credentialId: "age-cred-1",
+                  credentialTypeDisplayName: "Age Credential",
+                  credentialTypeLogo: "",
+                  format: "dc+sd-jwt",
+                },
+              ],
+              missingClaims: [],
+            },
+          ],
+        },
+      });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mock-dcql-query-groups")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("mock-dcql-group-government-identity")).toBeInTheDocument();
+    expect(screen.getByTestId("mock-dcql-group-age-proof")).toBeInTheDocument();
+    expect(screen.queryByTestId("mock-matching-credentials")).not.toBeInTheDocument();
+  });
+
+  test("renders DCQL credential sets when credentials response contains credentialSets", async () => {
+    mockFetchData.mockReset();
+    mockFetchData
+      .mockResolvedValueOnce({
+        ok: () => true,
+        data: mockVerifierTrusted,
+      })
+      .mockResolvedValueOnce({
+        ok: () => true,
+        data: {
+          queryGroups: [
+            {
+              queryId: "pan",
+              required: true,
+              multiple: false,
+              availableCredentials: [
+                {
+                  credentialId: "pan-cred",
+                  credentialTypeDisplayName: "Pan Card",
+                  credentialTypeLogo: "",
+                  format: "ldp_vc",
+                },
+              ],
+              missingClaims: [],
+            },
+            {
+              queryId: "aadhaar",
+              required: true,
+              multiple: false,
+              availableCredentials: [
+                {
+                  credentialId: "aadhaar-cred",
+                  credentialTypeDisplayName: "Aadhaar Card",
+                  credentialTypeLogo: "",
+                  format: "ldp_vc",
+                },
+              ],
+              missingClaims: [],
+            },
+          ],
+          credentialSets: [
+            {
+              required: true,
+              options: [["pan"], ["aadhaar"]],
+            },
+          ],
+        },
+      });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mock-dcql-credential-sets")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("mock-dcql-credential-set-0")).toBeInTheDocument();
+    expect(screen.queryByTestId("mock-dcql-query-groups")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("mock-matching-credentials")).not.toBeInTheDocument();
   });
 });

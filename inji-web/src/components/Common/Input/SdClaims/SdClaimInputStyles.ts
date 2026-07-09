@@ -7,6 +7,9 @@ export const SdClaimInputStyles = {
     leafRow:
         "w-full bg-white border border-[#E5E7EB] rounded-md px-4 py-3 flex mt-3 items-center gap-3 text-start",
     leafLabel: "text-[#101828] text-[14px] font-[500] flex-1 text-start",
+    leafRowModal:
+        "w-full flex items-center justify-between gap-4 px-4 py-4 bg-transparent border-b border-[#F5F5F7] text-start last:border-b-0",
+    leafLabelModal: "flex-1 min-w-0 text-[#101828] text-[15px] font-medium text-start",
     groupContainer: "w-full rounded-lg transition-all duration-300 ease-in-out",
     groupContainerExpanded: "border-iw-brand-gradient",
     groupContainerCollapsed: "border border-[#E5E7EB] bg-transparent",

@@ -20,11 +20,11 @@ jest.mock("../../assets/Shield-gray.svg", () => "shield-gray-mock.svg");
 describe("ConsentRequiredModal", () => {
   const baseProps = {
     title: "Consent Required",
-    description: "Make sure you recognize or trust Verifier.\nOnce you share:",
-    credentialsTitle: "Credentials Being Shared (2)",
+    description: "Please review your selection before continuing.",
+    credentialsTitle: "Cards Being Shared (2)",
     credentialsDescription:
-      "They will be able to view your selected credentials, including all associated information and verification data.",
-    consentButtonTitle: "Yes, I Consent to Share",
+      "Only the selected information from your chosen card(s) will be shared with the verifier. No additional information will be shared.",
+    consentButtonTitle: "Confirm & Share",
     backButtonTitle: "No, Take Me Back",
   };
 
