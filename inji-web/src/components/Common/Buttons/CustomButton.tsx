@@ -7,7 +7,7 @@ function CustomButton({ testId, onClick, title, styles }: { testId: string; onCl
             id={testId}
             data-testid={testId}
             onClick={onClick}
-            className={styles ?? CustomButtonStyles.default}
+            className={styles || CustomButtonStyles.default}
         >
             {title}
         </button>

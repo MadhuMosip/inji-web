@@ -122,7 +122,7 @@ describe("CredentialShareSuccessView", () => {
             <CredentialShareSuccessView
                 verifierName={verifierName}
                 credentials={credentials}
-                returnUrl="/clicked"
+                returnUrl="https://example.com/return"
             />
         );
 
@@ -130,7 +130,7 @@ describe("CredentialShareSuccessView", () => {
             fireEvent.click(getByTestId("btn-return-to-verifier"));
         });
 
-        expect(window.location.href).toBe("/clicked");
+        expect(window.location.href).toBe("https://example.com/return");
         window.location = originalLocation;
     });
 });

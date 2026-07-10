@@ -4,6 +4,12 @@ import "@testing-library/jest-dom";
 import SDClaimsSelectionModal from "../../modals/SDClaimsSelectionModal";
 import { WalletCredential } from "../../types/data";
 import { getDirCurrentLanguage } from "../../utils/i18n";
+import {
+  buildClaimTree,
+  collectClaimLeaves,
+  collectSdClaimPaths,
+  filterClaimTree,
+} from "../../utils/sdClaimsTree";
 
 jest.mock("../../modals/ModalWrapper", () => ({
   ModalWrapper: ({ content }: { content: React.ReactNode }) => (
@@ -101,19 +107,12 @@ jest.mock("react-i18next", () => ({
 
 jest.mock("../../assets/SelectedTickIcon.svg", () => "selected-tick-mock.svg");
 
-jest.mock("../../utils/sdClaimsTree", () => ({
-  buildClaimTree: jest.fn((_claims: string[], sdClaims: string[]) =>
-    (sdClaims ?? []).map((path: string) => ({
-      kind: "leaf",
-      path,
-      label: path.replace(/^\$\./, ""),
-      claimType: "sdClaim",
-    }))
-  ),
-  filterClaimTree: jest.fn((_nodes: unknown[], _q: string) => _nodes),
-  collectSdClaimPaths: jest.fn((nodes: { path: string }[]) => nodes.map((n) => n.path)),
-  collectClaimLeaves: jest.fn((nodes: unknown[]) => nodes),
-}));
+jest.mock("../../utils/sdClaimsTree");
+
+const mockBuildClaimTree = buildClaimTree as jest.Mock;
+const mockCollectClaimLeaves = collectClaimLeaves as jest.Mock;
+const mockCollectSdClaimPaths = collectSdClaimPaths as jest.Mock;
+const mockFilterClaimTree = filterClaimTree as jest.Mock;
 
 const mockGetDirCurrentLanguage = getDirCurrentLanguage as jest.Mock;
 
@@ -144,6 +143,26 @@ describe("SDClaimsSelectionModal", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetDirCurrentLanguage.mockReturnValue("ltr");
+
+    mockBuildClaimTree.mockImplementation((claims, sdClaims) => [
+      ...(sdClaims || []).map((path) => ({
+        kind: "leaf",
+        path,
+        label: path.replace(/^\$\./, ""),
+        claimType: "sdClaim",
+      })),
+      ...(claims || []).map((path) => ({
+        kind: "leaf",
+        path,
+        label: path.replace(/^\$\./, ""),
+        claimType: "claim",
+      })),
+    ]);
+    mockCollectClaimLeaves.mockImplementation((nodes) => nodes || []);
+    mockCollectSdClaimPaths.mockImplementation((nodes) =>
+      (nodes || []).filter((n) => n.claimType === "sdClaim").map((n) => n.path)
+    );
+    mockFilterClaimTree.mockImplementation((nodes) => nodes || []);
   });
 
   describe("rendering", () => {
