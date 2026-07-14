@@ -99,14 +99,15 @@ describe('CredentialSetSection', () => {
         expect(screen.getByTestId('mock-dcql-credentials-national-id')).toBeInTheDocument();
     });
 
-    it('renders noSatisfiableOptions message when credentialSet has no options', () => {
+    it('renders nothing when credentialSet has no satisfiable options', () => {
         render(
             <CredentialSetSection
                 {...defaultProps}
                 credentialSet={{ required: true, options: [] }}
             />
         );
-        expect(screen.getByText('dcql.noSatisfiableOptions')).toBeInTheDocument();
+        expect(screen.queryByText('dcql.noSatisfiableOptions')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('mock-dcql-credentials-national-id')).not.toBeInTheDocument();
     });
 
     it('renders embedded without section wrapper when embedInParentGrid=true', () => {

@@ -151,15 +151,15 @@ describe('QueryGroupSection', () => {
     });
 
     describe('No matching credentials', () => {
-        it('renders inline notice when no credentials available', () => {
+        it('does not render inline notice when no credentials available', () => {
             render(
                 <QueryGroupSection
                     {...defaultProps}
                     group={makeGroup({ availableCredentials: [] })}
                 />
             );
-            expect(screen.getByTestId('query-group-no-credentials-driver-license')).toBeInTheDocument();
-            expect(screen.getByText('dcql.noSatisfiableOptions')).toBeInTheDocument();
+            expect(screen.queryByTestId('query-group-no-credentials-driver-license')).not.toBeInTheDocument();
+            expect(screen.queryByText('dcql.noSatisfiableOptions')).not.toBeInTheDocument();
         });
 
         it('does not render credential list when no credentials', () => {

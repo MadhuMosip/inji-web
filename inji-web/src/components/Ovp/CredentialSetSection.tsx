@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import {
     DcqlCredentialSet,
     DcqlOptionSelectionState,
@@ -58,7 +57,6 @@ export function CredentialSetSection({
     onSdClaimsConfirm,
 }: CredentialSetSectionProps) {
     const navigate = useNavigate();
-    const { t } = useTranslation("VerifierTrustPage");
     const testId = `credential-set-${setIndex}`;
     const satisfiableOptions = getSatisfiableOptions(
         credentialSet,
@@ -157,11 +155,7 @@ export function CredentialSetSection({
 
     const renderOptions = () => {
         if (satisfiableOptions.length === 0) {
-            return (
-                <p className="text-sm text-iw-mediumGrayText">
-                    {t("dcql.noSatisfiableOptions")}
-                </p>
-            );
+            return null;
         }
 
         return satisfiableOptions.map((option, optionIndex) => {

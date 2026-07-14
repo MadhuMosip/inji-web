@@ -77,14 +77,7 @@ export function QueryGroupSection({
 
             {(group.required || isExpanded) && (
                 <div className={DcqlQueryGroupsStyles.sectionBody}>
-                    {!hasCredentials ? (
-                        <p
-                            className="text-sm text-iw-mediumGrayText px-1 py-2"
-                            data-testid={`query-group-no-credentials-${group.queryId}`}
-                        >
-                            {t("dcql.noSatisfiableOptions")}
-                        </p>
-                    ) : (
+                    {hasCredentials && (
                         <QueryGroupCredentialList
                             queryId={group.queryId}
                             credentials={group.availableCredentials}
