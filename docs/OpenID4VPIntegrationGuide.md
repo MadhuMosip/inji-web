@@ -1,8 +1,12 @@
 
-# Integrator’s Guide – Web Wallet Login & VC Sharing (OpenID4VP)
+# Integrator’s Guide – Web Wallet Login & VC Sharing (OpenID4VP Draft-23 / Presentation Exchange)
+
+> **Spec version:** This guide covers the **OpenID4VP Draft-23** flow that uses **Presentation Exchange** (`presentation_definition` / `presentation_definition_uri`).
+>
+> For **OpenID4VP 1.0** with **DCQL** (`dcql_query`), see [OpenID4VP 1.0 Integration Guide](./OpenID4VP1.0IntegrationGuide.md).
 
 ## 1. Introduction
-This guide provides implementers (*Verifiers*) with all necessary information to integrate their systems with the **INJI Web Wallet**. The integration enables users to log into the web wallet and share Verifiable Credentials (VCs) via **OpenID for Verifiable Presentations (OpenID4VP)**.
+This guide provides implementers (*Verifiers*) with all necessary information to integrate their systems with the **INJI Web Wallet** using **OpenID4VP Draft-23** and Presentation Exchange. The integration enables users to log into the web wallet and share Verifiable Credentials (VCs) via **OpenID for Verifiable Presentations (OpenID4VP)**.
 
 **Supported Credential Formats**: The INJI Web Wallet currently supports only **JSON-LD Verifiable Credentials** based on the W3C Verifiable Credentials Data Model 1.1. Other formats like JSON-LD Data Model 2.0, SD-JWT, MSO mDocs, etc. are not supported at this time.
 
@@ -425,5 +429,7 @@ sequenceDiagram
 ## References
 
 - [OpenID for Verifiable Presentations - draft 23](https://openid.net/specs/openid-4-verifiable-presentations-1_0-ID3.html)
+- [OpenID4VP 1.0 / DCQL Integration Guide (Inji Web)](./OpenID4VP1.0IntegrationGuide.md)
+- [OpenID4VP 1.0 support in Inji Web Wallet (Mimoto)](https://github.com/inji/mimoto/blob/ovp-1.0-dcql-support/docs/OVP-1.0-Support.md)
 - [INJI OpenID4VP jar ReadMe](https://github.com/mosip/inji-openid4vp/blob/master/README.md)
 - [Mimoto API Documentation](https://mosip.stoplight.io/docs/mimoto)
