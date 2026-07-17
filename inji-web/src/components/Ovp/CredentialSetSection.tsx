@@ -119,7 +119,6 @@ export function CredentialSetSection({
                     isVisible
                     missingClaims={group.missingClaims}
                     verifier={verifier}
-                    verifierContactUrl={redirectUri}
                     onGoToHome={() => navigate(ROUTES.ROOT)}
                     redirectUri={redirectUri ?? null}
                     presentationId={presentationId}

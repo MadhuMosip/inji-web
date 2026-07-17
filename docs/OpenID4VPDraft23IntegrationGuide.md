@@ -430,6 +430,6 @@ sequenceDiagram
 
 - [OpenID for Verifiable Presentations - draft 23](https://openid.net/specs/openid-4-verifiable-presentations-1_0-ID3.html)
 - [OpenID4VP 1.0 / DCQL Integration Guide (Inji Web)](./OpenID4VPIntegrationGuide.md)
-- [OpenID4VP 1.0 support in Inji Web Wallet (Mimoto)](https://github.com/inji/mimoto/blob/ovp-1.0-dcql-support/docs/OVP-1.0-Support.md)
+- [OpenID4VP 1.0 support in Inji Web Wallet (Mimoto)](https://github.com/inji/mimoto/blob/develop/docs/OVP-1.0-Support.md)
 - [INJI OpenID4VP jar ReadMe](https://github.com/mosip/inji-openid4vp/blob/master/README.md)
 - [Mimoto API Documentation](https://mosip.stoplight.io/docs/mimoto)

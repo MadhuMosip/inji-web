@@ -3,7 +3,7 @@
 > * [W3C VC - Verifiable Credentials Overview](https://www.w3.org/TR/vc-overview/)
 > * [OpenID4VC - OpenID for Verifiable Credential Issuance - draft 13](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID1.html)
 > * [OpenID4VP - OpenID for Verifiable Presentations - draft 23](https://openid.net/specs/openid-4-verifiable-presentations-1_0-ID3.html)
-> * [OpenID4VP - OpenID for Verifiable Presentations 1.0](https://openid.net/specs/openid-4-verifiable-presentations-1_0-final.html)
+> * [OpenID4VP - OpenID for Verifiable Presentations 1.0](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html)
 
 
 ### Table of Contents
@@ -213,7 +213,7 @@ In the upcoming releases, the following [features](https://docs.inji.io/inji-wal
 
     * [OpenID4VP 1.0 / DCQL](docs/OpenID4VPIntegrationGuide.md)
     * [OpenID4VP Draft-23 / Presentation Exchange](docs/OpenID4VPDraft23IntegrationGuide.md)
-    * [Mimoto OVP 1.0 API & UI contracts](https://github.com/inji/mimoto/blob/ovp-1.0-dcql-support/docs/OVP-1.0-Support.md)
+    * [Mimoto OVP 1.0 API & UI contracts](https://github.com/inji/mimoto/blob/develop/docs/OVP-1.0-Support.md)
 
 * **Product Documentation:**
 

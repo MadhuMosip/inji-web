@@ -7,35 +7,8 @@ import unknownVerifierLogo from "../../assets/unknown_verifier_logo.png";
 import { CredentialShareSuccessViewProps } from "../../types/components";
 import { CredentialShareSuccessStyles } from "./CredentialShareSuccessStyles";
 import { SolidButton } from "../Common/Buttons/SolidButton";
+import { formatSharedTimestamp } from "../../utils/dateUtils";
 import { safeExternalRedirect } from "../../utils/navigationUtils";
-
-function formatSharedTimestamp(
-    date: Date,
-    locale: string,
-    todayLabel: (time: string) => string
-): string {
-    const now = new Date();
-    const isToday =
-        date.getFullYear() === now.getFullYear() &&
-        date.getMonth() === now.getMonth() &&
-        date.getDate() === now.getDate();
-
-    const time = date.toLocaleTimeString(locale, {
-        hour: "numeric",
-        minute: "2-digit",
-    });
-
-    if (isToday) {
-        return todayLabel(time);
-    }
-
-    return date.toLocaleString(locale, {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-    });
-}
 
 export function CredentialShareSuccessView({
     verifierName,
@@ -51,13 +24,13 @@ export function CredentialShareSuccessView({
     const [count, setCount] = useState(countdownStart);
     const startedRef = useRef(false);
 
-    const sharedAtLabel = useMemo(
-        () =>
-            formatSharedTimestamp(new Date(), i18n.language, (time) =>
-                t("sharedTodayAt", { time })
-            ),
-        [i18n.language, t]
-    );
+    const sharedAtLabel = useMemo(() => {
+        const { isToday, time, dateTimeLabel } = formatSharedTimestamp(
+            new Date(),
+            i18n.language
+        );
+        return isToday ? t("sharedTodayAt", { time }) : dateTimeLabel;
+    }, [i18n.language, t]);
 
     useEffect(() => {
         if (startedRef.current) return;

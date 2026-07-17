@@ -81,7 +81,6 @@ function DcqlQueryGroups({
                     isVisible
                     missingClaims={firstNoMatchGroup.missingClaims}
                     verifier={verifier}
-                    verifierContactUrl={redirectUri}
                     onGoToHome={() => navigate(ROUTES.ROOT)}
                     redirectUri={redirectUri ?? null}
                     presentationId={presentationId}

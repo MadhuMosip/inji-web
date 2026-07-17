@@ -610,6 +610,295 @@ export const VPAuthorizationPage: React.FC = () => {
         setSelectedSdClaimsByCredential({});
     }, []);
 
+    const handleSdClaimsConfirm = useCallback(
+        (credentialId: string, selectedClaimPaths: string[]) => {
+            setSelectedSdClaimsByCredential((prev) => ({
+                ...prev,
+                [credentialId]: selectedClaimPaths,
+            }));
+        },
+        []
+    );
+
+    const handleMatchingCredentialSelect = useCallback(
+        (id: string, isSelected: boolean) => {
+            setSelectedCredentialIds((prev) =>
+                isSelected
+                    ? prev.includes(id)
+                        ? prev
+                        : [...prev, id]
+                    : prev.filter((cId) => cId !== id)
+            );
+            if (!isSelected) {
+                setSelectedSdClaimsByCredential((prev) => {
+                    const next = { ...prev };
+                    delete next[id];
+                    return next;
+                });
+            }
+        },
+        []
+    );
+
+    const renderSearchBar = () => {
+        if (hasNoMatchingCredentials) {
+            return null;
+        }
+
+        return (
+            <div className={StoredCardsPageStyles.searchContainer}>
+                <SearchBar
+                    testId="search-credentials"
+                    placeholder={t("mainPage.searchPlaceholder")}
+                    filter={filterCredentials}
+                />
+            </div>
+        );
+    };
+
+    const renderNoMatchingCredentialsModal = () => {
+        if (!showNoMatchModal || !presentationIdData || !verifierData) {
+            return null;
+        }
+
+        return (
+            <NoMatchingCredentialsModal
+                isVisible
+                missingClaims={missingClaimsData}
+                matchingCredentials={noMatchModalCredentials}
+                verifier={verifierData}
+                onGoToHome={() => navigate(ROUTES.ROOT)}
+                onClose={
+                    dcqlNoMatchState.blockCredentialSelection
+                        ? undefined
+                        : () => setIsPartialNoMatchDismissed(true)
+                }
+                redirectUri={verifierData?.redirectUri ?? null}
+                presentationId={presentationIdData}
+            />
+        );
+    };
+
+    const renderCredentialList = () => {
+        if (!presentationIdData || !verifierData) {
+            return null;
+        }
+
+        if (isDcqlPresentation && hasDcqlCredentialSets) {
+            return (
+                <DcqlCredentialSets
+                    credentialSets={credentialSetsData}
+                    queryGroups={filteredQueryGroups}
+                    selectionState={dcqlCredentialSetSelection}
+                    refreshCredentials={() => {}}
+                    selectedSdClaimsByCredential={selectedSdClaimsByCredential}
+                    onSelectionStateChange={handleDcqlCredentialSetSelectionChange}
+                    onSdClaimsConfirm={handleSdClaimsConfirm}
+                    presentationId={presentationIdData}
+                    redirectUri={verifierData?.redirectUri ?? null}
+                    verifier={verifierData}
+                />
+            );
+        }
+
+        if (isDcqlPresentation) {
+            return (
+                <DcqlQueryGroups
+                    queryGroups={filteredQueryGroups}
+                    selection={dcqlSelection}
+                    refreshCredentials={() => {}}
+                    selectedSdClaimsByCredential={selectedSdClaimsByCredential}
+                    onCredentialSelect={handleDcqlCredentialSelect}
+                    onSdClaimsConfirm={handleSdClaimsConfirm}
+                    presentationId={presentationIdData}
+                    redirectUri={verifierData?.redirectUri ?? null}
+                    verifier={verifierData}
+                />
+            );
+        }
+
+        return (
+            <MatchingCredentials
+                credentials={filteredCredentials}
+                refreshCredentials={() => {}}
+                selectedCredentialIds={selectedCredentialIds}
+                selectedSdClaimsByCredential={selectedSdClaimsByCredential}
+                onCredentialSelect={handleMatchingCredentialSelect}
+                onSdClaimsConfirm={handleSdClaimsConfirm}
+                presentationId={presentationIdData}
+                redirectUri={verifierData?.redirectUri ?? null}
+                missingClaims={missingClaimsData}
+            />
+        );
+    };
+
+    const renderCredentialSelection = () => {
+        if (hasNoMatchingCredentials || !presentationIdData || !verifierData) {
+            return null;
+        }
+
+        return (
+            <div
+                className={VpAuthPageBackgroundStyles.credentialSelectionLayout}
+                data-testid="vp-credential-selection-layout"
+            >
+                <VerifierRequestInfoPanel
+                    verifier={verifierData}
+                    className={VpAuthPageBackgroundStyles.credentialSelectionMain}
+                />
+                <div
+                    className={
+                        VpAuthPageBackgroundStyles.credentialSelectionActionsCell
+                    }
+                >
+                    <VerifierRequestActionPanel
+                        verifier={verifierData}
+                        presentationId={presentationIdData}
+                        selectedCredentialIds={displayedSelectedCredentialIds}
+                        isShareEnabled={isDcqlShareEnabled}
+                        onShareCredentials={handleShareCredentialsFromCard}
+                        stickyBelowHeader
+                    />
+                </div>
+                <div
+                    className={VpAuthPageBackgroundStyles.credentialSelectionList}
+                >
+                    {renderCredentialList()}
+                </div>
+            </div>
+        );
+    };
+
+    const renderCredentialRequestContent = () => {
+        if (
+            !showCredentialRequest ||
+            !presentationIdData ||
+            !verifierData ||
+            isErrorActive ||
+            isLoading
+        ) {
+            return null;
+        }
+
+        return (
+            <>
+                {renderNoMatchingCredentialsModal()}
+                {renderCredentialSelection()}
+            </>
+        );
+    };
+
+    const renderCredentialShareHandler = () => {
+        if (
+            !selectedCredentialsData ||
+            !verifierData ||
+            !presentationIdData ||
+            isErrorActive
+        ) {
+            return null;
+        }
+
+        return (
+            <CredentialShareHandler
+                verifierName={verifierData.name}
+                verifierLogo={verifierData.logo}
+                verifierTrusted={verifierData.trusted}
+                returnUrl={verifierData.redirectUri || ROUTES.ROOT}
+                selectedCredentials={selectedCredentialsData}
+                selectedSdClaims={presentationSelectedSdClaims}
+                presentationId={presentationIdData}
+                isDcqlPresentation={isDcqlPresentation}
+                dcqlSelection={dcqlSelection}
+                onShareSuccess={handleShareSuccess}
+                onClose={() => {
+                    setSelectedCredentialsData(null);
+                    setSelectedSdClaimsByCredential({});
+                    navigate(ROUTES.ROOT);
+                }}
+            />
+        );
+    };
+
+    const renderLoaderModal = () => (
+        <LoaderModal
+            isOpen={isLoading || isRetrying}
+            title={!showCredentialRequest ? t("loadingCard.title") : ""}
+            subtitle={!showCredentialRequest ? t("loadingCard.subtitle") : ""}
+            message={
+                showCredentialRequest
+                    ? t("CredentialRequestModal:loading.message")
+                    : ""
+            }
+            size="xl-loading"
+            testId="modal-loader"
+        />
+    );
+
+    const renderTrustVerifierModal = () => (
+        <TrustVerifierModal
+            isOpen={showTrustVerifier && !isErrorActive}
+            logo={verifierData?.logo}
+            verifierName={verifierData?.name}
+            onTrust={handleTrustButton}
+            onCancel={() => {
+                setShowTrustVerifier(false);
+                setIsCancelConfirmation(true);
+            }}
+            testId="modal-trust-verifier"
+        />
+    );
+
+    const renderErrorCard = () => (
+        <ErrorCard
+            isOpen={showError}
+            onClose={onClose}
+            onRetry={onRetry}
+            isRetrying={isRetrying}
+            title={errorTitle}
+            description={errorDescription}
+            testId="modal-error-card"
+        />
+    );
+
+    const renderTrustRejectionModal = () => {
+        if (!isCancelConfirmation || !presentationIdData) {
+            return null;
+        }
+
+        return (
+            <TrustRejectionModal
+                isOpen={isCancelConfirmation && !isErrorActive}
+                presentationId={presentationIdData}
+                redirectUri={verifierData?.redirectUri || null}
+                onConfirm={() => {
+                    setIsCancelConfirmation(false);
+                }}
+                onClose={() => {
+                    setIsCancelConfirmation(false);
+                    setShowTrustVerifier(true);
+                }}
+                testId="modal-trust-rejection-modal"
+            />
+        );
+    };
+
+    const renderLeaveConfirmationModal = () => {
+        if (!showLeaveWarnPopup) {
+            return null;
+        }
+
+        return (
+            <LeaveConfirmationModal
+                confirmLeave={handleBackBtn}
+                cancelLeave={() => setShowLeaveWarnPopup(false)}
+                title={t("leaveConfirmation.title")}
+                description={t("leaveConfirmation.description")}
+                confirmBtnTitle={t("leaveConfirmation.confirmButton")}
+                cancelBtnTitle={t("leaveConfirmation.cancelButton")}
+            />
+        );
+    };
+
     if (shareSuccessPayload) {
         return (
             <CredentialShareSuccessView
@@ -622,249 +911,21 @@ export const VPAuthorizationPage: React.FC = () => {
     return (
         <div className={VpAuthPageBackgroundStyles.contentOverlay}>
             <div className="w-full min-w-0">
-                {!hasNoMatchingCredentials && (
-                    <div className={StoredCardsPageStyles.searchContainer}>
-                        <SearchBar
-                            testId={"search-credentials"}
-                            placeholder={t('mainPage.searchPlaceholder')}
-                            filter={filterCredentials}
-                        />
-                    </div>
-                )}
+                {renderSearchBar()}
 
                 <div
                     className={VpAuthPageBackgroundStyles.credentialDetailsCard}
                     data-testid="vp-authorization-content"
                 >
-                    {showCredentialRequest && presentationIdData && verifierData && !isErrorActive && !isLoading && (
-                        <>
-                            {showNoMatchModal && (
-                                <NoMatchingCredentialsModal
-                                    isVisible
-                                    missingClaims={missingClaimsData}
-                                    matchingCredentials={noMatchModalCredentials}
-                                    verifier={verifierData}
-                                    verifierContactUrl={verifierData?.redirectUri}
-                                    onGoToHome={() => navigate(ROUTES.ROOT)}
-                                    onClose={
-                                        dcqlNoMatchState.blockCredentialSelection
-                                            ? undefined
-                                            : () =>
-                                                  setIsPartialNoMatchDismissed(
-                                                      true
-                                                  )
-                                    }
-                                    redirectUri={verifierData?.redirectUri ?? null}
-                                    presentationId={presentationIdData}
-                                />
-                            )}
-                        {!hasNoMatchingCredentials && (
-                        <>
-                            <div
-                                className={VpAuthPageBackgroundStyles.credentialSelectionLayout}
-                                data-testid="vp-credential-selection-layout"
-                            >
-                                <VerifierRequestInfoPanel
-                                    verifier={verifierData}
-                                    className={VpAuthPageBackgroundStyles.credentialSelectionMain}
-                                />
-                                <div
-                                    className={
-                                        VpAuthPageBackgroundStyles.credentialSelectionActionsCell
-                                    }
-                                >
-                                    <VerifierRequestActionPanel
-                                        verifier={verifierData}
-                                        presentationId={presentationIdData}
-                                        selectedCredentialIds={displayedSelectedCredentialIds}
-                                        isShareEnabled={isDcqlShareEnabled}
-                                        onShareCredentials={handleShareCredentialsFromCard}
-                                        stickyBelowHeader
-                                    />
-                                </div>
-                                <div
-                                    className={
-                                        VpAuthPageBackgroundStyles.credentialSelectionList
-                                    }
-                                >
-                            {isDcqlPresentation ? (
-                                hasDcqlCredentialSets ? (
-                                    <DcqlCredentialSets
-                                        credentialSets={credentialSetsData}
-                                        queryGroups={filteredQueryGroups}
-                                        selectionState={dcqlCredentialSetSelection}
-                                        refreshCredentials={() => { }}
-                                        selectedSdClaimsByCredential={
-                                            selectedSdClaimsByCredential
-                                        }
-                                        onSelectionStateChange={
-                                            handleDcqlCredentialSetSelectionChange
-                                        }
-                                        onSdClaimsConfirm={(
-                                            credentialId,
-                                            selectedClaimPaths
-                                        ) => {
-                                            setSelectedSdClaimsByCredential(
-                                                (prev) => ({
-                                                    ...prev,
-                                                    [credentialId]:
-                                                        selectedClaimPaths,
-                                                })
-                                            );
-                                        }}
-                                        presentationId={presentationIdData}
-                                        redirectUri={
-                                            verifierData?.redirectUri ?? null
-                                        }
-                                        verifier={verifierData}
-                                    />
-                                ) : (
-                                    <DcqlQueryGroups
-                                        queryGroups={filteredQueryGroups}
-                                        selection={dcqlSelection}
-                                        refreshCredentials={() => { }}
-                                        selectedSdClaimsByCredential={
-                                            selectedSdClaimsByCredential
-                                        }
-                                        onCredentialSelect={
-                                            handleDcqlCredentialSelect
-                                        }
-                                        onSdClaimsConfirm={(
-                                            credentialId,
-                                            selectedClaimPaths
-                                        ) => {
-                                            setSelectedSdClaimsByCredential(
-                                                (prev) => ({
-                                                    ...prev,
-                                                    [credentialId]:
-                                                        selectedClaimPaths,
-                                                })
-                                            );
-                                        }}
-                                        presentationId={presentationIdData}
-                                        redirectUri={
-                                            verifierData?.redirectUri ?? null
-                                        }
-                                        verifier={verifierData}
-                                    />
-                                )
-                            ) : (
-                                <MatchingCredentials
-                                    credentials={filteredCredentials}
-                                    refreshCredentials={() => { }}
-                                    selectedCredentialIds={selectedCredentialIds}
-                                    selectedSdClaimsByCredential={selectedSdClaimsByCredential}
-                                    onCredentialSelect={(id, isSelected) => {
-                                        setSelectedCredentialIds((prev) =>
-                                            isSelected
-                                                ? prev.includes(id) ? prev : [...prev, id]
-                                                : prev.filter((cId) => cId !== id)
-                                        );
-                                        if (!isSelected) {
-                                            setSelectedSdClaimsByCredential((prev) => {
-                                                const next = { ...prev };
-                                                delete next[id];
-                                                return next;
-                                            });
-                                        }
-                                    }}
-                                    onSdClaimsConfirm={(credentialId, selectedClaimPaths) => {
-                                        setSelectedSdClaimsByCredential((prev) => ({
-                                            ...prev,
-                                            [credentialId]: selectedClaimPaths,
-                                        }));
-                                    }}
-                                    presentationId={presentationIdData}
-                                    redirectUri={verifierData?.redirectUri ?? null}
-                                    missingClaims={missingClaimsData}
-                                />
-                            )}
-                                </div>
-                            </div>
-                        </>
-                        )}
-                        </>
-                    )}
-
-                                {selectedCredentialsData && verifierData && presentationIdData && !isErrorActive && (
-                                    <CredentialShareHandler
-                                        verifierName={verifierData.name}
-                                        verifierLogo={verifierData.logo}
-                                        verifierTrusted={verifierData.trusted}
-                                        returnUrl={verifierData.redirectUri || ROUTES.ROOT}
-                                        selectedCredentials={selectedCredentialsData}
-                                        selectedSdClaims={presentationSelectedSdClaims}
-                                        presentationId={presentationIdData}
-                                        isDcqlPresentation={isDcqlPresentation}
-                                        dcqlSelection={dcqlSelection}
-                                        onShareSuccess={handleShareSuccess}
-                                        onClose={() => {
-                                            setSelectedCredentialsData(null);
-                                            setSelectedSdClaimsByCredential({});
-                                            navigate(ROUTES.ROOT);
-                                        }}
-                                    />
-                                )}
-
+                    {renderCredentialRequestContent()}
+                    {renderCredentialShareHandler()}
                 </div>
 
-                <LoaderModal
-                                isOpen={isLoading || isRetrying}
-                                title={!showCredentialRequest ? t("loadingCard.title") : ''}
-                                subtitle={!showCredentialRequest ? t("loadingCard.subtitle") : ''}
-                                message={showCredentialRequest ? t('CredentialRequestModal:loading.message') : ''}
-                                size="xl-loading"
-                                testId="modal-loader"
-                />
-
-                            <TrustVerifierModal
-                                isOpen={showTrustVerifier && !isErrorActive}
-                                logo={verifierData?.logo}
-                                verifierName={verifierData?.name}
-                                onTrust={handleTrustButton}
-                                onCancel={() => {
-                                    setShowTrustVerifier(false);
-                                    setIsCancelConfirmation(true);
-                                }}
-                                testId="modal-trust-verifier"
-                            />
-
-                            <ErrorCard
-                                isOpen={showError}
-                                onClose={onClose}
-                                onRetry={onRetry}
-                                isRetrying={isRetrying}
-                                title={errorTitle}
-                                description={errorDescription}
-                                testId="modal-error-card"
-                            />
-
-                            {isCancelConfirmation && presentationIdData && (
-                                <TrustRejectionModal
-                                    isOpen={isCancelConfirmation && !isErrorActive}
-                                    presentationId={presentationIdData}
-                                    redirectUri={verifierData?.redirectUri || null}
-                                    onConfirm={() => {
-                                        setIsCancelConfirmation(false);
-                                    }}
-                                    onClose={() => {
-                                        setIsCancelConfirmation(false);
-                                        setShowTrustVerifier(true);
-                                    }}
-                                    testId="modal-trust-rejection-modal"
-                                />
-                            )}
-
-                {showLeaveWarnPopup && (
-                    <LeaveConfirmationModal
-                        confirmLeave={handleBackBtn}
-                        cancelLeave={() => setShowLeaveWarnPopup(false)}
-                        title={t("leaveConfirmation.title")}
-                        description={t("leaveConfirmation.description")}
-                        confirmBtnTitle={t("leaveConfirmation.confirmButton")}
-                        cancelBtnTitle={t("leaveConfirmation.cancelButton")}
-                    />
-                )}
+                {renderLoaderModal()}
+                {renderTrustVerifierModal()}
+                {renderErrorCard()}
+                {renderTrustRejectionModal()}
+                {renderLeaveConfirmationModal()}
             </div>
         </div>
     );

@@ -7,13 +7,13 @@
 ## 1. Introduction
 This guide provides implementers (*Verifiers*) with the information needed to integrate with the **INJI Web Wallet** when requesting credentials using **OpenID for Verifiable Presentations 1.0**.
 
-In OpenID4VP 1.0, the verifier expresses credential requirements with a **DCQL query** instead of a Presentation Exchange `presentation_definition`. The wallet authenticates the user, shows trust and consent screens, lets the user satisfy the DCQL query (including optional **credential sets** / OR options), and returns a Verifiable Presentation (VP) to the verifier’s `response_uri`.
+In OpenID4VP 1.0, the verifier expresses credential requirements with a **DCQL query**. The wallet authenticates the user, shows trust and consent screens, lets the user satisfy the DCQL query (including optional **credential sets** / OR options), and returns a Verifiable Presentation (VP) to the verifier’s `response_uri`.
 
 **Supported Credential Formats** (for presentation):
 - **W3C JSON-LD** Verifiable Credentials (Data Model 1.1 / `ldp_vc`)
 - **IETF SD-JWT VC** (`dc+sd-jwt`), including selective disclosure where applicable. `vc+sd-jwt` is accepted only as a legacy / compatibility alias.
 
-> **Technical API contracts** (Mimoto presentation endpoints, `queryGroups` / `credentialSets` response shapes, submit payload rules): see [OpenID4VP 1.0 support in Inji Web Wallet (Mimoto)](https://github.com/inji/mimoto/blob/ovp-1.0-dcql-support/docs/OVP-1.0-Support.md).
+> **Technical API contracts** (Mimoto presentation endpoints, `queryGroups` / `credentialSets` response shapes, submit payload rules): see [OpenID4VP 1.0 support in Inji Web Wallet (Mimoto)](https://github.com/inji/mimoto/blob/develop/docs/OVP-1.0-Support.md).
 
 ## 2. High-Level Flow
 1. Verifier constructs an OpenID4VP 1.0 authorization request with a `dcql_query`.
@@ -62,7 +62,7 @@ https://example.injiweb.com/authorize
 
 | Parameter | Required | Description |
 |----------|----------|-------------|
-| `client_id` | Yes | Verifier identifier. OpenID4VP 1.0 encodes how to interpret it with a **Client Identifier Prefix** inside the value (`prefix:orig_client_id`). An unprefixed value is treated as **pre-registered**. Examples: `redirect_uri:https://verifier.example.com/cb`, `did:example:123`, or `sample-app` (pre-registered). |
+| `client_id` | Yes | Verifier identifier. OpenID4VP 1.0 encodes how to interpret it with a **Client Identifier Prefix** inside the value (`prefix:orig_client_id`). An unprefixed value is treated as **pre-registered**. Examples: `redirect_uri:https://verifier.example.com/cb`, `decentralized_identifier:did:example:123`, or `sample-app` (pre-registered). |
 | `dcql_query` | Yes* | URL-encoded DCQL query describing required credentials, claims, and optional `credential_sets`. *Either `dcql_query` or a `scope` that represents a DCQL query must be present (not both), per OpenID4VP 1.0. |
 | `response_type` | Yes | Must be `vp_token`. |
 | `response_mode` | Yes | Must be `direct_post` or `direct_post.jwt`. |
@@ -93,9 +93,13 @@ OpenID4VP 1.0 uses Client Identifier Prefixes in `client_id` (`<prefix>:<orig_cl
   ```
 - Do not add a `pre-registered:` prefix; the absence of a prefix is the pre-registered case.
 
-### 4.3 `did`
-- Example: `client_id=did:example:123`
-- Wallet resolves the DID document to verify authenticity and keys.
+### 4.3 `decentralized_identifier`
+- Example: `client_id=decentralized_identifier:did:example:123`
+- The authorization request MUST be signed with a private key associated with the DID.
+- Wallet resolves the DID document to obtain the public key and verify the request signature.
+- Verifier metadata (other than the public key) MUST be passed via `client_metadata`.
+
+> In [Draft-23](./OpenID4VPDraft23IntegrationGuide.md), DID-based verifiers use `client_id_scheme=did` with an unprefixed `client_id` (for example, `did:example:123`). That pattern does not apply to OpenID4VP 1.0.
 
 ## 5. DCQL Query
 The `dcql_query` parameter defines what credentials (and optionally which claims / claim combinations) the verifier is requesting.
@@ -161,7 +165,7 @@ Interpretation:
 - **OR** between options in `credential_sets[].options`
 - **AND** within a single option (for example `["voter_id", "dl"]`)
 
-For Mimoto’s wallet-facing response model (`queryGroups`, `credentialSets`) and field reference, see the [Mimoto OVP 1.0 support doc](https://github.com/inji/mimoto/blob/ovp-1.0-dcql-support/docs/OVP-1.0-Support.md#step-2--get-matching-credentials-get).
+For Mimoto’s wallet-facing response model (`queryGroups`, `credentialSets`) and field reference, see the [Mimoto OVP 1.0 support doc](https://github.com/inji/mimoto/blob/develop/docs/OVP-1.0-Support.md#step-2--get-matching-credentials-get).
 
 ## 6. Client Metadata
 Client metadata provides verifier branding information (such as name and logo) displayed during the consent step, along with the supported VP formats the verifier can process.
@@ -308,7 +312,7 @@ Verifier must validate `state` to correlate the response with the correct sessio
 - `multiple=false` allows at most one credential per query
 - Required `credential_sets` must match exactly one option
 
-Details: [Mimoto OVP 1.0 support — Step 3](https://github.com/inji/mimoto/blob/ovp-1.0-dcql-support/docs/OVP-1.0-Support.md#step-3--submit-or-reject-patch).
+Details: [Mimoto OVP 1.0 support — Step 3](https://github.com/inji/mimoto/blob/develop/docs/OVP-1.0-Support.md#step-3--submit-or-reject-patch).
 
 ## 11. Integration Steps for Verifiers
 
@@ -335,7 +339,7 @@ Possible errors returned to the verifier (non-exhaustive):
 | `invalid_request` | Invalid or missing parameters (including malformed `dcql_query`) |
 | `access_denied` | User cancelled, no matching credentials, or denied consent |
 
-Refer to the OpenID4VP 1.0 specification for the full error model: [OpenID4VP 1.0 — Error Response](https://openid.net/specs/openid-4-verifiable-presentations-1_0-final.html).
+Refer to the OpenID4VP 1.0 specification for the full error model: [OpenID4VP 1.0 — Error Response](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html).
 
 Sample error:
 
@@ -347,7 +351,7 @@ Sample error:
 }
 ```
 
-Wallet ↔ Mimoto validation errors on submit (unknown `queryId`, invalid credential-set option, mixed `selectedCredentials` types, etc.) are documented in [Mimoto OVP 1.0 — Common errors](https://github.com/inji/mimoto/blob/ovp-1.0-dcql-support/docs/OVP-1.0-Support.md#common-errors-400).
+Wallet ↔ Mimoto validation errors on submit (unknown `queryId`, invalid credential-set option, mixed `selectedCredentials` types, etc.) are documented in [Mimoto OVP 1.0 — Common errors](https://github.com/inji/mimoto/blob/develop/docs/OVP-1.0-Support.md#common-errors-400).
 
 ## 13. Technical Specification
 
@@ -368,7 +372,7 @@ Wallet ↔ Mimoto validation errors on submit (unknown `queryId`, invalid creden
 
 For request/response JSON, UI rendering rules, SD-JWT `selectedSdClaims` behaviour, rejection payloads, and Draft-23 appendix shapes, use:
 
-**[OpenID4VP 1.0 support in Inji Web Wallet (Mimoto)](https://github.com/inji/mimoto/blob/ovp-1.0-dcql-support/docs/OVP-1.0-Support.md)**
+**[OpenID4VP 1.0 support in Inji Web Wallet (Mimoto)](https://github.com/inji/mimoto/blob/develop/docs/OVP-1.0-Support.md)**
 
 ### Detecting OVP 1.0 vs Draft-23 in the wallet
 
@@ -490,8 +494,8 @@ sequenceDiagram
 
 ## References
 
-- [OpenID for Verifiable Presentations 1.0](https://openid.net/specs/openid-4-verifiable-presentations-1_0-final.html)
-- [OpenID4VP 1.0 support in Inji Web Wallet (Mimoto) — API & UI contracts](https://github.com/inji/mimoto/blob/ovp-1.0-dcql-support/docs/OVP-1.0-Support.md)
+- [OpenID for Verifiable Presentations 1.0](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html)
+- [OpenID4VP 1.0 support in Inji Web Wallet (Mimoto) — API & UI contracts](https://github.com/inji/mimoto/blob/develop/docs/OVP-1.0-Support.md)
 - [OpenID4VP Draft-23 / Presentation Exchange Integration Guide (Inji Web)](./OpenID4VPDraft23IntegrationGuide.md)
 - [OpenID4VP SD-JWT support (Inji Web)](./SDJWTOpenID4VPIntegrationGuide.md)
 - [INJI OpenID4VP jar ReadMe](https://github.com/mosip/inji-openid4vp/blob/master/README.md)
