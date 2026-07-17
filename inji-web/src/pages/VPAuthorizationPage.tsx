@@ -21,6 +21,7 @@ import {
 import MatchingCredentials from "../components/Ovp/MatchingCredentials";
 import DcqlQueryGroups from "../components/Ovp/DcqlQueryGroups";
 import DcqlCredentialSets from "../components/Ovp/DcqlCredentialSets";
+import { isSdJwtCredential } from "../components/Ovp/Dcql/credentialCardUtils";
 import {
     DcqlCredentialSet,
     DcqlCredentialSetSelectionState,
@@ -239,7 +240,7 @@ export const VPAuthorizationPage: React.FC = () => {
                         const autoSdClaims: SelectedSdClaimsMap = {};
                         flatCredentials.forEach((credential) => {
                             if (
-                                credential.format?.includes("sd-jwt") &&
+                                isSdJwtCredential(credential) &&
                                 Array.isArray(credential.sdClaims) &&
                                 credential.sdClaims.length > 0
                             ) {
@@ -505,7 +506,8 @@ export const VPAuthorizationPage: React.FC = () => {
                     (c) => c.credentialId === credentialId
                 );
                 if (
-                    credential?.format?.includes("sd-jwt") &&
+                    credential &&
+                    isSdJwtCredential(credential) &&
                     Array.isArray(credential.sdClaims) &&
                     credential.sdClaims.length > 0
                 ) {
@@ -525,7 +527,7 @@ export const VPAuthorizationPage: React.FC = () => {
         }
         const payload: SelectedSdClaimsMap = {};
         selectedCredentialsData.forEach((credential) => {
-            if (!credential.format?.includes("sd-jwt")) {
+            if (!isSdJwtCredential(credential)) {
                 return;
             }
             if (credential.credentialId in selectedSdClaimsByCredential) {

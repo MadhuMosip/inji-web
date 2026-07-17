@@ -125,7 +125,7 @@ describe('NoMatchingCredentialsModal', () => {
                         return `${vars.count} required`;
                     }
                     if (key === "title") {
-                        return "Missing claims";
+                        return "Missing Information";
                     }
                 }
 
@@ -135,7 +135,6 @@ describe('NoMatchingCredentialsModal', () => {
                         "The verifier has requested cards based on the following claims:",
                     showMore: "Show more (+ {{count}})",
                     whatYouCanDo: "WHAT YOU CAN DO",
-                    contactVerifier: "Contact Verifier",
                     verifierHelp:
                         "Reach out to this verifier for more information on which Cards are required to proceed.",
                     matchingCards: "MATCHING CARDS",
@@ -259,7 +258,7 @@ describe('NoMatchingCredentialsModal', () => {
             expect(
                 screen.getByTestId('card-missing-claims-list-modal')
             ).toBeInTheDocument();
-            expect(screen.getByText('Missing claims')).toBeInTheDocument();
+            expect(screen.getByText('Missing Information')).toBeInTheDocument();
             expect(screen.getByText('5 required')).toBeInTheDocument();
             expect(screen.getByTestId('missing-claims-list')).toHaveTextContent(
                 'Claim 4'

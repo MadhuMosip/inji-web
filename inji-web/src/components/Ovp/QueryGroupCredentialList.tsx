@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { SelectedSdClaimsMap, WalletCredential } from "../../types/data";
 import { MatchingCredentialsStyles } from "./OvpPageStyles";
 import checkCircle from "../../assets/checkCircleTwo.svg";
+import { isSdJwtCredential } from "./Dcql/credentialCardUtils";
 import SDClaimsSelectionModal from "../../modals/SDClaimsSelectionModal";
 
 interface QueryGroupCredentialListProps {
@@ -55,7 +56,7 @@ export function QueryGroupCredentialList({
             onCredentialSelect(queryId, credential.credentialId, true);
         }
 
-        if (credential.format.includes("sd-jwt")) {
+        if (isSdJwtCredential(credential)) {
             setSelectedSDJWT(credential);
             setShowSDClaimsModal(true);
         }

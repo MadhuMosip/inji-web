@@ -727,8 +727,15 @@ describe("VPAuthorizationPage", () => {
               queryId: "government-identity",
               required: true,
               multiple: false,
-              availableCredentials: [],
-              missingClaims: ["$.type"],
+              availableCredentials: [
+                {
+                  credentialId: "gov-cred-1",
+                  credentialTypeDisplayName: "Government ID",
+                  credentialTypeLogo: "",
+                  format: "ldp_vc",
+                },
+              ],
+              missingClaims: [],
             },
             {
               queryId: "age-proof",
@@ -756,6 +763,101 @@ describe("VPAuthorizationPage", () => {
     expect(screen.getByTestId("mock-dcql-group-government-identity")).toBeInTheDocument();
     expect(screen.getByTestId("mock-dcql-group-age-proof")).toBeInTheDocument();
     expect(screen.queryByTestId("mock-matching-credentials")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("card-no-matching-credentials-modal")).not.toBeInTheDocument();
+  });
+
+  test("shows no-matching modal when a required query group has no credentials", async () => {
+    mockFetchData.mockReset();
+    mockFetchData
+      .mockResolvedValueOnce({
+        ok: () => true,
+        data: mockVerifierTrusted,
+      })
+      .mockResolvedValueOnce({
+        ok: () => true,
+        data: {
+          queryGroups: [
+            {
+              queryId: "government-identity",
+              required: true,
+              multiple: false,
+              availableCredentials: [],
+              missingClaims: ["$.type"],
+            },
+            {
+              queryId: "age-proof",
+              required: true,
+              multiple: false,
+              availableCredentials: [
+                {
+                  credentialId: "age-cred-1",
+                  credentialTypeDisplayName: "Age Credential",
+                  credentialTypeLogo: "",
+                  format: "dc+sd-jwt",
+                },
+              ],
+              missingClaims: [],
+            },
+          ],
+        },
+      });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("card-no-matching-credentials-modal")).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId("mock-dcql-query-groups")).not.toBeInTheDocument();
+  });
+
+  test("does not show no-matching modal when credential sets remain satisfiable with partial empty groups", async () => {
+    mockFetchData.mockReset();
+    mockFetchData
+      .mockResolvedValueOnce({
+        ok: () => true,
+        data: mockVerifierTrusted,
+      })
+      .mockResolvedValueOnce({
+        ok: () => true,
+        data: {
+          queryGroups: [
+            {
+              queryId: "pan",
+              required: true,
+              multiple: false,
+              availableCredentials: [],
+              missingClaims: ["$.type"],
+            },
+            {
+              queryId: "aadhaar",
+              required: true,
+              multiple: false,
+              availableCredentials: [
+                {
+                  credentialId: "aadhaar-cred",
+                  credentialTypeDisplayName: "Aadhaar Card",
+                  credentialTypeLogo: "",
+                  format: "ldp_vc",
+                },
+              ],
+              missingClaims: [],
+            },
+          ],
+          credentialSets: [
+            {
+              required: true,
+              options: [["pan"], ["aadhaar"]],
+            },
+          ],
+        },
+      });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mock-dcql-credential-sets")).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId("card-no-matching-credentials-modal")).not.toBeInTheDocument();
   });
 
   test("renders DCQL credential sets when credentials response contains credentialSets", async () => {

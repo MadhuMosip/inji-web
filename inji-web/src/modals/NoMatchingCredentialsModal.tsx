@@ -216,29 +216,32 @@ export const NoMatchingCredentialsModal: React.FC<NoMatchingCredentialsModalProp
                                 btnTestId="btn-close-no-matching-credentials"
                             />
                         </div>
-                        <div className={styles.iconContainer}>
-                            <img
-                                src={Shield}
-                                alt=""
-                                className={styles.iconImage}
-                                data-testid="img-no-matching-credentials-icon"
-                                aria-hidden
-                            />
+                        <div className={styles.headerSection}>
+                            <div className={styles.iconContainer}>
+                                <img
+                                    src={Shield}
+                                    alt=""
+                                    className={styles.iconImage}
+                                    data-testid="img-no-matching-credentials-icon"
+                                    aria-hidden
+                                />
+                            </div>
+
+                            <h2
+                                id="title-no-matching-credentials"
+                                className={styles.title}
+                            >
+                                {t("title")}
+                            </h2>
+                            <p
+                                data-testid="text-no-matching-credentials-description"
+                                className={styles.claimsIntro}
+                            >
+                                {t("claimsIntro")}
+                            </p>
                         </div>
 
-                        <h2
-                            id="title-no-matching-credentials"
-                            className={styles.title}
-                        >
-                            {t("title")}
-                        </h2>
-                        <p
-                            data-testid="text-no-matching-credentials-description"
-                            className={styles.claimsIntro}
-                        >
-                            {t("claimsIntro")}
-                        </p>
-
+                        <div className={styles.scrollArea}>
                         {missingClaims.length > 0 && (
                             <div
                                 className={styles.claimsCard}
@@ -309,12 +312,6 @@ export const NoMatchingCredentialsModal: React.FC<NoMatchingCredentialsModalProp
                                             />
                                         )}
                                     </div>
-                                    <p
-                                        className={styles.contactLink}
-                                        data-testid="text-contact-verifier"
-                                    >
-                                        {t("contactVerifier")}
-                                    </p>
                                 </div>
                             </div>
                             <p className={styles.verifierHelp}>{t("verifierHelp")}</p>
@@ -366,6 +363,7 @@ export const NoMatchingCredentialsModal: React.FC<NoMatchingCredentialsModalProp
                                 </div>
                             </>
                         )}
+                        </div>
 
                         <SolidButton
                             testId="btn-go-to-home"

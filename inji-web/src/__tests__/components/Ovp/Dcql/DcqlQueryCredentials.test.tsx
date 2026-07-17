@@ -45,11 +45,15 @@ jest.mock('../../../../modals/CredentialPreviewModal', () => ({
     ),
 }));
 
-jest.mock('../../../../components/Ovp/Dcql/credentialCardUtils', () => ({
-    getCredentialActionVariant: jest.fn((cred: WalletCredential) =>
-        cred.format.includes('sd-jwt') ? 'shareableFields' : 'viewCard'
-    ),
-}));
+jest.mock('../../../../components/Ovp/Dcql/credentialCardUtils', () => {
+    const actual = jest.requireActual(
+        '../../../../components/Ovp/Dcql/credentialCardUtils'
+    );
+    return {
+        ...actual,
+        getCredentialActionVariant: jest.fn(actual.getCredentialActionVariant),
+    };
+});
 
 const makeCredential = (id: string, format = 'ldp_vc'): WalletCredential => ({
     credentialId: id,

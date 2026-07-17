@@ -579,8 +579,8 @@
       "instructionSelectCount": "उपलब्ध विकल्पों में से {{count}} कार्ड चुनें।",
       "instructionOnePerSet": "प्रत्येक समूह से एक कार्ड चुनें।",
       "instructionComplex": "सत्यापनकर्ता के अनुरोध को पूरा करने के लिए चयन निर्देशों का पालन करें।",
-      "selectShareableFields": "आवश्यक फील्ड्स",
-      "selectRequiredClaims": "आवश्यक दावे चुनें",
+      "selectShareableFields": "ज़रूरी जानकारी",
+      "selectRequiredClaims": "आवश्यक जानकारी चुनें",
       "viewCard": "कार्ड देखें",
       "showAllCards": "सभी {{count}} कार्ड दिखाएँ",
       "clearAll": "सभी हटाएँ",
@@ -627,8 +627,8 @@
     "subtitleReadOnly": "क्रेडेंशियल पूर्वावलोकन · सभी फ़ील्ड साझा किए जाएंगे",
     "confirmProceed": "पुष्टि करें और आगे बढ़ें",
     "done": "पूर्ण",
-    "disclosableFields": "प्रकट किए जा सकने वाले दावे",
-    "defaultShareable": "डिफ़ॉल्ट रूप से साझा किए जा सकने वाले दावे",
+    "disclosableFields": "प्रकट की जा सकने वाली जानकारी",
+    "defaultShareable": "डिफ़ॉल्ट रूप से साझा की जा सकने वाली जानकारी",
     "defaultShareableNote": "शामिल · इन्हें हटाया नहीं जा सकता।",
     "checkAll": "सभी चुनें",
     "clearAll": "सभी साफ़ करें",
@@ -645,7 +645,6 @@
     "missingInfoLabel": "अनुपलब्ध जानकारी:",
     "showMore": "और दिखाएँ (+{{count}}) >",
     "whatYouCanDo": "आप क्या कर सकते हैं",
-    "contactVerifier": "सत्यापनकर्ता से संपर्क करें",
     "verifierHelp": "आगे बढ़ने के लिए आवश्यक कार्डों के बारे में अधिक जानकारी के लिए सत्यापनकर्ता से संपर्क करें।",
     "matchingCards": "आंशिक रूप से मेल खाने वाले कार्ड",
     "goToHomeButton": "होम पर जाएँ",
@@ -654,7 +653,7 @@
     "unknownVerifier": "अज्ञात सत्यापनकर्ता"
   },
   "MissingClaimsListModal": {
-    "title": "अनुपलब्ध दावे",
+    "title": "अनुपलब्ध जानकारी",
     "requiredCount": "{{count}} आवश्यक"
   },
   "LogoutConfirmation": {

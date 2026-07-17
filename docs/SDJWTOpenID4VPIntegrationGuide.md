@@ -4,8 +4,8 @@
 The existing OpenID4VP flow in Inji Web wallet supports W3C Data Model 1.1 JSON-LD VCs. This document describes the extension to share IETF SD-JWT VCs as well.
 
 Related guides:
-- [OpenID4VP Draft-23 / Presentation Exchange](./OpenID4VPIntegrationGuide.md)
-- [OpenID4VP 1.0 / DCQL](./OpenID4VP1.0IntegrationGuide.md)
+- [OpenID4VP 1.0 / DCQL](./OpenID4VPIntegrationGuide.md)
+- [OpenID4VP Draft-23 / Presentation Exchange](./OpenID4VPDraft23IntegrationGuide.md)
 - [Mimoto OVP 1.0 API contracts (selectedSdClaims)](https://github.com/inji/mimoto/blob/ovp-1.0-dcql-support/docs/OVP-1.0-Support.md#sd-jwt-selective-disclosure-selectedsdclaims)
 
 ### Technical Specification :

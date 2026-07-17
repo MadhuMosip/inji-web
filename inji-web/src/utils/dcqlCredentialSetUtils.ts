@@ -263,11 +263,20 @@ export function areRequiredCredentialSetsUnsatisfiable(
         return false;
     }
 
-    return requiredSets.every(
+    // The presentation cannot succeed if any required set has no satisfiable option.
+    return requiredSets.some(
         (set) => getSatisfiableOptions(set, queryGroups).length === 0
     );
 }
 
+/**
+ * Decide whether to show the no-matching-credentials modal.
+ * Show only when the user has no way to satisfy the request:
+ * - every query group is empty, or
+ * - required credential sets cannot be satisfied, or
+ * - (query-groups-only) a required query group has no credentials.
+ * Partial gaps that still leave a satisfiable credential_sets path do not show the modal.
+ */
 export function getDcqlNoMatchState(
     queryGroups: DcqlQueryGroup[],
     credentialSets: DcqlCredentialSet[],
@@ -281,16 +290,24 @@ export function getDcqlNoMatchState(
         (group) => group.availableCredentials.length === 0
     );
     const allEmpty = emptyGroups.length === queryGroups.length;
-    const requiredSetsUnsatisfiable =
-        hasCredentialSets &&
-        areRequiredCredentialSetsUnsatisfiable(credentialSets, queryGroups);
 
-    if (allEmpty || requiredSetsUnsatisfiable) {
+    if (allEmpty) {
         return { showModal: true, blockCredentialSelection: true };
     }
 
-    if (emptyGroups.length > 0) {
-        return { showModal: true, blockCredentialSelection: false };
+    if (hasCredentialSets) {
+        if (areRequiredCredentialSetsUnsatisfiable(credentialSets, queryGroups)) {
+            return { showModal: true, blockCredentialSelection: true };
+        }
+        // Required sets can still be satisfied (e.g. via OR alternatives) — let the user select.
+        return { showModal: false, blockCredentialSelection: false };
+    }
+
+    const requiredGroupUnsatisfiable = queryGroups.some(
+        (group) => group.required && group.availableCredentials.length === 0
+    );
+    if (requiredGroupUnsatisfiable) {
+        return { showModal: true, blockCredentialSelection: true };
     }
 
     return { showModal: false, blockCredentialSelection: false };

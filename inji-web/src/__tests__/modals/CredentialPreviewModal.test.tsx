@@ -131,20 +131,22 @@ describe('CredentialPreviewModal', () => {
             expect(screen.getByTestId('mock-pdf-viewer')).toBeInTheDocument();
         });
 
-        it('renders previewUnavailable text when fetch returns non-ok response', async () => {
+        it('does not render previewUnavailable text when fetch returns non-ok response', async () => {
             mockFetchData.mockResolvedValue({ ok: () => false });
             await act(async () => {
                 render(<CredentialPreviewModal credential={makeCredential()} onClose={mockOnClose} />);
             });
-            expect(screen.getByText('previewUnavailable')).toBeInTheDocument();
+            expect(screen.queryByText('previewUnavailable')).not.toBeInTheDocument();
+            expect(screen.getByTestId('credential-preview-panel')).toBeInTheDocument();
         });
 
-        it('renders previewUnavailable text when fetch throws', async () => {
+        it('does not render previewUnavailable text when fetch throws', async () => {
             mockFetchData.mockRejectedValue(new Error('Network error'));
             await act(async () => {
                 render(<CredentialPreviewModal credential={makeCredential()} onClose={mockOnClose} />);
             });
-            expect(screen.getByText('previewUnavailable')).toBeInTheDocument();
+            expect(screen.queryByText('previewUnavailable')).not.toBeInTheDocument();
+            expect(screen.getByTestId('credential-preview-panel')).toBeInTheDocument();
         });
 
     });

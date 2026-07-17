@@ -579,8 +579,8 @@
         "instructionSelectCount": "Select {{count}} cards from the available options.",
         "instructionOnePerSet": "Select one card from each group.",
         "instructionComplex": "Follow the selection instructions to satisfy the verifier's request.",
-        "selectShareableFields": "Required fields",
-        "selectRequiredClaims": "Select Required Claims",
+        "selectShareableFields": "Required Information",
+        "selectRequiredClaims": "Select Required Information",
         "viewCard": "View Card",
         "showAllCards": "Show all {{count}} cards",
         "clearAll": "Clear all",
@@ -624,8 +624,8 @@
     "subtitleReadOnly": "Credential preview · all fields will be shared",
     "confirmProceed": "Confirm & Proceed",
     "done": "Done",
-    "disclosableFields": "Disclosable CLAIMS",
-    "defaultShareable": "Default Shareable Claims",
+    "disclosableFields": "Disclosable INFORMATION",
+    "defaultShareable": "Default Shareable Information",
     "defaultShareableNote": "Included · cannot be deselected.",
     "checkAll": "Check All",
     "clearAll": "Clear All",
@@ -642,7 +642,6 @@
     "missingInfoLabel": "Missing Information:",
     "showMore": "Show more (+{{count}})",
     "whatYouCanDo": "WHAT YOU CAN DO",
-    "contactVerifier": "Contact Verifier",
     "verifierHelp": "Reach out to this verifier for more information on which card(s) are required to proceed.",
     "matchingCards": "PARTIALLY MATCHING CARDS",
     "goToHomeButton": "Go to Home",
@@ -651,7 +650,7 @@
     "unknownVerifier": "Unknown Verifier"
   },
   "MissingClaimsListModal": {
-    "title": "Missing claims",
+    "title": "Missing Information",
     "requiredCount": "{{count}} required"
   },
   "LogoutConfirmation": {

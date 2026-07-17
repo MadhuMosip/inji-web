@@ -6,7 +6,7 @@ import CredentialPreviewModal from "../../../modals/CredentialPreviewModal";
 import {
     DcqlCredentialOptionCard,
 } from "./DcqlCredentialOptionCard";
-import { getCredentialActionVariant } from "./credentialCardUtils";
+import { getCredentialActionVariant, isSdJwtCredential } from "./credentialCardUtils";
 import { DcqlDesignStyles } from "./dcqlDesignStyles";
 
 interface VpCredentialOptionCardsProps {
@@ -44,7 +44,7 @@ export function VpCredentialOptionCards({
     };
 
     const handleActionClick = (credential: WalletCredential) => {
-        if (credential.format.includes("sd-jwt")) {
+        if (isSdJwtCredential(credential)) {
             setSelectedSDJWT(credential);
             setShowSDClaimsSelectionModal(true);
             return;
@@ -70,7 +70,7 @@ export function VpCredentialOptionCards({
                         `matching-credentials-tile-${credentialKey}`;
 
                     const actionVariant = getCredentialActionVariant(credential);
-                    const isSdJwt = credential.format.includes("sd-jwt");
+                    const isSdJwt = isSdJwtCredential(credential);
 
                     return (
                         <DcqlCredentialOptionCard

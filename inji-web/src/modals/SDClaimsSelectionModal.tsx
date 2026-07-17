@@ -159,11 +159,7 @@ function SDClaimsSelectionModal({
             return <PDFViewer previewContent={previewContent} />;
         }
 
-        return (
-            <p className="text-sm text-[#64748B] text-center px-4">
-                {t("previewUnavailable")}
-            </p>
-        );
+        return null;
     };
 
     return (

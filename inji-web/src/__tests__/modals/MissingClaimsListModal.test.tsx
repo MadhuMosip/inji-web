@@ -48,7 +48,7 @@ describe("MissingClaimsListModal", () => {
                     return `${vars.count} required`;
                 }
                 const translations: Record<string, string> = {
-                    title: "Missing claims",
+                    title: "Missing Information",
                     requiredCount: "{{count}} required",
                 };
                 return translations[key] ?? key;
@@ -69,7 +69,7 @@ describe("MissingClaimsListModal", () => {
         expect(
             screen.getByTestId("card-missing-claims-list-modal")
         ).toBeInTheDocument();
-        expect(screen.getByText("Missing claims")).toBeInTheDocument();
+        expect(screen.getByText("Missing Information")).toBeInTheDocument();
         expect(screen.getByText("3 required")).toBeInTheDocument();
         expect(screen.getByTestId("missing-claims-list")).toHaveTextContent(
             "Health Insurance Id"

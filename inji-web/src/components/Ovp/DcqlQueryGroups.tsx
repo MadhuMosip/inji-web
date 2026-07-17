@@ -38,11 +38,11 @@ function DcqlQueryGroups({
     const mandatoryGroups = queryGroups.filter((group) => group.required);
     const optionalGroups = queryGroups.filter((group) => !group.required);
 
-    // Mandatory groups take priority; fall back to the first empty optional group.
+    // Only block when a mandatory query cannot be satisfied. Empty optional
+    // groups alone must not prevent sharing credentials that still satisfy the request.
     const firstNoMatchGroup =
-        [...mandatoryGroups, ...optionalGroups].find(
-            (g) => g.availableCredentials.length === 0
-        ) ?? null;
+        mandatoryGroups.find((g) => g.availableCredentials.length === 0) ??
+        null;
 
     return (
         <>

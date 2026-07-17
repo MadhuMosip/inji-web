@@ -100,7 +100,7 @@ export const ModalStyles = {
         previewPanel:
             "flex flex-col flex-1 min-h-0 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] overflow-hidden",
         previewScrollArea:
-            "flex-1 min-h-0 w-full overflow-y-auto overscroll-contain",
+            "flex-1 min-h-0 w-full overflow-y-auto overscroll-contain iw-scrollbar-thin",
         previewLoading:
             "flex flex-1 min-h-[360px] w-full items-center justify-center",
     },
@@ -111,13 +111,14 @@ export const ModalStyles = {
         subtitle: "mt-1 text-sm text-[#64748B] text-start",
         closeButton:
             "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E5E7EB] bg-white hover:bg-[#F9FAFB]",
-        splitContainer: "flex flex-col lg:flex-row gap-6 flex-1 min-h-0",
+        splitContainer:
+            "flex flex-col lg:flex-row gap-6 flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1 iw-scrollbar-thin",
         previewPanel:
-            "lg:w-[55%] flex flex-col flex-1 min-h-0 max-h-[75vh] rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] overflow-hidden",
-        previewScrollArea: "flex-1 min-h-0 w-full overflow-y-auto",
+            "lg:w-[55%] flex flex-col flex-1 min-h-0 max-h-[50vh] lg:max-h-[75vh] rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] overflow-hidden",
+        previewScrollArea: "flex-1 min-h-0 w-full overflow-y-auto iw-scrollbar-thin",
         previewLoading: "flex flex-1 min-h-0 w-full items-center justify-center",
-        claimsPanel: "lg:w-[45%] flex flex-col flex-1 min-h-0 max-h-[75vh]",
-        claimsScrollArea: "flex-1 min-h-0 overflow-y-auto pr-1",
+        claimsPanel: "lg:w-[45%] flex flex-col flex-1 min-h-0",
+        claimsScrollArea: "pr-1",
         fieldsSection: "mb-5",
         fieldsSectionCard:
             "rounded-xl border border-[#F5F5F7] bg-white py-1 shadow-sm",

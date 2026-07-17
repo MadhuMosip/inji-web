@@ -211,6 +211,25 @@
     var(--iw-gradient-brand-horizontal) border-box;
     background-clip: padding-box, border-box;
   }
+
+  .iw-scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 transparent;
+  }
+
+  .iw-scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .iw-scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #CBD5E1;
+    border-radius: 9999px;
+  }
+
+  .iw-scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
 
 .inji-toast {

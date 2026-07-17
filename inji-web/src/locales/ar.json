@@ -579,8 +579,8 @@
       "instructionSelectCount": "اختر {{count}} بطاقة من الخيارات المتاحة.",
       "instructionOnePerSet": "اختر بطاقة واحدة من كل مجموعة.",
       "instructionComplex": "اتبع تعليمات الاختيار لتلبية طلب المُتحقق.",
-      "selectShareableFields": "الحقول المطلوبة",
-      "selectRequiredClaims": "اختر المطالبات المطلوبة",
+      "selectShareableFields": "المعلومات المطلوبة",
+      "selectRequiredClaims": "اختر المعلومات المطلوبة",
       "viewCard": "عرض البطاقة",
       "showAllCards": "عرض جميع البطاقات ({{count}})",
       "clearAll": "مسح الكل",
@@ -645,7 +645,6 @@
     "missingInfoLabel": "معلومات مفقودة:",
     "showMore": "عرض المزيد (+{{count}}) >",
     "whatYouCanDo": "ما الذي يمكنك فعله",
-    "contactVerifier": "التواصل مع جهة التحقق",
     "verifierHelp": "تواصل مع جهة التحقق للحصول على مزيد من المعلومات حول البطاقات المطلوبة للمتابعة.",
     "matchingCards": "بطاقات مطابقة جزئيًا",
     "goToHomeButton": "الانتقال إلى الصفحة الرئيسية",
@@ -654,7 +653,7 @@
     "unknownVerifier": "جهة تحقق غير معروفة"
   },
   "MissingClaimsListModal": {
-    "title": "المطالبات المفقودة",
+    "title": "المعلومات المفقودة",
     "requiredCount": "{{count}} مطلوب"
   },
   "LogoutConfirmation": {

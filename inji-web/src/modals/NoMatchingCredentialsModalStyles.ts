@@ -1,5 +1,8 @@
 export const NoMatchingCredentialsModalStyles = {
-    wrapper: "relative flex w-full max-w-lg flex-col px-6 py-8 text-center",
+    wrapper:
+        "relative flex w-full max-w-lg max-h-[85vh] min-h-0 flex-col overflow-hidden px-6 py-8 text-center",
+    headerSection: "shrink-0",
+    scrollArea: "min-h-0 flex-1 overflow-y-auto overscroll-contain text-left",
     closeButtonContainer: "absolute right-4 top-4 z-10",
     closeButton:
         "flex h-8 w-8 items-center justify-center rounded-full bg-[#F1F5F9] hover:bg-[#F9FAFB]",
@@ -36,5 +39,5 @@ export const NoMatchingCredentialsModalStyles = {
         "flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#E2E8F0] bg-white",
     matchingCardLogo: "h-full w-full object-cover",
     matchingCardName: "text-sm font-medium text-[#0F172A]",
-    footerButton: "mt-6 h-12 rounded-full text-sm font-semibold",
+    footerButton: "mt-6 h-12 shrink-0 rounded-full text-sm font-semibold",
 };

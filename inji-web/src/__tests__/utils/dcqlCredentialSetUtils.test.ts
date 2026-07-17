@@ -248,7 +248,7 @@ describe("dcqlCredentialSetUtils", () => {
         });
     });
 
-    test("getDcqlNoMatchState shows partial modal when some groups lack credentials", () => {
+    test("getDcqlNoMatchState hides modal when partial groups are empty but credential sets remain satisfiable", () => {
         const groups: DcqlQueryGroup[] = [
             {
                 queryId: "insurance_id",
@@ -297,8 +297,9 @@ describe("dcqlCredentialSetUtils", () => {
             },
         ];
 
+        // Required set can still be satisfied via ["vc_sd_jwt"]; optional via ["msisdn"].
         expect(getDcqlNoMatchState(groups, sets, true)).toEqual({
-            showModal: true,
+            showModal: false,
             blockCredentialSelection: false,
         });
     });
@@ -330,6 +331,88 @@ describe("dcqlCredentialSetUtils", () => {
         expect(getDcqlNoMatchState(groups, sets, true)).toEqual({
             showModal: true,
             blockCredentialSelection: true,
+        });
+    });
+
+    test("getDcqlNoMatchState blocks when any required credential set is unsatisfiable", () => {
+        const groups: DcqlQueryGroup[] = [
+            {
+                queryId: "pan",
+                required: true,
+                multiple: false,
+                availableCredentials: [makeCredential("pan-cred")],
+                missingClaims: [],
+            },
+            {
+                queryId: "aadhaar",
+                required: true,
+                multiple: false,
+                availableCredentials: [],
+                missingClaims: ["$.name"],
+            },
+        ];
+        const sets: DcqlCredentialSet[] = [
+            {
+                required: true,
+                options: [["pan"]],
+            },
+            {
+                required: true,
+                options: [["aadhaar"]],
+            },
+        ];
+
+        expect(getDcqlNoMatchState(groups, sets, true)).toEqual({
+            showModal: true,
+            blockCredentialSelection: true,
+        });
+    });
+
+    test("getDcqlNoMatchState blocks when a required query group is empty without credential sets", () => {
+        const groups: DcqlQueryGroup[] = [
+            {
+                queryId: "pan",
+                required: true,
+                multiple: false,
+                availableCredentials: [],
+                missingClaims: ["$.type"],
+            },
+            {
+                queryId: "optional_id",
+                required: false,
+                multiple: false,
+                availableCredentials: [makeCredential("opt-cred")],
+                missingClaims: [],
+            },
+        ];
+
+        expect(getDcqlNoMatchState(groups, [], false)).toEqual({
+            showModal: true,
+            blockCredentialSelection: true,
+        });
+    });
+
+    test("getDcqlNoMatchState hides modal when only optional query groups are empty", () => {
+        const groups: DcqlQueryGroup[] = [
+            {
+                queryId: "pan",
+                required: true,
+                multiple: false,
+                availableCredentials: [makeCredential("pan-cred")],
+                missingClaims: [],
+            },
+            {
+                queryId: "optional_id",
+                required: false,
+                multiple: false,
+                availableCredentials: [],
+                missingClaims: ["$.opt"],
+            },
+        ];
+
+        expect(getDcqlNoMatchState(groups, [], false)).toEqual({
+            showModal: false,
+            blockCredentialSelection: false,
         });
     });
 

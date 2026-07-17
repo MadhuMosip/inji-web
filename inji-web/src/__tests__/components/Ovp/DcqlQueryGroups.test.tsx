@@ -122,23 +122,32 @@ describe('DcqlQueryGroups', () => {
             expect(screen.getAllByTestId('mock-no-matching-modal')).toHaveLength(1);
         });
 
-        it('renders exactly one modal even when multiple groups have no credentials', () => {
+        it('renders exactly one modal even when multiple mandatory groups have no credentials', () => {
             const groups = [
                 makeGroup('national-id', true, true),
+                makeGroup('passport', true, true),
                 makeGroup('insurance', false, true),
             ];
             render(<DcqlQueryGroups {...defaultProps} queryGroups={groups} />);
             expect(screen.getAllByTestId('mock-no-matching-modal')).toHaveLength(1);
         });
 
-        it('prioritises the mandatory no-match group over an optional one', () => {
+        it('does not render the modal when only optional groups lack credentials', () => {
+            const groups = [
+                makeGroup('national-id', true),
+                makeGroup('insurance', false, true),
+            ];
+            render(<DcqlQueryGroups {...defaultProps} queryGroups={groups} />);
+            expect(screen.queryByTestId('mock-no-matching-modal')).not.toBeInTheDocument();
+        });
+
+        it('prioritises the first mandatory no-match group', () => {
             const groups = [
                 makeGroup('optional-first', false, true),
                 makeGroup('mandatory-empty', true, true),
                 makeGroup('has-creds', true),
             ];
             render(<DcqlQueryGroups {...defaultProps} queryGroups={groups} />);
-            // mandatory groups are checked first; modal gets the mandatory group's missingClaims
             expect(screen.getByTestId('mock-no-matching-modal')).toHaveAttribute(
                 'data-missing-count',
                 '1'
