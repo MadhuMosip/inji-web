@@ -178,7 +178,7 @@ describe("useInterceptor", () => {
         expect(navigateMock).not.toHaveBeenCalled();
     });
 
-    test("should not overwrite redirectTo when 401 happens on login home page (issue #628)", async () => {
+    test("should not overwrite redirectTo when 401 happens on login home page", async () => {
         (useLocation as jest.Mock).mockReturnValue({
             pathname: ROUTES.ROOT,
             search: "",
