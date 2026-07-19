@@ -219,6 +219,7 @@ function VerifierCredentialsRequestCard({
     selectedCredentialIds = [],
     onShareCredentials,
     isShareEnabled,
+    stickyBelowHeader = false,
 }: CredentialShareCardProps) {
     return (
         <div
@@ -233,6 +234,7 @@ function VerifierCredentialsRequestCard({
                     selectedCredentialIds={selectedCredentialIds}
                     onShareCredentials={onShareCredentials}
                     isShareEnabled={isShareEnabled}
+                    stickyBelowHeader={stickyBelowHeader}
                 />
             </div>
         </div>

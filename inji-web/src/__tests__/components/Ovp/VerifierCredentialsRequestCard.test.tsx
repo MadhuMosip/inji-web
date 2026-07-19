@@ -27,6 +27,12 @@ jest.mock("../../../utils/verifierUtils", () => ({
 jest.mock("../../../assets/unknown_verifier_logo.png", () => "unknown-verifier-mock.png");
 jest.mock("../../../assets/Sheild.svg", () => "shield-mock.svg");
 
+jest.mock("../../../components/Ovp/VpStickyActionPanel", () => ({
+  VpStickyActionPanel: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="vp-sticky-action-panel">{children}</div>
+  ),
+}));
+
 const MockSolidButton = jest.fn();
 jest.mock("../../../components/Common/Buttons/SolidButton", () => ({
   SolidButton: (props: any) => {
@@ -249,5 +255,26 @@ describe("VerifierCredentialsRequestCard", () => {
 
     fireEvent.click(screen.getByTestId("verifier-decline-button"));
     expect(rejectVerifierRequest).not.toHaveBeenCalled();
+  });
+
+  it("forwards stickyBelowHeader to VerifierRequestActionPanel", () => {
+    const {rerender} = render(
+      <VerifierCredentialsRequestCard
+        verifier={baseVerifier}
+        presentationId="pid-123"
+        selectedCredentialIds={["cred-1"]}
+      />
+    );
+    expect(screen.queryByTestId("vp-sticky-action-panel")).not.toBeInTheDocument();
+
+    rerender(
+      <VerifierCredentialsRequestCard
+        verifier={baseVerifier}
+        presentationId="pid-123"
+        selectedCredentialIds={["cred-1"]}
+        stickyBelowHeader
+      />
+    );
+    expect(screen.getByTestId("vp-sticky-action-panel")).toBeInTheDocument();
   });
 });
