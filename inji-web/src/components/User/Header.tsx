@@ -144,9 +144,13 @@ export const Header: React.FC<UserHeaderProps> = ({
                 <InfoFieldSkeleton width="w-24" height="h-2" />
               </div>
             );
-          }
-        
-          return (
+        }
+
+        if (!user) {
+            return null;
+        }
+
+        return (
             <div className="flex gap-2 items-center">
               <div
                 className={`aspect-square w-12 rounded-full bg-iw-avatarPlaceholder overflow-hidden flex items-center justify-center text-iw-avatarText font-medium text-lg ${
@@ -164,9 +168,11 @@ export const Header: React.FC<UserHeaderProps> = ({
                   getProfileInitials(displayName)
                 )}
               </div>
-              <span className="font-semibold text-gray-800">
-                {convertStringIntoPascalCase(displayName)}
-              </span>
+              {displayName && (
+                <span className="font-semibold text-gray-800">
+                  {convertStringIntoPascalCase(displayName)}
+                </span>
+              )}
             </div>
           );
         };
@@ -237,6 +243,7 @@ export const Header: React.FC<UserHeaderProps> = ({
                 <div className="flex items-center space-x-6">
                     <LanguageSelector />
 
+                    {(isLoading || user) && (
                     <div
                         data-testid="profile-details"
                         className="hidden sm:block relative"
@@ -244,7 +251,7 @@ export const Header: React.FC<UserHeaderProps> = ({
                     >
                         <div className="flex items-center space-x-2">
                             {getUserProfileIconWithName()}
-                            {!isLoading && !disableProfileDropdown && (
+                            {!isLoading && user && !disableProfileDropdown && (
                                 <div
                                 className="relative inline-block cursor-pointer"
                                 onClick={toggleProfileDropdown}
@@ -274,13 +281,14 @@ export const Header: React.FC<UserHeaderProps> = ({
                             </div>
                         )}
                     </div>
+                    )}
                 </div>
             </div>
             <div
                 data-testid="hamburger-menu-dropdown"
                 className="block sm:hidden w-full"
             >
-                {isHamburgerMenuOpen && (
+                {isHamburgerMenuOpen && (isLoading || user) && (
                     <div
                         style={{marginTop: headerHeight}}
                         className="absolute top-1 bg-white shadow-iw-hamburger-dropdown p-2 w-full"
@@ -289,7 +297,7 @@ export const Header: React.FC<UserHeaderProps> = ({
                             <div className="flex items-center px-4 py-2">
                                 {getUserProfileIconWithName()}
                             </div>
-                            {!disableProfileDropdown && dropdownItems.map((item, index) => (
+                            {!disableProfileDropdown && user && dropdownItems.map((item, index) => (
                                 <React.Fragment key={item.key}>
                                     <div
                                         className={`px-4 py-2 text-sm ${item.textColor} hover:bg-gray-100 cursor-pointer font-medium`}
