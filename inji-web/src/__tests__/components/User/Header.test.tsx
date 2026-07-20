@@ -6,6 +6,7 @@ import {useUser} from '../../../hooks/User/useUser';
 import * as i18n from '../../../utils/i18n';
 import {mockApiResponse, mockUseApi} from "../../../test-utils/setupUseApiMock";
 import {userProfile} from "../../../test-utils/mockObjects";
+import {navigateToUserHome} from '../../../utils/navigationUtils';
 
 jest.mock('../../../hooks/User/useUser', () => ({
     useUser: jest.fn(),
@@ -31,6 +32,10 @@ jest.mock('../../../utils/i18n', () => ({
 jest.mock('../../../assets/HamburgerMenu.svg', () => 'mock-hamburger-icon');
 jest.mock('../../../assets/InjiWebLogo.png', () => 'mock-injiweb-logo');
 
+jest.mock('../../../utils/navigationUtils', () => ({
+    navigateToUserHome: jest.fn(),
+}));
+
 (globalThis as any).crypto = {
     getRandomValues: (arr: any) => arr.map(() => Math.floor(Math.random() * 256))
 };
@@ -42,6 +47,7 @@ describe('Header', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockNavigateFn.mockReset();
+        (navigateToUserHome as jest.Mock).mockReset();
         setMockUseLocation({pathname: '/'});
 
         (useUser as jest.Mock).mockReturnValue({
@@ -64,6 +70,49 @@ describe('Header', () => {
         expect(screen.getByTestId('header-injiWeb-logo')).toBeInTheDocument();
         expect(screen.getByTestId('profile-details')).toBeInTheDocument();
         expect(screen.getByText('John Doe')).toBeInTheDocument(); // From PascalCase util
+    });
+
+    it('navigates home when logo is clicked', () => {
+        render(<Header headerRef={mockHeaderRef} headerHeight={50} />);
+
+        fireEvent.click(screen.getByTestId('header-injiWeb-logo').parentElement!);
+
+        expect(navigateToUserHome).toHaveBeenCalledWith(mockNavigateFn);
+    });
+
+    it('navigates home when logo Enter key is pressed', () => {
+        render(<Header headerRef={mockHeaderRef} headerHeight={50} />);
+
+        fireEvent.keyDown(screen.getByTestId('header-injiWeb-logo').parentElement!, { key: 'Enter' });
+
+        expect(navigateToUserHome).toHaveBeenCalledWith(mockNavigateFn);
+    });
+
+    it('navigates home when logo Space key is pressed', () => {
+        render(<Header headerRef={mockHeaderRef} headerHeight={50} />);
+
+        fireEvent.keyDown(screen.getByTestId('header-injiWeb-logo').parentElement!, { key: ' ' });
+
+        expect(navigateToUserHome).toHaveBeenCalledWith(mockNavigateFn);
+    });
+
+    it('does not navigate home when logo navigation is disabled', () => {
+        render(
+            <Header
+                headerRef={mockHeaderRef}
+                headerHeight={50}
+                disableLogoNavigation
+            />
+        );
+
+        const logoContainer = screen.getByTestId('header-injiWeb-logo').parentElement!;
+        expect(logoContainer).toHaveAttribute('role', 'img');
+        expect(logoContainer).not.toHaveAttribute('role', 'button');
+
+        fireEvent.click(logoContainer);
+        fireEvent.keyDown(logoContainer, { key: 'Enter' });
+
+        expect(navigateToUserHome).not.toHaveBeenCalled();
     });
 
     it('toggles profile dropdown on click', () => {
