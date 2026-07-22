@@ -174,4 +174,57 @@ describe('Header', () => {
 
         mockUseApi.fetchData.mockRestore();
     });
+
+    it('does not render profile details or default "U" when user is not logged in', () => {
+        (useUser as jest.Mock).mockReturnValue({
+            user: null,
+            removeUser: mockRemoveUser,
+            isLoading: false,
+        });
+
+        render(<Header headerRef={mockHeaderRef} headerHeight={50} />);
+
+        expect(screen.queryByTestId('profile-details')).not.toBeInTheDocument();
+        expect(screen.queryByText('U')).not.toBeInTheDocument();
+    });
+
+    it('shows profile skeleton while user profile is loading', () => {
+        (useUser as jest.Mock).mockReturnValue({
+            user: null,
+            removeUser: mockRemoveUser,
+            isLoading: true,
+        });
+
+        render(<Header headerRef={mockHeaderRef} headerHeight={50} />);
+
+        expect(screen.getByTestId('profile-details')).toBeInTheDocument();
+        expect(screen.queryByText('U')).not.toBeInTheDocument();
+    });
+
+    it('renders default "U" when displayName is missing for a logged-in user', () => {
+        (useUser as jest.Mock).mockReturnValue({
+            user: {...userProfile, displayName: undefined, profilePictureUrl: undefined},
+            removeUser: mockRemoveUser,
+            isLoading: false,
+        });
+
+        render(<Header headerRef={mockHeaderRef} headerHeight={50} />);
+
+        expect(screen.getByTestId('profile-details')).toBeInTheDocument();
+        expect(screen.getByText('U')).toBeInTheDocument();
+        expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
+    });
+
+    it('renders profile initial from displayName when available', () => {
+        (useUser as jest.Mock).mockReturnValue({
+            user: {...userProfile, profilePictureUrl: undefined},
+            removeUser: mockRemoveUser,
+            isLoading: false,
+        });
+
+        render(<Header headerRef={mockHeaderRef} headerHeight={50} />);
+
+        expect(screen.getByText('J')).toBeInTheDocument();
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+    });
 });
