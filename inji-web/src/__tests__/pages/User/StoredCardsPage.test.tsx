@@ -129,6 +129,75 @@ describe('Testing of StoredCardsPage ->', () => {
         expect(screen.getByText('Permis de conduire')).toBeInTheDocument();
     });
 
+    it('should ignore stale credentials response after a newer language request completes', async () => {
+        let resolveStaleRequest: (value: unknown) => void;
+        const staleRequestPromise = new Promise((resolve) => {
+            resolveStaleRequest = resolve;
+        });
+
+        mockUseApi.fetchData
+            .mockReturnValueOnce(staleRequestPromise)
+            .mockResolvedValueOnce({
+                ok: () => true,
+                data: [{
+                    ...mockCredentials[0],
+                    credentialTypeDisplayName: 'Permis de conduire',
+                    issuerDisplayName: 'DMV FR',
+                }],
+                status: 200,
+                error: null,
+                headers: {},
+                state: RequestStatus.DONE
+            });
+
+        renderWithRouter(<StoredCardsPage/>);
+        expect(screen.getByTestId('loader-credentials')).toBeInTheDocument();
+
+        reduxStore.dispatch(storeLanguage('fr'));
+        await waitForLoaderDisappearance();
+        expect(screen.getByText('Permis de conduire')).toBeInTheDocument();
+
+        resolveStaleRequest!({
+            ok: () => true,
+            data: mockCredentials,
+            status: 200,
+            error: null,
+            headers: {},
+            state: RequestStatus.DONE
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText('Permis de conduire')).toBeInTheDocument();
+        });
+        expect(screen.queryByText('Drivers License')).not.toBeInTheDocument();
+    });
+
+    it('should clear previous error when a later language reload succeeds', async () => {
+        mockApiResponseSequence([
+            {
+                error: {response: {data: {errorMessage: 'Internal Server Error'}}},
+                status: 500,
+                state: RequestStatus.ERROR
+            },
+            {
+                data: mockCredentials
+            }
+        ]);
+
+        renderWithRouter(<StoredCardsPage/>);
+        await waitForLoaderDisappearance();
+
+        await waitFor(() => {
+            expect(screen.getByText('Server Error')).toBeInTheDocument();
+        });
+
+        reduxStore.dispatch(storeLanguage('fr'));
+        await waitForLoaderDisappearance();
+
+        expect(screen.queryByText('Server Error')).not.toBeInTheDocument();
+        expect(screen.getByText('Drivers License')).toBeInTheDocument();
+    });
+
     it('should navigate to home on nav back button click', () => {
         renderWithRouter(<StoredCardsPage/>);
 

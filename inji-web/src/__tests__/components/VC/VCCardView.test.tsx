@@ -342,6 +342,56 @@ describe('VCCardView Component', () => {
         expect(mockUseApi.fetchData).not.toHaveBeenCalled();
     });
 
+    it('should ignore in-flight preview response after preview is closed', async () => {
+        const actualRedux = jest.requireActual('react-redux');
+        const {useSelector} = require('react-redux') as {useSelector: jest.Mock};
+        useSelector.mockImplementation(actualRedux.useSelector);
+
+        mockApiResponse({
+            data: new Blob(['pdf-en'], {type: "application/pdf"}),
+            headers: {"Content-Disposition": 'attachment; filename="credential.pdf"'}
+        });
+
+        let resolveLanguagePreview: (value: unknown) => void;
+        const languagePreviewPromise = new Promise((resolve) => {
+            resolveLanguagePreview = resolve;
+        });
+
+        reduxStore.dispatch(storeLanguage('en'));
+        renderWithProvider(
+            <VCCardView
+                refreshCredentials={refreshCredentialsMock}
+                credential={mockCredential}
+            />
+        );
+
+        fireEvent.click(screen.getByTestId("vc-card-view"));
+        await screen.findByTestId("vc-detail-view");
+
+        mockUseApi.fetchData.mockReturnValueOnce(languagePreviewPromise);
+        reduxStore.dispatch(storeLanguage('fr'));
+
+        await waitFor(() => {
+            expect(mockUseApi.fetchData).toHaveBeenCalledTimes(2);
+        });
+
+        fireEvent.click(screen.getByRole('button', {name: 'Close'}));
+        expect(screen.queryByTestId("vc-detail-view")).not.toBeInTheDocument();
+
+        resolveLanguagePreview!({
+            ok: () => true,
+            data: new Blob(['pdf-fr'], {type: "application/pdf"}),
+            status: 200,
+            error: null,
+            headers: {},
+            state: RequestStatus.DONE
+        });
+
+        await waitFor(() => {
+            expect(screen.queryByTestId("vc-detail-view")).not.toBeInTheDocument();
+        });
+    });
+
     it("should show error when download fails", async () => {
         mockApiResponse({state: RequestStatus.ERROR, status: 500})
 
