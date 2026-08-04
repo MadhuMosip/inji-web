@@ -1,6 +1,6 @@
 import {ApiRequest, ApiResult, WalletCredential} from "../../types/data";
 import {VCStyles} from "./VCStyles";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {Clickable} from "../Common/Clickable";
 import {api} from "../../utils/api";
 import {downloadCredentialPDF} from "../../utils/misc";
@@ -26,6 +26,7 @@ export function VCCardView(props: Readonly<{
     const [error, setError] = useState<string>()
     const [previewContent, setPreviewContent] = useState<Blob>();
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+    const isPreviewOpenRef = useRef(false);
     const {t} = useTranslation('StoredCards', {
         keyPrefix: "cardView"
     })
@@ -77,11 +78,19 @@ export function VCCardView(props: Readonly<{
             api.fetchWalletCredentialPreview,
             async (response) => {
                 const pdfContent: Blob = response.data;
+                isPreviewOpenRef.current = true;
                 setPreviewContent(pdfContent);
             },
             previewApi,
         );
     };
+
+    useEffect(() => {
+        if (!isPreviewOpenRef.current) {
+            return;
+        }
+        void preview();
+    }, [language]);
 
     const handleDownload = async (event: React.MouseEvent) => {
         event.stopPropagation();
@@ -127,6 +136,7 @@ export function VCCardView(props: Readonly<{
     };
 
     const clearPreview = () => {
+        isPreviewOpenRef.current = false;
         setPreviewContent(undefined);
     }
 

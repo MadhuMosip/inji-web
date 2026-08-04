@@ -12,6 +12,8 @@ import {KEYS, RequestStatus} from "../../../utils/constants";
 import React from "react";
 import {mockApiResponse, mockApiResponseSequence, mockUseApi} from "../../../test-utils/setupUseApiMock";
 import {api} from "../../../utils/api";
+import {reduxStore} from "../../../redux/reduxStore";
+import {storeLanguage} from "../../../redux/reducers/commonReducer";
 
 mockUseTranslation()
 mockApiObject()
@@ -38,6 +40,7 @@ describe('Testing of StoredCardsPage ->', () => {
 
         localStorageMock.setItem('selectedLanguage', 'en');
         localStorageMock.setItem(KEYS.WALLET_ID, "faa0e18f-0935-4fab-8ab3-0c546c0ca714")
+        reduxStore.dispatch(storeLanguage('en'));
     });
 
 
@@ -93,6 +96,38 @@ describe('Testing of StoredCardsPage ->', () => {
             expect(asFragment()).toMatchSnapshot();
         });
     })
+
+    it('should refetch credentials with updated Accept-Language when language changes', async () => {
+        mockApiResponseSequence([
+            {data: mockCredentials},
+            {
+                data: [{
+                    ...mockCredentials[0],
+                    credentialTypeDisplayName: 'Permis de conduire',
+                    issuerDisplayName: 'DMV FR',
+                }]
+            }
+        ]);
+
+        renderWithRouter(<StoredCardsPage/>);
+        await waitForLoaderDisappearance();
+
+        expect(screen.getByText('Drivers License')).toBeInTheDocument();
+
+        reduxStore.dispatch(storeLanguage('fr'));
+
+        await waitFor(() => {
+            expect(mockUseApi.fetchData).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    headers: expect.objectContaining({"Accept-Language": "fr"}),
+                    apiConfig: api.fetchWalletVCs
+                })
+            );
+        });
+
+        await waitForLoaderDisappearance();
+        expect(screen.getByText('Permis de conduire')).toBeInTheDocument();
+    });
 
     it('should navigate to home on nav back button click', () => {
         renderWithRouter(<StoredCardsPage/>);

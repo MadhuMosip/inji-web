@@ -91,7 +91,7 @@ export const StoredCardsPage: React.FC = () => {
     useEffect(() => {
         void fetchWalletCredentials();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [language]);
 
     const filterCredentials = (searchText: string) => {
         if (searchText === "") {
