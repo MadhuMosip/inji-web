@@ -321,6 +321,28 @@ describe('NoMatchingCredentialsModal', () => {
             expect(window.location.href).toBe('https://example.com/redirect');
         });
 
+        it('rejects verifier when the close icon is selected', async () => {
+            mockFetchData.mockResolvedValue(mockApiRejectSuccessWithRedirect);
+            setupWindowLocationMock();
+            render(<NoMatchingCredentialsModal {...defaultProps} />);
+
+            fireEvent.click(
+                screen.getByTestId('btn-close-no-matching-credentials')
+            );
+
+            await waitFor(() => {
+                expect(mockFetchData).toHaveBeenCalledWith({
+                    url: expect.stringContaining('/presentations/test-presentation-id'),
+                    apiConfig: expect.any(Object),
+                    body: {
+                        errorCode: 'invalid_transaction_data',
+                        errorMessage: 'No matching credentials found to fulfill the request',
+                    },
+                });
+            });
+            expect(window.location.href).toBe('https://example.com/redirect');
+        });
+
         it('rejects verifier and redirects when partial cards are shown', async () => {
             const matchingCredentials = [
                 {
