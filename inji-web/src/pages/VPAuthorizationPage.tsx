@@ -29,7 +29,6 @@ import {
     DcqlSelectionState,
 } from "../types/dcql";
 import {
-    areRequiredQueryGroupsSatisfied,
     buildInitialDcqlSelection,
     filterQueryGroupsBySearch,
     flattenQueryGroupCredentials,
@@ -38,7 +37,6 @@ import {
     updateDcqlCredentialSelection,
 } from "../utils/dcqlSelectionUtils";
 import {
-    areRequiredCredentialSetsSatisfied,
     buildInitialCredentialSetSelection,
     flattenCredentialSetSelectionToDcqlState,
     getDcqlNoMatchState,
@@ -349,28 +347,6 @@ export const VPAuthorizationPage: React.FC = () => {
         dcqlSelection,
         isDcqlPresentation,
         selectedCredentialIds,
-    ]);
-
-    const isDcqlShareEnabled = useMemo(() => {
-        if (!isDcqlPresentation) {
-            return selectedCredentialIds.length > 0;
-        }
-        if (hasDcqlCredentialSets) {
-            return areRequiredCredentialSetsSatisfied(
-                credentialSetsData,
-                dcqlCredentialSetSelection,
-                queryGroupsData
-            );
-        }
-        return areRequiredQueryGroupsSatisfied(queryGroupsData, dcqlSelection);
-    }, [
-        credentialSetsData,
-        dcqlCredentialSetSelection,
-        dcqlSelection,
-        hasDcqlCredentialSets,
-        isDcqlPresentation,
-        queryGroupsData,
-        selectedCredentialIds.length,
     ]);
 
     const displayedSelectedCredentialIds = useMemo(() => {
@@ -740,7 +716,6 @@ export const VPAuthorizationPage: React.FC = () => {
                         verifier={verifierData}
                         presentationId={presentationIdData}
                         selectedCredentialIds={displayedSelectedCredentialIds}
-                        isShareEnabled={isDcqlShareEnabled}
                         onShareCredentials={handleShareCredentialsFromCard}
                         stickyBelowHeader
                     />
