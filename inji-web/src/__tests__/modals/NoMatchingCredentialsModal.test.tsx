@@ -339,8 +339,8 @@ describe('NoMatchingCredentialsModal', () => {
                         errorMessage: 'No matching credentials found to fulfill the request',
                     },
                 });
+                expect(window.location.href).toBe('https://example.com/redirect');
             });
-            expect(window.location.href).toBe('https://example.com/redirect');
         });
 
         it('rejects verifier and redirects when partial cards are shown', async () => {
