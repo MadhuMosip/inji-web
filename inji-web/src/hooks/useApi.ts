@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useCallback, useState} from "react";
 import {ApiRequest, ApiResult} from "../types/data";
 import {ContentTypes, MethodType} from "../utils/api";
 import axios, {AxiosError} from "axios";
@@ -37,12 +37,12 @@ export function useApi<T = any>(): UseApiReturn<T> {
         return status !== null && status >= HTTP_STATUS_CODES.OK && status < HTTP_STATUS_CODES.MULTIPLE_CHOICES;
     };
 
-    async function fetchData({
+    const fetchData = useCallback(async ({
                                  headers = undefined,
                                  body,
                                  apiConfig,
                                  url = undefined
-                             }: RequestConfig): Promise<ApiResult<T>> {
+                             }: RequestConfig): Promise<ApiResult<T>> => {
         setState(RequestStatus.LOADING)
         setError(null);
         setStatus(null);
@@ -152,7 +152,7 @@ export function useApi<T = any>(): UseApiReturn<T> {
         }
 
         return result;
-    }
+    }, []);
 
     return {data, error, state, status, fetchData, ok};
 }
