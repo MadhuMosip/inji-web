@@ -531,7 +531,9 @@
       "defaultDescription": "تعذر إكمال طلبك. يرجى الإغلاق والمحاولة لاحقًا.",
       "technicalTitle": "عذرًا! حدث خطأ فني.",
       "technicalDescription": "حدثت مشكلة تقنية أثناء معالجة طلبك. يمكنك المحاولة مرة أخرى بعد قليل.",
-      "closeButton": "إغلاق"
+      "closeButton": "إغلاق",
+      "shareFailedTitle": "تعذرت مشاركة البطاقات",
+      "shareFailedDescription": "البطاقات المحددة لا تتطابق مع نوع البطاقة المطلوب. يرجى مراجعة اختيارك والمحاولة مرة أخرى."
     },
     "RetryCard": {
       "defaultTitle": "حدث خطأ ما",
