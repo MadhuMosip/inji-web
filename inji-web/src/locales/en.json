@@ -531,7 +531,9 @@
         "defaultDescription": "We couldn’t complete your request. Please close and try again later.",
         "technicalTitle": "Oops! An Error Occurred.",
         "technicalDescription": "There was a technical issue while processing your request. You can try again in a moment.",
-        "closeButton": "Close"
+        "closeButton": "Close",
+        "shareFailedTitle": "Unable to share cards",
+        "shareFailedDescription": "The selected cards don’t match the requested card type. Please review your selection and try again."
       },
       "RetryCard": {
         "defaultTitle": "Something went wrong",

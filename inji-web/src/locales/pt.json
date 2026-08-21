@@ -531,7 +531,9 @@
       "defaultDescription": "Não foi possível concluir sua solicitação. Feche e tente novamente mais tarde.",
       "technicalTitle": "Ops! Ocorreu um erro.",
       "technicalDescription": "Ocorreu um problema técnico ao processar sua solicitação. Tente novamente em alguns instantes.",
-      "closeButton": "Fechar"
+      "closeButton": "Fechar",
+      "shareFailedTitle": "Não é possível compartilhar cartões",
+      "shareFailedDescription": "Os cartões selecionados não correspondem ao tipo de cartão solicitado. Por favor, revise sua seleção e tente novamente."
     },
     "RetryCard": {
       "defaultTitle": "Algo deu errado",
