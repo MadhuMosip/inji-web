@@ -10,6 +10,7 @@ import {CodeChallengeObject, CredentialConfigurationObject} from "../../types/da
 import {RootState} from "../../types/redux";
 import {DataShareExpiryModal} from "../../modals/DataShareExpiryModal";
 import {useUser} from "../../hooks/User/useUser";
+import {createDpopSession, removeDpopSession} from "../../utils/dpop";
 
 export const Credential: React.FC<CredentialProps> = (props) => {
     const credentials = useSelector(
@@ -18,6 +19,9 @@ export const Credential: React.FC<CredentialProps> = (props) => {
 
     const authorizationEndpoint = credentials?.authorization_endpoint;
     const grantTypesSupported = credentials?.grant_types_supported;
+    const dpopTokenEndpoint = credentials?.token_endpoint;
+    const dpopCredentialEndpoint = credentials?.credential_endpoint;
+    const dpopSigningAlgs = credentials?.dpop_signing_alg_values_supported;
 
     const selectedIssuer = useSelector(
         (state: RootState) => state.issuers.selected_issuer
@@ -38,35 +42,53 @@ export const Credential: React.FC<CredentialProps> = (props) => {
     const onSuccess = async (
         defaultVCStorageExpiryLimit: number = vcStorageExpiryLimitInTimes
     ) => {
+        if (!validateIfAuthServerSupportRequiredGrantTypes(grantTypesSupported)) {
+            props.setErrorObj({
+                code: "errors.authorizationGrantTypeNotSupportedByWallet.code",
+                message:
+                    "errors.authorizationGrantTypeNotSupportedByWallet.message"
+            });
+            return;
+        }
+        if (!dpopTokenEndpoint || !dpopCredentialEndpoint) {
+            props.setErrorObj({
+                code: "errors.dpopInitializationFailed.code",
+                message: "errors.dpopInitializationFailed.message"
+            });
+            return;
+        }
+
         const state = generateRandomString();
         const code_challenge: CodeChallengeObject =
             generateCodeChallenge(state);
-        addNewSession({
-            selectedIssuer: selectedIssuer,
-            selectedCredentialType: {type: filteredCredentialConfig.name, displayObj: filteredCredentialConfig.display},
-            codeVerifier: state,
-            vcStorageExpiryLimitInTimes: Number.isNaN(defaultVCStorageExpiryLimit)
-                ? vcStorageExpiryLimitInTimes
-                : defaultVCStorageExpiryLimit,
-            state: state
-        });
 
-        if (
-            validateIfAuthServerSupportRequiredGrantTypes(grantTypesSupported)
-        ) {
+        try {
+            const dpopJkt = await createDpopSession(state, dpopSigningAlgs);
+            addNewSession({
+                selectedIssuer: selectedIssuer,
+                selectedCredentialType: {type: filteredCredentialConfig.name, displayObj: filteredCredentialConfig.display},
+                codeVerifier: state,
+                vcStorageExpiryLimitInTimes: isNaN(defaultVCStorageExpiryLimit)
+                    ? vcStorageExpiryLimitInTimes
+                    : defaultVCStorageExpiryLimit,
+                state: state,
+                dpopTokenEndpoint,
+                dpopCredentialEndpoint
+            });
             const url = buildAuthorizationUrl(
                 selectedIssuer,
                 filteredCredentialConfig,
                 state,
                 code_challenge,
-                authorizationEndpoint!
-              );
-              window.open(url, "_self", "noopener");
-        } else {
+                authorizationEndpoint!,
+                dpopJkt
+            );
+            window.open(url, "_self", "noopener");
+        } catch (error) {
+            await removeDpopSession(state);
             props.setErrorObj({
-                code: "errors.authorizationGrantTypeNotSupportedByWallet.code",
-                message:
-                    "errors.authorizationGrantTypeNotSupportedByWallet.message"
+                code: "errors.dpopInitializationFailed.code",
+                message: "errors.dpopInitializationFailed.message"
             });
         }
     };

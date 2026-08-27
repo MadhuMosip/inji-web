@@ -28,6 +28,9 @@ export type IssuerConfigurationObject = {
     credentials_supported: CredentialConfigurationObject[];
     authorization_endpoint: string;
     grant_types_supported: string[];
+    token_endpoint: string;
+    credential_endpoint: string;
+    dpop_signing_alg_values_supported?: string[];
 };
 
 export type CredentialConfigurationObject = {
@@ -68,6 +71,14 @@ export type ResponseTypeObject = {
     access_token?: string;
     expires_in?: number;
     token_type?: string;
+    c_nonce?: string;
+};
+
+export type TokenResponse = {
+    access_token: string;
+    token_type?: string;
+    expires_in?: number;
+    c_nonce?: string;
 };
 
 export type ErrorType = {
@@ -86,6 +97,8 @@ export type SessionObject = {
     codeVerifier: string;
     vcStorageExpiryLimitInTimes: number;
     state: string;
+    dpopTokenEndpoint: string;
+    dpopCredentialEndpoint: string;
 };
 
 export type ApiRequest = {
@@ -160,26 +173,31 @@ export type DropdownItem = {
 
 export type RouteValue = (typeof ROUTES)[keyof typeof ROUTES];
 
-type LoggedInRequestBody = {
-    grantType: 'authorization_code';
-    code: string;
-    redirectUri: string;
-    codeVerifier: string;
-    issuer: string;
-    credentialConfigurationId: string;
-}
-
-type GuestRequestBody = {
-    grant_type: 'authorization_code';
+export type TokenRequestBody = {
+    grant_type: "authorization_code";
     code: string;
     redirect_uri: string;
     code_verifier: string;
+};
+
+export type LoggedInCredentialRequestBody = {
+    issuer: string;
+    credentialConfigurationId: string;
+    accessToken: string;
+    tokenType?: string;
+    cNonce?: string;
+};
+
+export type GuestCredentialRequestBody = {
     issuer: string;
     credential: string;
     vcStorageExpiryLimitInTimes: string;
-}
+    access_token: string;
+    token_type?: string;
+    c_nonce?: string;
+};
 
-export type TokenRequestBody = LoggedInRequestBody | GuestRequestBody;
+export type CredentialRequestBody = LoggedInCredentialRequestBody | GuestCredentialRequestBody;
 
 export interface MenuItemType {
     label: string;

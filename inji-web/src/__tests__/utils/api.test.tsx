@@ -85,6 +85,15 @@ describe('Testing API Class', () => {
     });
   });
 
+  test('Check getTokenV2 request', () => {
+    const getTokenV2 = apiModule.api.getTokenV2;
+    expect(getTokenV2.url('issuer123')).toBe(
+      'https://api.collab.mossip.net/v1/mimoto/v2/get-token/issuer123'
+    );
+    expect(getTokenV2.methodType).toBe(apiModule.MethodType.POST);
+    expect(getTokenV2.headers()['Content-Type']).toBe('application/x-www-form-urlencoded');
+  });
+
   test('Check authorization URL generation', () => {
     const currentIssuer: IssuerObject = {
       name: 'Issuer Name',
@@ -135,18 +144,20 @@ describe('Testing API Class', () => {
       filterCredentialWellknown,
       state,
       code_challenge,
-      'https://auth.server/authorize'
+      'https://auth.server/authorize',
+      'thumbprint-value'
     );
     expect(url).toBe(
       'https://auth.server/authorize' +
       '?response_type=code&' +
       'client_id=client123&' +
       'scope=openid&' +
-      `redirect_uri=https://api.collab.mossip.net/redirect&` +
+      `redirect_uri=https://injiweb.dev-int-inji.mosip.net/redirect&` +
       'state=state123&' +
       'code_challenge=challenge123&' +
       'code_challenge_method=S256&' +
-      'ui_locales=' + i18n.language
+      'ui_locales=' + i18n.language +
+      '&dpop_jkt=thumbprint-value'
     );
   });
 });
