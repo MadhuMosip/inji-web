@@ -3,6 +3,7 @@ import {
     generateRandomString,
     isObjectEmpty,
     getTokenRequestBody,
+    getCredentialRequestBody,
     downloadCredentialPDF,
     getErrorObject,
     convertStringIntoPascalCase
@@ -45,27 +46,38 @@ describe('Test misc.ts utility functions', () => {
     });
 
    test('Check if getTokenRequestBody returns correct request body', () => {
-    const requestBody = getTokenRequestBody('code', 'verifier', 'issuer', 'credential', 'expiry');
+    const requestBody = getTokenRequestBody('code', 'verifier');
     expect(requestBody).toEqual({
         'grant_type': 'authorization_code',
         'code': 'code',
-        'redirect_uri': window.location.origin + "/redirect", 
-        'code_verifier': 'verifier',
-        'issuer': 'issuer',
-        'credential': 'credential',
-        'vcStorageExpiryLimitInTimes': 'expiry'
-    });
-
-    const requestBodyForLoggedIn = getTokenRequestBody('code', 'verifier', 'issuer', 'credential', 'expiry', true);
-    expect(requestBodyForLoggedIn).toEqual({
-        'grantType': 'authorization_code',
-        'code': 'code',
-        'redirectUri': window.location.origin + "/redirect",
-        'codeVerifier': 'verifier',
-        'issuer': 'issuer',
-        'credentialConfigurationId': 'credential',
+        'redirect_uri': 'https://injiweb.dev-int-inji.mosip.net/redirect',
+        'code_verifier': 'verifier'
     });
 });
+
+    test('builds guest and logged-in credential requests from a token response', () => {
+      const tokenResponse = {
+        access_token: 'access-token',
+        token_type: 'DPoP',
+        c_nonce: 'credential-nonce'
+      };
+
+      expect(getCredentialRequestBody('issuer', 'credential', '3', tokenResponse, false)).toEqual({
+        issuer: 'issuer',
+        credential: 'credential',
+        vcStorageExpiryLimitInTimes: '3',
+        access_token: 'access-token',
+        token_type: 'DPoP',
+        c_nonce: 'credential-nonce'
+      });
+      expect(getCredentialRequestBody('issuer', 'credential', '3', tokenResponse, true)).toEqual({
+        'issuer': 'issuer',
+        'credentialConfigurationId': 'credential',
+        'accessToken': 'access-token',
+        'tokenType': 'DPoP',
+        'cNonce': 'credential-nonce'
+      });
+    });
 
     test('Check if downloadCredentialPDF creates and clicks a download link', async () => {
         const response = new Blob(['test'], { type: 'application/pdf' });

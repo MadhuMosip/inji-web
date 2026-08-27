@@ -1,6 +1,6 @@
 import {setMockUseSelectorState} from "../../../test-utils/mockReactRedux";
 import React from "react";
-import {screen} from "@testing-library/react";
+import {screen, waitFor} from "@testing-library/react";
 import {Credential} from "../../../components/Credentials/Credential";
 import {
     getCredentialTypeDisplayObjectForCurrentLanguage,
@@ -10,8 +10,10 @@ import {mockCredentialTypeDisplayArrayObject, mockIssuerDisplayArrayObject} from
 import {mockusei18n, renderWithProvider,} from "../../../test-utils/mockUtils";
 import userEvent from "@testing-library/user-event";
 import {CredentialConfigurationObject} from "../../../types/data";
-import {buildAuthorizationUrl} from "../../../utils/misc";
+import {buildAuthorizationUrl, generateRandomString} from "../../../utils/misc";
 import {useUser} from "../../../hooks/User/useUser";
+import {createDpopSession} from "../../../utils/dpop";
+import {addNewSession} from "../../../utils/sessions";
 
 jest.mock("../../../components/Common/ItemBox", () => ({
     ItemBox: ({ index, title, url, onClick }: any) => (
@@ -62,6 +64,15 @@ jest.mock("../../../hooks/User/useUser", () => {
     return {useUser: useUserMock};
 });
 
+jest.mock("../../../utils/dpop", () => ({
+    createDpopSession: jest.fn().mockResolvedValue("dpop-jkt"),
+    removeDpopSession: jest.fn().mockResolvedValue(undefined)
+}));
+
+jest.mock("../../../utils/sessions", () => ({
+    addNewSession: jest.fn()
+}));
+
 mockusei18n();
 const mockSetErrorObj = jest.fn();
 
@@ -83,7 +94,9 @@ const mockState = {
     credentials: {
         credentials: {
             authorization_endpoint: "https://test-auth-server/authorize",
-        grant_types_supported: ["authorization_code"],
+            grant_types_supported: ["authorization_code"],
+            token_endpoint: "https://test-auth-server/token",
+            credential_endpoint: "https://test-issuer/credential"
         },
     },
 };
@@ -99,6 +112,8 @@ describe("Testing the Functionality of Credentials", () => {
         setMockUseSelectorState(mockState);
 
         (buildAuthorizationUrl as jest.Mock).mockReturnValue("https://redirect.mock/constructed");
+        (generateRandomString as jest.Mock).mockReturnValue("fixedState123");
+        (createDpopSession as jest.Mock).mockResolvedValue("dpop-jkt");
 
         (useUser as jest.Mock).mockReturnValue({ isUserLoggedIn: () => true });
 
@@ -157,7 +172,7 @@ describe("Testing the Functionality of Credentials", () => {
         userEvent.click(container);
 
         // Assert: buildAuthorizationUrl called once
-        expect(buildAuthorizationUrl).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(buildAuthorizationUrl).toHaveBeenCalledTimes(1));
 
         // // Verify positions of args:
         const [ issuerArg, credentialArg, , , authEndpointArg ] = (buildAuthorizationUrl as jest.Mock).mock.calls[0];
@@ -165,6 +180,12 @@ describe("Testing the Functionality of Credentials", () => {
         expect(issuerArg).toMatchObject({ issuer_id: "issuer1" });
         expect(credentialArg).toBe(credential);
         expect(authEndpointArg).toBe("https://test-auth-server/authorize");
+        expect((buildAuthorizationUrl as jest.Mock).mock.calls[0][5]).toBe("dpop-jkt");
+        expect(createDpopSession).toHaveBeenCalledWith("fixedState123", undefined);
+        expect(addNewSession).toHaveBeenCalledWith(expect.objectContaining({
+            dpopTokenEndpoint: "https://test-auth-server/token",
+            dpopCredentialEndpoint: "https://test-issuer/credential"
+        }));
 
         // Assert window.open called with returned URL
         expect(window.open).toHaveBeenCalledTimes(1);
@@ -193,7 +214,7 @@ describe("Testing the Functionality of Credentials", () => {
 
         // confirm and then redirect
         userEvent.click(screen.getByTestId("expiry-confirm"));
-        expect(buildAuthorizationUrl).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(buildAuthorizationUrl).toHaveBeenCalledTimes(1));
         expect(window.open).toHaveBeenCalledWith(
           "https://redirect.mock/constructed",
           "_self",
@@ -253,7 +274,7 @@ describe("Testing the Functionality of Credentials", () => {
 
         // 4) assertions
         expect(screen.queryByTestId("DataShareExpiryModal")).toBeNull();
-        expect(buildAuthorizationUrl).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(buildAuthorizationUrl).toHaveBeenCalledTimes(1));
         expect(window.open).toHaveBeenCalledWith(
             "https://redirect.mock/constructed",
             "_self",

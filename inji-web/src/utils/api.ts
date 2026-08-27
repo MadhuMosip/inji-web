@@ -63,12 +63,22 @@ export class api {
         },
         responseType: "blob"
     };
+    static getTokenV2: ApiRequest = {
+        url: (issuerId: string) => api.mimotoHost + `/v2/get-token/${issuerId}`,
+        methodType: MethodType.POST,
+        headers: () => ({
+            "accept": ContentTypes.JSON,
+            "Content-Type": ContentTypes.FORM_URL_ENCODED,
+            "Cache-Control": "no-cache, no-store, must-revalidate"
+        })
+    };
     static authorization = (
         currentIssuer: IssuerObject,
         filterCredentialWellknown: CredentialConfigurationObject,
         state: string,
         code_challenge: CodeChallengeObject,
-        authorizationEndPoint: String
+        authorizationEndPoint: String,
+        dpopJkt?: string
     ) => {
         return (
             `${authorizationEndPoint}` +
@@ -79,7 +89,8 @@ export class api {
             `state=${state}&` +
             `code_challenge=${code_challenge.codeChallenge}&` +
             `code_challenge_method=S256&` +
-            `ui_locales=${i18n.language}`
+            `ui_locales=${i18n.language}` +
+            (dpopJkt ? `&dpop_jkt=${encodeURIComponent(dpopJkt)}` : "")
         );
     };
     // method to fetch user profile

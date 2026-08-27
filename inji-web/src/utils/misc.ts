@@ -1,7 +1,14 @@
 import sha256 from 'crypto-js/sha256';
 import Base64 from 'crypto-js/enc-base64';
 import {api} from "./api";
-import { IssuerObject,CredentialConfigurationObject,CodeChallengeObject, TokenRequestBody } from '../types/data';
+import {
+    CodeChallengeObject,
+    CredentialConfigurationObject,
+    CredentialRequestBody,
+    IssuerObject,
+    TokenRequestBody,
+    TokenResponse
+} from '../types/data';
 
 export const generateCodeChallenge = (verifier = generateRandomString()) => {
     const hashedVerifier = sha256(verifier);
@@ -43,38 +50,52 @@ export const buildAuthorizationUrl = (
     filteredCredentialConfig: CredentialConfigurationObject,
     state: string,
     codeChallenge: CodeChallengeObject,
-    authorizationEndpoint: string
+    authorizationEndpoint: string,
+    dpopJkt?: string
   ): string => {
     return api.authorization(
       selectedIssuer,
       filteredCredentialConfig,
       state,
       codeChallenge,
-      authorizationEndpoint
+      authorizationEndpoint,
+      dpopJkt
     );
   };
   
-export const getTokenRequestBody = (code: string, codeVerifier: string, issuerId: string, credentialConfigurationId: string, vcStorageExpiryLimitInTimes: string, isLoggedIn = false) : TokenRequestBody => {
-    // naming convention is handled separately for logged in and non logged in users as they use camelcase and snake case respectively
-    if (isLoggedIn) {
-        return {
-            'grantType': 'authorization_code',
-            'code': code,
-            'redirectUri': api.authorizationRedirectionUrl,
-            'codeVerifier': codeVerifier,
-            'issuer': issuerId,
-            'credentialConfigurationId': credentialConfigurationId,
-        }
-    }
+export const getTokenRequestBody = (code: string, codeVerifier: string): TokenRequestBody => {
     return {
         'grant_type': 'authorization_code',
         'code': code,
         'redirect_uri': api.authorizationRedirectionUrl,
-        'code_verifier': codeVerifier,
-        'issuer': issuerId,
-        'credential': credentialConfigurationId,
-        'vcStorageExpiryLimitInTimes': vcStorageExpiryLimitInTimes
+        'code_verifier': codeVerifier
+    };
+};
+
+export const getCredentialRequestBody = (
+    issuerId: string,
+    credentialConfigurationId: string,
+    vcStorageExpiryLimitInTimes: string,
+    tokenResponse: TokenResponse,
+    isLoggedIn: boolean
+): CredentialRequestBody => {
+    if (isLoggedIn) {
+        return {
+            issuer: issuerId,
+            credentialConfigurationId,
+            accessToken: tokenResponse.access_token,
+            tokenType: tokenResponse.token_type,
+            cNonce: tokenResponse.c_nonce
+        };
     }
+    return {
+        issuer: issuerId,
+        credential: credentialConfigurationId,
+        vcStorageExpiryLimitInTimes,
+        access_token: tokenResponse.access_token,
+        ...(tokenResponse.token_type ? {token_type: tokenResponse.token_type} : {}),
+        ...(tokenResponse.c_nonce ? {c_nonce: tokenResponse.c_nonce} : {})
+    };
 }
 
 export const downloadCredentialPDF = async (
