@@ -71,24 +71,33 @@ export const standardizeError = (
 };
 
 /**
- * Logs error with consistent format
+ * Logs error with consistent format and sanitized metadata only.
+ * Does not write raw error objects (may contain tokens/proofs) to the console.
  */
 export const logError = (error: StandardError, options: ErrorOptions = {}): void => {
     if (options.logError === false) return;
-    
-    const message = options.fallbackMessage || 
-                    error.originalError?.response?.data?.message || 
-                    error.originalError?.message || 
-                    'An unexpected error occurred';
-    
+
+    const originalMessage = typeof error.originalError?.message === "string"
+        ? error.originalError.message
+        : undefined;
+    const responseMessage = typeof error.originalError?.response?.data?.message === "string"
+        ? error.originalError.response.data.message
+        : typeof error.originalError?.response?.data?.error === "string"
+            ? error.originalError.response.data.error
+            : undefined;
+
+    const message = options.fallbackMessage ||
+        responseMessage ||
+        originalMessage ||
+        "An unexpected error occurred";
+
     const logData = {
         code: error.code,
         message,
         context: options.context,
-        timestamp: new Date().toISOString(),
-        originalError: error.originalError
+        timestamp: new Date().toISOString()
     };
-    
+
     console.error(`[${error.code}] ${message}`, logData);
 };
 

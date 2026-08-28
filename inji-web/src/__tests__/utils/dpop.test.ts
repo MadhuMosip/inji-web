@@ -47,7 +47,7 @@ describe("DPoP utilities", () => {
         expect(selectDpopAlgorithm(["RS384"])).toBe("RS384");
     });
 
-    test("falls back to ES256 when the first AS algorithm cannot be generated", async () => {
+    test("tries advertised algorithms in order and uses the first one that can be generated", async () => {
         const sessionId = "fallback-alg-session";
         const thumbprint = await createDpopSession(sessionId, ["ES256K", "RS256"]);
         const proof = await generateDpopProof({
@@ -57,10 +57,16 @@ describe("DPoP utilities", () => {
         const header = decodeJwtPart(proof.split(".")[0]);
 
         expect(thumbprint).toMatch(/^[A-Za-z0-9_-]{43}$/);
-        expect(header.alg).toBe("ES256");
-        expect(header.jwk).toMatchObject({kty: "EC", crv: "P-256"});
+        expect(header.alg).toBe("RS256");
+        expect(header.jwk.kty).toBe("RSA");
+        expect(Object.keys(header.jwk).sort()).toEqual(["e", "kty", "n"]);
 
         await removeDpopSession(sessionId);
+    }, 15000);
+
+    test("fails when no advertised DPoP algorithm can be generated", async () => {
+        await expect(createDpopSession("unsupported-alg-session", ["ES256K"]))
+            .rejects.toThrow("No advertised DPoP signing algorithm is supported");
     }, 15000);
 
     test("detects use_dpop_nonce from JSON, XML, and WWW-Authenticate", () => {

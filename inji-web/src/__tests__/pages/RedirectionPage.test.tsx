@@ -1,5 +1,5 @@
 import React from 'react';
-import {waitFor} from '@testing-library/react';
+import {screen, waitFor} from '@testing-library/react';
 import {RedirectionPage} from '../../pages/RedirectionPage';
 import {getActiveSession} from '../../utils/sessions';
 import {
@@ -74,7 +74,8 @@ describe('Testing the Functionality of RedirectionPage', () => {
         (getActiveSession as jest.Mock).mockReturnValue({
             selectedIssuer: {
                 issuer_id: 'issuer1',
-                display: [{name: 'Test Issuer'}]
+                display: [{name: 'Test Issuer'}],
+                credentials_endpoint: 'https://issuer.example/legacy-credentials'
             },
             selectedCredentialType: {type: 'CredentialType', displayObj: []},
             codeVerifier: 'code-verifier',
@@ -281,5 +282,79 @@ describe('Testing the Functionality of RedirectionPage', () => {
             endpoint: "https://issuer.example/token",
             nonce: "as-nonce"
         }));
+    });
+
+    test("retries credential download with dpopCredentialEndpoint for nonce challenge", async () => {
+        (getTokenRequestBody as jest.Mock).mockReturnValue({
+            grant_type: "authorization_code",
+            code: "auth-code",
+            redirect_uri: "https://wallet.example/redirect",
+            code_verifier: "code-verifier"
+        });
+        (getCredentialRequestBody as jest.Mock).mockReturnValue({
+            issuer: "issuer1",
+            credential: "CredentialType",
+            vcStorageExpiryLimitInTimes: "-1",
+            access_token: "access-token",
+            token_type: "DPoP"
+        });
+        mockUseApi.fetchData.mockReset();
+        mockApiResponseSequence([
+            {
+                data: {access_token: "access-token", token_type: "DPoP"},
+                status: 200,
+                state: RequestStatus.DONE
+            },
+            {
+                status: 401,
+                state: RequestStatus.ERROR,
+                headers: {"dpop-nonce": "credential-nonce"},
+                error: {response: {data: {error: "use_dpop_nonce"}}}
+            },
+            {
+                data: new Blob(["credential"]),
+                status: 200,
+                state: RequestStatus.DONE
+            }
+        ]);
+
+        renderWithRouter(<RedirectionPage/>);
+
+        await waitFor(() => expect(mockUseApi.fetchData).toHaveBeenCalledTimes(3));
+        expect(generateDpopProof).toHaveBeenCalledWith(expect.objectContaining({
+            endpoint: "https://issuer.example/credential",
+            nonce: "credential-nonce",
+            accessToken: "access-token"
+        }));
+        expect(generateDpopProof).not.toHaveBeenCalledWith(expect.objectContaining({
+            endpoint: "https://issuer.example/legacy-credentials"
+        }));
+    });
+
+    test("shows error when token response is missing access_token", async () => {
+        (getTokenRequestBody as jest.Mock).mockReturnValue({
+            grant_type: "authorization_code",
+            code: "auth-code",
+            redirect_uri: "https://wallet.example/redirect",
+            code_verifier: "code-verifier"
+        });
+        (getErrorObject as jest.Mock).mockReturnValue({
+            code: "error.generic.title",
+            message: "error.generic.subTitle"
+        });
+        mockUseApi.fetchData.mockReset();
+        mockApiResponse({
+            data: {token_type: "DPoP"},
+            status: 200,
+            state: RequestStatus.DONE
+        });
+
+        renderWithRouter(<RedirectionPage/>);
+
+        await waitFor(() => {
+            expect(screen.getByTestId("DownloadResult-Error-ShieldIcon")).toBeInTheDocument();
+        });
+        expect(mockUseApi.fetchData).toHaveBeenCalledTimes(1);
+        expect(downloadCredentialPDF).not.toHaveBeenCalled();
     });
 });
