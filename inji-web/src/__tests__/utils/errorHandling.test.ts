@@ -226,16 +226,27 @@ describe('errorHandling', () => {
             expect(mockConsoleError).toHaveBeenCalled();
         });
 
-        it('should log with original error', () => {
+        it('should log with sanitized metadata only', () => {
             const originalError = new Error('Original error');
+            (originalError as Error & {response?: {data?: {access_token?: string}}}).response = {
+                data: {access_token: "secret-token"}
+            };
             const error: StandardError = {
                 code: ERROR_TYPES.UNKNOWN,
                 originalError,
             };
 
-            logError(error);
+            logError(error, {context: "credentialIssuance"});
 
             expect(mockConsoleError).toHaveBeenCalled();
+            const logData = mockConsoleError.mock.calls[0][1];
+            expect(logData).toEqual(expect.objectContaining({
+                code: ERROR_TYPES.UNKNOWN,
+                message: "Original error",
+                context: "credentialIssuance",
+            }));
+            expect(logData).not.toHaveProperty("originalError");
+            expect(JSON.stringify(logData)).not.toContain("secret-token");
         });
     });
 

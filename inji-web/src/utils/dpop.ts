@@ -124,7 +124,7 @@ export const getDpopSession = async (sessionId: string): Promise<DpopSession | n
 
 export const selectDpopAlgorithm = (supportedAlgs?: string[]): DpopAlg => {
     if (supportedAlgs && supportedAlgs.length > 0) {
-        // Accept the AS's first advertised algorithm; createDpopSession falls back if signing fails.
+        // Prefer the AS's first advertised algorithm; createDpopSession tries each in order.
         return supportedAlgs[0];
     }
     return DEFAULT_DPOP_ALG;
@@ -229,15 +229,26 @@ export const createDpopSession = async (
     sessionId: string,
     supportedAlgs?: string[]
 ): Promise<string> => {
-    let alg = selectDpopAlgorithm(supportedAlgs);
-    let keyPair: CryptoKeyPair;
-    try {
-        keyPair = await generateDpopKeyPair(alg);
-    } catch {
-        // AS asked for an alg this runtime cannot generate — fall back to default.
-        alg = DEFAULT_DPOP_ALG;
-        keyPair = await generateDpopKeyPair(alg);
+    // When metadata is present, only use advertised algorithms (RFC 9449).
+    // Default to ES256 only when dpop_signing_alg_values_supported is absent/empty.
+    const candidates = supportedAlgs?.length ? supportedAlgs : [DEFAULT_DPOP_ALG];
+    let alg: DpopAlg | undefined;
+    let keyPair: CryptoKeyPair | undefined;
+
+    for (const candidate of candidates) {
+        try {
+            keyPair = await generateDpopKeyPair(candidate);
+            alg = candidate;
+            break;
+        } catch {
+            // Try the next advertised algorithm.
+        }
     }
+
+    if (!keyPair || !alg) {
+        throw new Error("No advertised DPoP signing algorithm is supported");
+    }
+
     const publicJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
     const session = {privateKey: keyPair.privateKey, publicJwk, alg};
     await persistSession(sessionId, session);

@@ -15,6 +15,7 @@ import {useApi} from "../hooks/useApi";
 import {useSelector} from "react-redux";
 import {RootState} from "../types/redux";
 import {generateDpopProof, isUseDpopNonceError, removeDpopSession} from "../utils/dpop";
+import {logError, standardizeError} from "../utils/errorHandling";
 import {AxiosError} from "axios";
 
 export const RedirectionPage: React.FC = () => {
@@ -53,6 +54,7 @@ export const RedirectionPage: React.FC = () => {
     const handleLoggedInDownloadFlow = async (
         issuerId: string,
         requestBody: CredentialRequestBody,
+        credentialEndpoint: string,
         dpopProof?: string
     ) => {
         const downloadId = addSession(credentialTypeDisplayObj, RequestStatus.LOADING);
@@ -72,7 +74,7 @@ export const RedirectionPage: React.FC = () => {
             const token = (requestBody as {accessToken: string}).accessToken;
             const retryProof = await generateDpopProof({
                 sessionId: redirectedSessionId!,
-                endpoint: activeSessionInfo.selectedIssuer.credentials_endpoint,
+                endpoint: credentialEndpoint,
                 nonce,
                 accessToken: token
             });
@@ -88,6 +90,7 @@ export const RedirectionPage: React.FC = () => {
 
     const handleGuestDownloadFlow = async (
         requestBody: CredentialRequestBody,
+        credentialEndpoint: string,
         dpopProof?: string
     ) => {
         const request = async (proof?: string) => vcDownloadApi.fetchData({
@@ -105,7 +108,7 @@ export const RedirectionPage: React.FC = () => {
             const token = (requestBody as {access_token: string}).access_token;
             const retryProof = await generateDpopProof({
                 sessionId: redirectedSessionId!,
-                endpoint: activeSessionInfo.selectedIssuer.credentials_endpoint,
+                endpoint: credentialEndpoint,
                 nonce,
                 accessToken: token
             });
@@ -162,7 +165,7 @@ export const RedirectionPage: React.FC = () => {
                 }
 
                 if (!tokenResponse.ok() || !tokenResponse.data?.access_token) {
-                    return;
+                    throw new Error("Token response is missing access_token");
                 }
 
                 const credentialRequestBody = getCredentialRequestBody(
@@ -181,12 +184,14 @@ export const RedirectionPage: React.FC = () => {
                     : undefined;
 
                 if (isUserLoggedIn()) {
-                    await handleLoggedInDownloadFlow(issuerId, credentialRequestBody, credentialProof);
+                    await handleLoggedInDownloadFlow(issuerId, credentialRequestBody, credentialEndpoint, credentialProof);
                 } else {
-                    await handleGuestDownloadFlow(credentialRequestBody, credentialProof);
+                    await handleGuestDownloadFlow(credentialRequestBody, credentialEndpoint, credentialProof);
                 }
             } catch (error) {
-                console.error("Error during token fetch or credential download:", error);
+                logError(standardizeError(error, {context: "credentialIssuance"}), {
+                    context: "credentialIssuance"
+                });
                 setIssuanceError(true);
             } finally {
                 removeActiveSession(sessionId);
