@@ -3,6 +3,8 @@
  * Provides consistent error handling patterns across the application
  */
 
+import {reportApplicationError} from "./logger";
+
 export interface StandardError {
     code: string;
     originalError?: any;
@@ -91,14 +93,12 @@ export const logError = (error: StandardError, options: ErrorOptions = {}): void
         originalMessage ||
         "An unexpected error occurred";
 
-    const logData = {
+    reportApplicationError({
         code: error.code,
         message,
         context: options.context,
         timestamp: new Date().toISOString()
-    };
-
-    console.error(`[${error.code}] ${message}`, logData);
+    });
 };
 
 /**
