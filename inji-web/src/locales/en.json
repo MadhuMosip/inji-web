@@ -169,7 +169,7 @@
       },
       "dpopInitializationFailed": {
         "code": "Secure authorization could not be started",
-        "message": "Your browser could not initialize the secure credential download. Please try again."
+        "message": "The secure credential download session could not be started. Please try again."
       }
     }
   },

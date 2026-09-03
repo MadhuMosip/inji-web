@@ -1,27 +1,23 @@
 import React, {useState} from "react";
 import {getCredentialTypeDisplayObjectForCurrentLanguage,} from "../../utils/i18n";
 import {ItemBox} from "../Common/ItemBox";
-import {buildAuthorizationUrl, generateCodeChallenge, generateRandomString} from "../../utils/misc";
+import {createAuthorizationUrl, generateCodeChallenge, generateRandomString} from "../../utils/misc";
+import {api} from "../../utils/api";
 import {addNewSession} from "../../utils/sessions";
 import {useSelector} from "react-redux";
 import {CredentialProps} from "../../types/components";
-import {CodeChallengeObject, CredentialConfigurationObject} from "../../types/data";
+import {CredentialConfigurationObject} from "../../types/data";
 
 import {RootState} from "../../types/redux";
 import {DataShareExpiryModal} from "../../modals/DataShareExpiryModal";
 import {useUser} from "../../hooks/User/useUser";
-import {createDpopSession, removeDpopSession} from "../../utils/dpop";
 
 export const Credential: React.FC<CredentialProps> = (props) => {
     const credentials = useSelector(
         (state: RootState) => state.credentials.credentials
     );
 
-    const authorizationEndpoint = credentials?.authorization_endpoint;
     const grantTypesSupported = credentials?.grant_types_supported;
-    const dpopTokenEndpoint = credentials?.token_endpoint;
-    const dpopCredentialEndpoint = credentials?.credential_endpoint;
-    const dpopSigningAlgs = credentials?.dpop_signing_alg_values_supported;
 
     const selectedIssuer = useSelector(
         (state: RootState) => state.issuers.selected_issuer
@@ -50,7 +46,7 @@ export const Credential: React.FC<CredentialProps> = (props) => {
             });
             return;
         }
-        if (!dpopTokenEndpoint || !dpopCredentialEndpoint) {
+        if (!selectedIssuer?.issuer_id || !filteredCredentialConfig.scope) {
             props.setErrorObj({
                 code: "errors.dpopInitializationFailed.code",
                 message: "errors.dpopInitializationFailed.message"
@@ -59,11 +55,18 @@ export const Credential: React.FC<CredentialProps> = (props) => {
         }
 
         const state = generateRandomString();
-        const code_challenge: CodeChallengeObject =
-            generateCodeChallenge(state);
+        const {codeChallenge} = generateCodeChallenge(state);
 
         try {
-            const dpopJkt = await createDpopSession(state, dpopSigningAlgs);
+            const authorizationUrl = await createAuthorizationUrl(selectedIssuer.issuer_id, {
+                state,
+                codeChallenge,
+                codeChallengeMethod: "S256",
+                redirectUri: api.authorizationRedirectionUrl,
+                scope: filteredCredentialConfig.scope,
+                responseType: "code",
+                uiLocales: language
+            });
             addNewSession({
                 selectedIssuer: selectedIssuer,
                 selectedCredentialType: {type: filteredCredentialConfig.name, displayObj: filteredCredentialConfig.display},
@@ -71,21 +74,10 @@ export const Credential: React.FC<CredentialProps> = (props) => {
                 vcStorageExpiryLimitInTimes: isNaN(defaultVCStorageExpiryLimit)
                     ? vcStorageExpiryLimitInTimes
                     : defaultVCStorageExpiryLimit,
-                state: state,
-                dpopTokenEndpoint,
-                dpopCredentialEndpoint
+                state: state
             });
-            const url = buildAuthorizationUrl(
-                selectedIssuer,
-                filteredCredentialConfig,
-                state,
-                code_challenge,
-                authorizationEndpoint!,
-                dpopJkt
-            );
-            window.open(url, "_self", "noopener");
+            window.open(authorizationUrl, "_self", "noopener");
         } catch (error) {
-            await removeDpopSession(state);
             props.setErrorObj({
                 code: "errors.dpopInitializationFailed.code",
                 message: "errors.dpopInitializationFailed.message"
