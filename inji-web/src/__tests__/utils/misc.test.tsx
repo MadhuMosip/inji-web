@@ -46,68 +46,62 @@ describe('Test misc.ts utility functions', () => {
         expect(isObjectEmpty({ key: 'value' })).toBe(false);
     });
 
-    test('createAuthorizationUrl posts PKCE params and returns the Mimoto authorization URL', async () => {
+    test('createAuthorizationUrl posts issuance params and returns the Mimoto authorization URL and state', async () => {
         const requestSpy = jest.spyOn(apiInstance, 'request').mockResolvedValue({
             data: {
-                authorizationUrl: 'https://as.example.com/authorize?dpop_jkt=thumbprint'
+                authorizationUrl: 'https://as.example.com/authorize?dpop_jkt=thumbprint',
+                state: 'mimoto-state'
             }
         } as any);
 
-        const url = await createAuthorizationUrl('issuer1', {
-            state: 'oauth-state',
-            codeChallenge: 'challenge',
-            codeChallengeMethod: 'S256',
+        const result = await createAuthorizationUrl('issuer1', {
             redirectUri: window.location.origin + '/redirect',
             scope: 'mosip_vc_ldp',
             responseType: 'code',
             uiLocales: 'en'
         });
 
-        expect(url).toBe('https://as.example.com/authorize?dpop_jkt=thumbprint');
+        expect(result).toEqual({
+            authorizationUrl: 'https://as.example.com/authorize?dpop_jkt=thumbprint',
+            state: 'mimoto-state'
+        });
         expect(requestSpy).toHaveBeenCalledWith(expect.objectContaining({
             method: 'POST',
             withCredentials: true,
-            headers: expect.objectContaining({
-                state: 'oauth-state'
-            }),
             data: expect.objectContaining({
-                codeChallenge: 'challenge',
-                codeChallengeMethod: 'S256',
                 scope: 'mosip_vc_ldp',
                 responseType: 'code',
                 uiLocales: 'en'
             })
         }));
         expect(requestSpy).toHaveBeenCalledWith(expect.objectContaining({
-            data: expect.not.objectContaining({
+            headers: expect.not.objectContaining({
                 state: expect.anything()
+            }),
+            data: expect.not.objectContaining({
+                state: expect.anything(),
+                codeChallenge: expect.anything(),
+                codeChallengeMethod: expect.anything()
             })
         }));
         requestSpy.mockRestore();
     });
 
-    test('builds guest and logged-in credential requests with authorization grant', () => {
+    test('builds guest and logged-in credential requests with authorization code only', () => {
       const grant = {
-        code: 'auth-code',
-        codeVerifier: 'verifier'
+        code: 'auth-code'
       };
 
       expect(getCredentialRequestBody('issuer', 'credential', '3', false, grant)).toEqual({
         issuer: 'issuer',
         credential: 'credential',
         vcStorageExpiryLimitInTimes: '3',
-        code: 'auth-code',
-        grant_type: 'authorization_code',
-        redirect_uri: window.location.origin + "/redirect",
-        code_verifier: 'verifier'
+        code: 'auth-code'
       });
       expect(getCredentialRequestBody('issuer', 'credential', '3', true, grant)).toEqual({
         issuer: 'issuer',
         credentialConfigurationId: 'credential',
-        code: 'auth-code',
-        grantType: 'authorization_code',
-        redirectUri: window.location.origin + "/redirect",
-        codeVerifier: 'verifier'
+        code: 'auth-code'
       });
     });
 

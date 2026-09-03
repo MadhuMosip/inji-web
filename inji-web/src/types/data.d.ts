@@ -81,7 +81,6 @@ type DownloadSessionCredentialTypeObj = {
 export type SessionObject = {
     selectedIssuer?: IssuerObject;
     selectedCredentialType: DownloadSessionCredentialTypeObj;
-    codeVerifier: string;
     vcStorageExpiryLimitInTimes: number;
     state: string;
 };
@@ -162,9 +161,6 @@ export type LoggedInCredentialRequestBody = {
     issuer: string;
     credentialConfigurationId: string;
     code?: string;
-    grantType?: string;
-    redirectUri?: string;
-    codeVerifier?: string;
 };
 
 export type GuestCredentialRequestBody = {
@@ -172,9 +168,6 @@ export type GuestCredentialRequestBody = {
     credential: string;
     vcStorageExpiryLimitInTimes: string;
     code?: string;
-    grant_type?: string;
-    redirect_uri?: string;
-    code_verifier?: string;
 };
 
 export type CredentialRequestBody = LoggedInCredentialRequestBody | GuestCredentialRequestBody;

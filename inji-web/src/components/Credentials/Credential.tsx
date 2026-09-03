@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {getCredentialTypeDisplayObjectForCurrentLanguage,} from "../../utils/i18n";
 import {ItemBox} from "../Common/ItemBox";
-import {createAuthorizationUrl, generateCodeChallenge, generateRandomString} from "../../utils/misc";
+import {createAuthorizationUrl} from "../../utils/misc";
 import {api} from "../../utils/api";
 import {addNewSession} from "../../utils/sessions";
 import {useSelector} from "react-redux";
@@ -54,14 +54,8 @@ export const Credential: React.FC<CredentialProps> = (props) => {
             return;
         }
 
-        const state = generateRandomString();
-        const {codeChallenge} = generateCodeChallenge(state);
-
         try {
-            const authorizationUrl = await createAuthorizationUrl(selectedIssuer.issuer_id, {
-                state,
-                codeChallenge,
-                codeChallengeMethod: "S256",
+            const {authorizationUrl, state} = await createAuthorizationUrl(selectedIssuer.issuer_id, {
                 redirectUri: api.authorizationRedirectionUrl,
                 scope: filteredCredentialConfig.scope,
                 responseType: "code",
@@ -70,11 +64,10 @@ export const Credential: React.FC<CredentialProps> = (props) => {
             addNewSession({
                 selectedIssuer: selectedIssuer,
                 selectedCredentialType: {type: filteredCredentialConfig.name, displayObj: filteredCredentialConfig.display},
-                codeVerifier: state,
                 vcStorageExpiryLimitInTimes: isNaN(defaultVCStorageExpiryLimit)
                     ? vcStorageExpiryLimitInTimes
                     : defaultVCStorageExpiryLimit,
-                state: state
+                state
             });
             window.open(authorizationUrl, "_self", "noopener");
         } catch (error) {

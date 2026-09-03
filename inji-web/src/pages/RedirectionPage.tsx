@@ -81,13 +81,12 @@ export const RedirectionPage: React.FC = () => {
             const sessionId = redirectedSessionId!;
             try {
                 const code = searchParams.get('code') ?? '';
-                const codeVerifier = activeSessionInfo.codeVerifier;
                 const issuer = activeSessionInfo.selectedIssuer;
                 const issuerId = issuer?.issuer_id ?? '';
                 const vcStorageExpiryLimitInTimes =
                     activeSessionInfo.vcStorageExpiryLimitInTimes ?? '-1';
                 
-                if (!code || !codeVerifier || !issuerId) {
+                if (!code || !issuerId) {
                     throw new Error("Missing issuance session data");
                 }
 
@@ -96,7 +95,7 @@ export const RedirectionPage: React.FC = () => {
                     credentialType,
                     String(vcStorageExpiryLimitInTimes),
                     isUserLoggedIn(),
-                    {code, codeVerifier}
+                    {code}
                 );
 
                 if (isUserLoggedIn()) {

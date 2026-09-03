@@ -40,9 +40,6 @@ export const isObjectEmpty = (object: any) => {
 }
 
 export type IssuerAuthorizeRequest = {
-    state: string;
-    codeChallenge: string;
-    codeChallengeMethod: string;
     redirectUri: string;
     scope: string;
     responseType: string;
@@ -52,23 +49,20 @@ export type IssuerAuthorizeRequest = {
 export const createAuthorizationUrl = async (
     issuerId: string,
     request: IssuerAuthorizeRequest
-): Promise<string> => {
-    const {state, ...body} = request;
+): Promise<{authorizationUrl: string; state: string}> => {
     const response = await apiInstance.request({
         url: api.authorizeIssuance.url(issuerId),
         method: "POST",
-        headers: {
-            ...api.authorizeIssuance.headers(),
-            state
-        },
-        data: body,
+        headers: api.authorizeIssuance.headers(),
+        data: request,
         withCredentials: true
     });
     const authorizationUrl = response.data?.authorizationUrl;
-    if (typeof authorizationUrl !== "string" || !authorizationUrl) {
-        throw new Error(response.data?.errorMessage ?? "Authorize did not return an authorization URL");
+    const state = response.data?.state;
+    if (typeof authorizationUrl !== "string" || !authorizationUrl || typeof state !== "string" || !state) {
+        throw new Error(response.data?.errorMessage ?? "Authorize did not return an authorization URL and state");
     }
-    return authorizationUrl;
+    return {authorizationUrl, state};
 };
 
 export const getCredentialRequestBody = (
@@ -76,26 +70,20 @@ export const getCredentialRequestBody = (
     credentialConfigurationId: string,
     vcStorageExpiryLimitInTimes: string,
     isLoggedIn: boolean,
-    grant: {code: string; codeVerifier: string}
+    grant: {code: string}
 ): CredentialRequestBody => {
     if (isLoggedIn) {
         return {
             issuer: issuerId,
             credentialConfigurationId,
-            code: grant.code,
-            grantType: "authorization_code",
-            redirectUri: api.authorizationRedirectionUrl,
-            codeVerifier: grant.codeVerifier
+            code: grant.code
         };
     }
     return {
         issuer: issuerId,
         credential: credentialConfigurationId,
         vcStorageExpiryLimitInTimes,
-        code: grant.code,
-        grant_type: "authorization_code",
-        redirect_uri: api.authorizationRedirectionUrl,
-        code_verifier: grant.codeVerifier
+        code: grant.code
     };
 }
 
