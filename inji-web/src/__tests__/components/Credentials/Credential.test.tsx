@@ -10,7 +10,7 @@ import {mockCredentialTypeDisplayArrayObject, mockIssuerDisplayArrayObject} from
 import {mockusei18n, renderWithProvider,} from "../../../test-utils/mockUtils";
 import userEvent from "@testing-library/user-event";
 import {CredentialConfigurationObject} from "../../../types/data";
-import {createAuthorizationUrl, generateCodeChallenge, generateRandomString} from "../../../utils/misc";
+import {createAuthorizationUrl} from "../../../utils/misc";
 import {useUser} from "../../../hooks/User/useUser";
 import {addNewSession} from "../../../utils/sessions";
 
@@ -44,16 +44,12 @@ jest.mock("../../../utils/i18n", () => ({
 
 jest.mock("../../../utils/misc", () => {
     const originalModule = jest.requireActual("../../../utils/misc");
-    const mockFn = jest.fn().mockReturnValue("fixedState123");
-    const mockChallenge = jest.fn().mockReturnValue({
-        codeChallenge: "fixedChallengeValue",
-        codeVerifier: "fixedState123",
+    const createAuthorizationUrlMock = jest.fn().mockResolvedValue({
+        authorizationUrl: "https://as.example.com/authorize?dpop_jkt=thumbprint",
+        state: "mimoto-state"
     });
-    const createAuthorizationUrlMock = jest.fn().mockResolvedValue("https://as.example.com/authorize?dpop_jkt=thumbprint");
     return {
         ...originalModule,
-        generateRandomString: mockFn,
-        generateCodeChallenge: mockChallenge,
         createAuthorizationUrl: createAuthorizationUrlMock,
     };
 });
@@ -105,11 +101,9 @@ describe("Testing the Functionality of Credentials", () => {
     beforeEach(() => {
         setMockUseSelectorState(mockState);
 
-        (createAuthorizationUrl as jest.Mock).mockResolvedValue("https://as.example.com/authorize?dpop_jkt=thumbprint");
-        (generateRandomString as jest.Mock).mockReturnValue("fixedState123");
-        (generateCodeChallenge as jest.Mock).mockReturnValue({
-            codeChallenge: "fixedChallengeValue",
-            codeVerifier: "fixedState123"
+        (createAuthorizationUrl as jest.Mock).mockResolvedValue({
+            authorizationUrl: "https://as.example.com/authorize?dpop_jkt=thumbprint",
+            state: "mimoto-state"
         });
 
         (useUser as jest.Mock).mockReturnValue({ isUserLoggedIn: () => true });
@@ -170,15 +164,21 @@ describe("Testing the Functionality of Credentials", () => {
 
         await waitFor(() => expect(createAuthorizationUrl).toHaveBeenCalledTimes(1));
         expect(createAuthorizationUrl).toHaveBeenCalledWith("issuer1", expect.objectContaining({
-            state: "fixedState123",
-            codeChallenge: "fixedChallengeValue",
-            codeChallengeMethod: "S256",
+            redirectUri: expect.any(String),
             scope: "mosip_vc_ldp",
             responseType: "code",
             uiLocales: "en"
         }));
+        expect(createAuthorizationUrl).toHaveBeenCalledWith("issuer1", expect.not.objectContaining({
+            state: expect.anything(),
+            codeChallenge: expect.anything(),
+            codeChallengeMethod: expect.anything()
+        }));
         expect(addNewSession).toHaveBeenCalledWith(expect.objectContaining({
-            state: "fixedState123"
+            state: "mimoto-state"
+        }));
+        expect(addNewSession).toHaveBeenCalledWith(expect.not.objectContaining({
+            codeVerifier: expect.anything()
         }));
 
         expect(window.open).toHaveBeenCalledTimes(1);

@@ -49,7 +49,6 @@ describe('Testing the Layout of RedirectionPage', () => {
                 display: [{name: 'Test Issuer'}]
             },
             selectedCredentialType: {type: 'CredentialType', displayObj: []},
-            codeVerifier: 'code-verifier',
             state: 'sessionId1'
         });
         (useUser as jest.Mock).mockReturnValue({isUserLoggedIn: () => false});
@@ -74,7 +73,6 @@ describe('Testing the Functionality of RedirectionPage', () => {
                 credentials_endpoint: 'https://issuer.example/legacy-credentials'
             },
             selectedCredentialType: {type: 'CredentialType', displayObj: []},
-            codeVerifier: 'code-verifier',
             state: 'sessionId1'
         });
         (useUser as jest.Mock).mockReturnValue({isUserLoggedIn: () => false});
@@ -162,15 +160,12 @@ describe('Testing the Functionality of RedirectionPage', () => {
     test.todo("check if credential download API with right params is called for logged in user")
     test.todo("check if redirects to issuer page after successful download initiation for logged in user")
 
-    test("calls guest credential download once with state header, code, and code_verifier", async () => {
+    test("calls guest credential download once with state header and code", async () => {
         const credentialBody = {
             issuer: "issuer1",
             credential: "CredentialType",
             vcStorageExpiryLimitInTimes: "-1",
-            code: "auth-code",
-            grant_type: "authorization_code",
-            redirect_uri: "https://wallet.example/redirect",
-            code_verifier: "code-verifier"
+            code: "auth-code"
         };
         (getCredentialRequestBody as jest.Mock).mockReturnValue(credentialBody);
         mockUseApi.fetchData.mockReset();
@@ -188,7 +183,7 @@ describe('Testing the Functionality of RedirectionPage', () => {
             "CredentialType",
             "-1",
             expect.any(Boolean),
-            {code: "auth-code", codeVerifier: "code-verifier"}
+            {code: "auth-code"}
         );
         expect(mockUseApi.fetchData).toHaveBeenCalledWith(expect.objectContaining({
             apiConfig: api.fetchTokenAnddownloadVc,
@@ -206,10 +201,7 @@ describe('Testing the Functionality of RedirectionPage', () => {
             issuer: "issuer1",
             credential: "CredentialType",
             vcStorageExpiryLimitInTimes: "-1",
-            code: "auth-code",
-            grant_type: "authorization_code",
-            redirect_uri: "https://wallet.example/redirect",
-            code_verifier: "code-verifier"
+            code: "auth-code"
         });
         mockUseApi.fetchData.mockReset();
         mockApiResponse({
