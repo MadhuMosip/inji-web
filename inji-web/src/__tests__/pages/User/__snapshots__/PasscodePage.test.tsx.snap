@@ -509,6 +509,7 @@ exports[`Passcode check if layout is matching with snapshot when Wallet exists 1
                 <button
                   class="text-xs sm:text-sm text-iw-secondary cursor-pointer hover:underline text-sm md:text-md font-semibold"
                   data-testid="btn-forgot-passcode"
+                  type="button"
                 >
                   Forgot Passcode?
                 </button>
@@ -523,6 +524,7 @@ exports[`Passcode check if layout is matching with snapshot when Wallet exists 1
                     class="w-full text-center items-center flex-wrap min-w-0 text-iw-text font-bold px-6 py-2 shadow text-white mr-1 rounded-lg false bg-gray-400 cursor-not-allowed grayscale"
                     data-testid="btn-submit-passcode"
                     disabled=""
+                    type="button"
                   >
                     <div
                       class="flex items-center justify-center gap-1.5 md:gap-1"
