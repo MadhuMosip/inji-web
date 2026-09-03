@@ -169,7 +169,7 @@
       },
       "dpopInitializationFailed": {
         "code": "L'autorisation sécurisée n'a pas pu être lancée.",
-        "message": "Votre navigateur n'a pas pu initialiser le téléchargement sécurisé des identifiants. Veuillez réessayer."
+        "message": "La session de téléchargement sécurisé des identifiants n'a pas pu être démarrée. Veuillez réessayer."
       }
     }
   },

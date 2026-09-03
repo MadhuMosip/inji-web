@@ -169,7 +169,7 @@
       },
       "dpopInitializationFailed": {
         "code": "Não foi possível iniciar a autorização segura.",
-        "message": "Seu navegador não conseguiu inicializar o download seguro de credenciais. Por favor, tente novamente."
+        "message": "Não foi possível iniciar a sessão segura de download de credenciais. Por favor, tente novamente."
       }
     }
   },

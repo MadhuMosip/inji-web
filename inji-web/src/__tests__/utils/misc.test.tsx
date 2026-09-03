@@ -2,12 +2,13 @@ import {
     generateCodeChallenge,
     generateRandomString,
     isObjectEmpty,
-    getTokenRequestBody,
     getCredentialRequestBody,
     downloadCredentialPDF,
     getErrorObject,
-    convertStringIntoPascalCase
+    convertStringIntoPascalCase,
+    createAuthorizationUrl
 } from '../../utils/misc';
+import { apiInstance } from '../../hooks/useApi';
 import { mockCrypto } from '../../test-utils/mockUtils';
 import sha256 from 'crypto-js/sha256';
 import Base64 from 'crypto-js/enc-base64';
@@ -45,37 +46,68 @@ describe('Test misc.ts utility functions', () => {
         expect(isObjectEmpty({ key: 'value' })).toBe(false);
     });
 
-   test('Check if getTokenRequestBody returns correct request body', () => {
-    const requestBody = getTokenRequestBody('code', 'verifier');
-    expect(requestBody).toEqual({
-        'grant_type': 'authorization_code',
-        'code': 'code',
-        'redirect_uri': window.location.origin + "/redirect",
-        'code_verifier': 'verifier'
-    });
-});
+    test('createAuthorizationUrl posts PKCE params and returns the Mimoto authorization URL', async () => {
+        const requestSpy = jest.spyOn(apiInstance, 'request').mockResolvedValue({
+            data: {
+                authorizationUrl: 'https://as.example.com/authorize?dpop_jkt=thumbprint'
+            }
+        } as any);
 
-    test('builds guest and logged-in credential requests from a token response', () => {
-      const tokenResponse = {
-        access_token: 'access-token',
-        token_type: 'DPoP',
-        c_nonce: 'credential-nonce'
+        const url = await createAuthorizationUrl('issuer1', {
+            state: 'oauth-state',
+            codeChallenge: 'challenge',
+            codeChallengeMethod: 'S256',
+            redirectUri: window.location.origin + '/redirect',
+            scope: 'mosip_vc_ldp',
+            responseType: 'code',
+            uiLocales: 'en'
+        });
+
+        expect(url).toBe('https://as.example.com/authorize?dpop_jkt=thumbprint');
+        expect(requestSpy).toHaveBeenCalledWith(expect.objectContaining({
+            method: 'POST',
+            withCredentials: true,
+            headers: expect.objectContaining({
+                state: 'oauth-state'
+            }),
+            data: expect.objectContaining({
+                codeChallenge: 'challenge',
+                codeChallengeMethod: 'S256',
+                scope: 'mosip_vc_ldp',
+                responseType: 'code',
+                uiLocales: 'en'
+            })
+        }));
+        expect(requestSpy).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.not.objectContaining({
+                state: expect.anything()
+            })
+        }));
+        requestSpy.mockRestore();
+    });
+
+    test('builds guest and logged-in credential requests with authorization grant', () => {
+      const grant = {
+        code: 'auth-code',
+        codeVerifier: 'verifier'
       };
 
-      expect(getCredentialRequestBody('issuer', 'credential', '3', tokenResponse, false)).toEqual({
+      expect(getCredentialRequestBody('issuer', 'credential', '3', false, grant)).toEqual({
         issuer: 'issuer',
         credential: 'credential',
         vcStorageExpiryLimitInTimes: '3',
-        access_token: 'access-token',
-        token_type: 'DPoP',
-        c_nonce: 'credential-nonce'
+        code: 'auth-code',
+        grant_type: 'authorization_code',
+        redirect_uri: window.location.origin + "/redirect",
+        code_verifier: 'verifier'
       });
-      expect(getCredentialRequestBody('issuer', 'credential', '3', tokenResponse, true)).toEqual({
-        'issuer': 'issuer',
-        'credentialConfigurationId': 'credential',
-        'accessToken': 'access-token',
-        'tokenType': 'DPoP',
-        'cNonce': 'credential-nonce'
+      expect(getCredentialRequestBody('issuer', 'credential', '3', true, grant)).toEqual({
+        issuer: 'issuer',
+        credentialConfigurationId: 'credential',
+        code: 'auth-code',
+        grantType: 'authorization_code',
+        redirectUri: window.location.origin + "/redirect",
+        codeVerifier: 'verifier'
       });
     });
 
