@@ -4,7 +4,7 @@ This document describes how **Mimoto** supports Demonstrating Proof of Possessio
 
 DPoP binds an OAuth access token to a client-held key. A client presents a request-specific DPoP proof together with the access token, preventing the token from being replayed without the corresponding private key.
 
-Mimoto is the **BFF (Backend for Frontend)** for Inji Web issuance. It generates an ephemeral DPoP key per issuance, signs token and credential proofs, retries `use_dpop_nonce` internally, and keeps the access token and private key in the HTTP session.
+Mimoto is the **BFF (Backend for Frontend)** for Inji Web issuance. It generates PKCE and OAuth `state`, creates an ephemeral DPoP key per issuance, signs token and credential proofs, retries `use_dpop_nonce` internally, and keeps the access token and private key in the HTTP session. Inji Web never receives the DPoP private key, the access token, or the PKCE `code_verifier`.
 
 The implementation follows:
 
@@ -28,7 +28,7 @@ POST /credentials/download
 POST /wallets/{walletId}/credentials
 ```
 
-Inji Web does **not** call a separate token API. Download sends OAuth `state` in the `state` request header, plus `code` and `code_verifier` in the body. Mimoto exchanges the authorization code internally, then fetches the credential.
+Inji Web does **not** call a separate token API. Download sends OAuth `state` in the `state` request header and `code` in the body. Mimoto loads the matching issuance session (including PKCE verifier and DPoP key), exchanges the authorization code internally, then fetches the credential.
 
 `POST /v2/get-token/{issuer}` remains as a DPoP header passthrough for non-Inji-Web clients. Inji Web issuance does not use it.
 
@@ -38,12 +38,13 @@ Credential download APIs are **BFF-only**. They do not accept a client `DPoP` he
 
 ## Design goals
 
+- Create PKCE and OAuth `state` in Mimoto (not in the browser).
 - Create a DPoP key per issuance in Mimoto and include `dpop_jkt` on the authorization URL returned to Inji Web.
 - Bind proofs to the **real upstream** Authorization Server token endpoint and Credential Issuer credential endpoint (`htu`), not to Mimoto URLs.
 - Exchange the authorization code in Mimoto and attach DPoP to the AS.
 - Handle `use_dpop_nonce` inside Mimoto (no browser round-trip).
 - Download the credential with a new proof that includes `ath`.
-- Keep the access token and DPoP private key server-side; never return them to the SPA.
+- Keep the access token, PKCE verifier, and DPoP private key server-side; never return them to the SPA.
 - Bind that material to the HTTP session cookie (`SESSION`). Logged-in users already have a session; guest callers receive one from `POST /issuers/{issuer-id}/authorize`.
 - Keep DPoP keys separate from OpenID4VCI credential proof keys (`openid4vci-proof+jwt`) and from Mimoto `client_assertion` keys.
 
@@ -51,8 +52,8 @@ Credential download APIs are **BFF-only**. They do not accept a client `DPoP` he
 
 | Component | Responsibilities |
 | --------- | ---------------- |
-| Inji Web | Generate PKCE `state` / `code_verifier`; call `POST /issuers/{issuer-id}/authorize` with `state` as a request header; open the returned authorization URL (`window.open`); send `state` as a request header plus `code` and `code_verifier` on the credential download APIs. Do not send tokens or DPoP proofs. |
-| Mimoto | Generate DPoP key; put `dpop_jkt` on the authorization URL; exchange the auth code during download; sign token proofs; retry AS `use_dpop_nonce`; keep the access token in session; sign credential proofs with `ath`; retry issuer `use_dpop_nonce`; delete the issuance session after download. |
+| Inji Web | Call `POST /issuers/{issuer-id}/authorize` with `redirectUri`, `scope`, `responseType`, and `uiLocales`; store the returned `state` in browser session storage for the redirect; open the returned authorization URL (`window.open`); after redirect, send `state` as a request header plus `code` on the credential download APIs. Do not generate PKCE, and do not send tokens or DPoP proofs. |
+| Mimoto | Generate OAuth `state` and PKCE; generate DPoP key; put `dpop_jkt` (and PKCE) on the authorization URL; return `authorizationUrl` and `state`; exchange the auth code during download using the stored verifier; sign token proofs; retry AS `use_dpop_nonce`; keep the access token in session; sign credential proofs with `ath`; retry issuer `use_dpop_nonce`; delete the issuance session after download. |
 | Authorization Server | Validate token-endpoint proofs, bind DPoP access tokens to the proof key, may issue `DPoP-Nonce` challenges. |
 | Credential Issuer | Validate the DPoP-bound access token and credential-endpoint proof, may issue resource-server `DPoP-Nonce` challenges. Some issuers (for example Certify) may reject `Authorization: DPoP` and require Bearer. |
 
@@ -60,7 +61,7 @@ Credential download APIs are **BFF-only**. They do not accept a client `DPoP` he
 
 Mimoto owns the DPoP key lifecycle:
 
-1. `POST /issuers/{issuer-id}/authorize` with PKCE parameters creates an HTTP session (guest) or reuses the logged-in session.
+1. `POST /issuers/{issuer-id}/authorize` creates an HTTP session (guest) or reuses the logged-in session, generates OAuth `state` and PKCE, and builds the authorization URL.
 2. Mimoto reads `dpop_signing_alg_values_supported` from Authorization Server metadata.
 3. When that list is present, Mimoto uses the **first advertised algorithm it can sign** (`RS256`, `PS256`, or `ES256`). It does not apply a separate client ranking. Example: `["RS256","ES512","EdDSA","ES256K","ES256","ES384"]` → `RS256`.
 4. When the metadata value is absent or empty, Mimoto defaults to **ES256**.
@@ -78,11 +79,8 @@ DPoP algorithm selection is independent of OpenID4VCI credential proof algorithm
 ```http
 POST /issuers/{issuer-id}/authorize
 Content-Type: application/json
-state: <oauth-state>
 
 {
-  "codeChallenge": "<pkce-s256-challenge>",
-  "codeChallengeMethod": "S256",
   "redirectUri": "https://injiweb.example.com/redirect",
   "scope": "openid MockVerifiableCredential",
   "responseType": "code",
@@ -90,17 +88,18 @@ state: <oauth-state>
 }
 ```
 
-All body fields are required. Send OAuth `state` in the `state` header. `uiLocales` is the Inji Web UI language and is placed on the authorization URL as `ui_locales`. `client_id` and `authorization_endpoint` come from issuer configuration.
+All body fields are required. Inji Web does **not** send `state`, `codeChallenge`, or `codeChallengeMethod`; Mimoto generates PKCE and OAuth `state` server-side. `uiLocales` is the Inji Web UI language and is placed on the authorization URL as `ui_locales`. `client_id` and `authorization_endpoint` come from issuer configuration.
 
 Response:
 
 ```json
 {
-  "authorizationUrl": "https://as.example.com/authorize?client_id=...&redirect_uri=...&response_type=code&scope=...&state=...&code_challenge=...&code_challenge_method=S256&ui_locales=en&dpop_jkt=..."
+  "authorizationUrl": "https://as.example.com/authorize?client_id=...&redirect_uri=...&response_type=code&scope=...&state=...&code_challenge=...&code_challenge_method=S256&ui_locales=en&dpop_jkt=...",
+  "state": "<oauth-state>"
 }
 ```
 
-Inji Web opens `authorizationUrl` (`window.open(authUrl)`). Guest callers receive a `SESSION` cookie. Subsequent download calls must send credentials (`withCredentials: true`).
+Inji Web stores `state` in its browser download session (to match the redirect and send it again on download), then opens `authorizationUrl` (`window.open(authUrl)`). Guest callers receive a `SESSION` cookie. Subsequent download calls must send credentials (`withCredentials: true`).
 
 ### Guest credential — `POST /credentials/download`
 
@@ -111,43 +110,39 @@ state: <oauth-state>
 
 issuer=...
 &credential=...
-&locale=...
+&vcStorageExpiryLimitInTimes=...
 &code=...
-&grant_type=authorization_code
-&redirect_uri=...
-&code_verifier=...
 ```
 
 When a BFF issuance session exists for `state`, Mimoto:
 
-1. Builds the confidential-client token request (`client_assertion`, etc.).
-2. Signs a DPoP proof with `htu` = the real AS `token_endpoint`.
-3. POSTs to `getTokenEndpoint()` (`proxy_token_endpoint` when configured).
-4. On `use_dpop_nonce` + `DPoP-Nonce`, signs a new proof with `nonce` and retries once. MOSIP XML `<OAuthError>` bodies are treated as JSON `error` values.
-5. Stores `access_token` / `token_type` / `c_nonce` in the session (never returned to the SPA).
-6. Signs a credential proof (`htu` = credential endpoint, `ath` = SHA-256 of the access token).
-7. Retries issuer `use_dpop_nonce` once, then removes the issuance session.
+1. Loads the stored PKCE verifier and DPoP key for that `state`.
+2. Builds the confidential-client token request (`client_assertion`, etc.).
+3. Signs a DPoP proof with `htu` = the real AS `token_endpoint`.
+4. POSTs to `getTokenEndpoint()` (`proxy_token_endpoint` when configured).
+5. On `use_dpop_nonce` + `DPoP-Nonce`, signs a new proof with `nonce` and retries once. MOSIP XML `<OAuthError>` bodies are treated as JSON `error` values.
+6. Stores `access_token` / `token_type` / `c_nonce` in the session (never returned to the SPA).
+7. Signs a credential proof (`htu` = credential endpoint, `ath` = SHA-256 of the access token).
+8. Retries issuer `use_dpop_nonce` once, then removes the issuance session.
 
-Do not send `access_token` or a `DPoP` header.
+Do not send `access_token`, `code_verifier`, `grant_type`, `redirect_uri`, or a `DPoP` header from Inji Web. Mimoto supplies grant and PKCE details from the issuance session.
 
 ### Logged-in credential — `POST /wallets/{walletId}/credentials`
 
 ```http
 POST /wallets/{walletId}/credentials
 Content-Type: application/json
+Accept-Language: <ui-locale>
 state: <oauth-state>
 
 {
   "issuer": "...",
   "credentialConfigurationId": "...",
-  "code": "...",
-  "grantType": "authorization_code",
-  "redirectUri": "...",
-  "codeVerifier": "..."
+  "code": "..."
 }
 ```
 
-Same server-side token exchange + proof + nonce retry as guest. The logged-in `SESSION` cookie already binds the user. Do not send `accessToken` or a `DPoP` header.
+Same server-side token exchange + proof + nonce retry as guest. The logged-in `SESSION` cookie already binds the user. Do not send `accessToken`, `codeVerifier`, `grantType`, `redirectUri`, or a `DPoP` header from Inji Web.
 
 ## DPoP proof contents (Mimoto-built)
 
@@ -173,11 +168,11 @@ Each request receives a newly signed proof with a unique `jti`.
 
 ```mermaid
 flowchart TD
-  A([Inji Web begins issuance]) --> B[POST /issuers/issuer-id/authorize with PKCE]
-  B --> C[Mimoto creates DPoP key in SESSION]
-  C --> D[Return authorization URL with dpop_jkt]
-  D --> E[window.open authUrl]
-  E --> F[POST credential API with state header, code, code_verifier]
+  A([Inji Web begins issuance]) --> B[POST /issuers/issuer-id/authorize]
+  B --> C[Mimoto creates PKCE, state, and DPoP key in SESSION]
+  C --> D[Return authorizationUrl + state with dpop_jkt on URL]
+  D --> E[Inji Web stores state and window.open authUrl]
+  E --> F[POST credential API with state header and code]
   F --> G[Mimoto signs token proof and exchanges code]
   G --> H{AS use_dpop_nonce?}
   H -- yes --> I[Retry once with nonce]
@@ -201,11 +196,11 @@ sequenceDiagram
   participant AS as Authorization Server
   participant CI as Credential Issuer
 
-  W->>M: POST /issuers/{issuer-id}/authorize (header state + PKCE body)
-  M-->>W: authorization URL + SESSION cookie
+  W->>M: POST /issuers/{issuer-id}/authorize (redirectUri, scope, responseType, uiLocales)
+  M-->>W: authorizationUrl + state + SESSION cookie
   W->>AS: window.open(authUrl) including ui_locales and dpop_jkt
   AS-->>W: redirect?code&state
-  W->>M: POST credential API (header state + code + code_verifier)
+  W->>M: POST credential API (header state + body code)
   M->>M: Sign proof-A (htu = AS token_endpoint)
   M->>AS: Token form + DPoP=proof-A + client_assertion
   alt Authorization Server requires a nonce
@@ -309,12 +304,12 @@ The Bearer-only retry is intentional compatibility behavior and is logged as a w
 | Credential issuer returns `use_dpop_nonce` + `DPoP-Nonce` (BFF session) | Retry once inside Mimoto; then remove the issuance session on success. |
 | Credential issuer returns Bearer-only `WWW-Authenticate` | Retry once as Bearer. |
 | Credential issuer returns Certify DPoP-not-supported body | Retry once as Bearer. |
-| Logged-in API called without `state` header or without the authorization code grant | `400 invalid_request`. |
-| Guest/logged-in called with BFF `state` + auth-code grant | Exchange the code internally, then download. |
+| Logged-in API called without `state` header or without the authorization code | `400 invalid_request`. |
+| Guest/logged-in called with BFF `state` + auth `code` | Exchange the code internally using the session PKCE verifier, then download. |
 
 ## Security characteristics
 
-- The private DPoP key exists only in Mimoto, bound to the HTTP session and OAuth `state`.
+- The private DPoP key and PKCE verifier exist only in Mimoto, bound to the HTTP session and OAuth `state`.
 - Combined download returns only the PDF / stored credential.
 - Proof `htu` values target upstream resource URLs so token binding remains correct across the proxy.
 - Credential-endpoint proofs include `ath`, binding the proof to the access token.
@@ -324,14 +319,15 @@ The Bearer-only retry is intentional compatibility behavior and is logged as a w
 
 ## Client contract summary (Inji Web)
 
-1. Generate PKCE `state` / `code_verifier` in the browser.
-2. `POST /issuers/{issuer-id}/authorize` with `state` in the request header, PKCE fields and `uiLocales` in the body, and credentials included; open the returned authorization URL.
-3. Guest: `POST /credentials/download` with `state` in the request header and `issuer`, `credential`, `code`, `grant_type`, `redirect_uri`, and `code_verifier` in the form body. Do not send `access_token` or `DPoP`.
-4. Logged-in: `POST /wallets/{walletId}/credentials` with `state` in the request header and `issuer`, `credentialConfigurationId`, `code`, `grantType`, `redirectUri`, and `codeVerifier` in the JSON body. Do not send `accessToken` or `DPoP`.
-5. Expect Mimoto to exchange the token internally, retry AS and issuer `use_dpop_nonce`, and auto-retry Bearer for Certify-like DPoP rejections.
+1. `POST /issuers/{issuer-id}/authorize` with `redirectUri`, `scope`, `responseType`, and `uiLocales`, and credentials included.
+2. Persist the returned `state` in the browser download session; open the returned `authorizationUrl`.
+3. Guest: `POST /credentials/download` with `state` in the request header and `issuer`, `credential`, `vcStorageExpiryLimitInTimes`, and `code` in the form body. Do not send `access_token`, `code_verifier`, or `DPoP`.
+4. Logged-in: `POST /wallets/{walletId}/credentials` with `state` in the request header and `issuer`, `credentialConfigurationId`, and `code` in the JSON body. Do not send `accessToken`, `codeVerifier`, or `DPoP`.
+5. Expect Mimoto to exchange the token internally (using session PKCE), retry AS and issuer `use_dpop_nonce`, and auto-retry Bearer for Certify-like DPoP rejections.
 
 ## Out of scope
 
+- PKCE / OAuth `state` generation in the browser for Inji Web
 - DPoP key generation or proof signing in the browser for Inji Web
 - DPoP for OpenID4VP presentation flows
 - DPoP for wallet-binding / local authentication endpoints
