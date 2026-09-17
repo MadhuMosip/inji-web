@@ -186,7 +186,7 @@ describe('Testing the Functionality of RedirectionPage', () => {
             {code: "auth-code"}
         );
         expect(mockUseApi.fetchData).toHaveBeenCalledWith(expect.objectContaining({
-            apiConfig: api.fetchTokenAnddownloadVc,
+            apiConfig: api.downloadVC,
             body: credentialBody,
             headers: expect.objectContaining({state: "sessionId1"})
         }));

@@ -60,9 +60,9 @@ export const RedirectionPage: React.FC = () => {
     const handleGuestDownloadFlow = async (requestBody: CredentialRequestBody, state: string) => {
         const credentialDownloadResponse = await vcDownloadApi.fetchData({
             body: requestBody,
-            apiConfig: api.fetchTokenAnddownloadVc,
+            apiConfig: api.downloadVC,
             headers: {
-                ...api.fetchTokenAnddownloadVc.headers(),
+                ...api.downloadVC.headers(),
                 state
             }
         });

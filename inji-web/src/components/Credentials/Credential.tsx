@@ -38,41 +38,44 @@ export const Credential: React.FC<CredentialProps> = (props) => {
     const onSuccess = async (
         defaultVCStorageExpiryLimit: number = vcStorageExpiryLimitInTimes
     ) => {
-        if (!validateIfAuthServerSupportRequiredGrantTypes(grantTypesSupported)) {
+        const isRequiredGrantTypesSupported =
+            validateIfAuthServerSupportRequiredGrantTypes(grantTypesSupported);
+
+        if (isRequiredGrantTypesSupported) {
+            if (!selectedIssuer?.issuer_id || !filteredCredentialConfig.name) {
+                props.setErrorObj({
+                    code: "errors.dpopInitializationFailed.code",
+                    message: "errors.dpopInitializationFailed.message"
+                });
+                return;
+            }
+
+            try {
+                const {authorizationUrl, state} = await createAuthorizationUrl(selectedIssuer.issuer_id, {
+                    redirectUri: api.authorizationRedirectionUrl,
+                    credentialConfigurationId: filteredCredentialConfig.name,
+                    uiLocales: language
+                });
+                addNewSession({
+                    selectedIssuer: selectedIssuer,
+                    selectedCredentialType: {type: filteredCredentialConfig.name, displayObj: filteredCredentialConfig.display},
+                    vcStorageExpiryLimitInTimes: isNaN(defaultVCStorageExpiryLimit)
+                        ? vcStorageExpiryLimitInTimes
+                        : defaultVCStorageExpiryLimit,
+                    state
+                });
+                window.open(authorizationUrl, "_self", "noopener");
+            } catch (error) {
+                props.setErrorObj({
+                    code: "errors.dpopInitializationFailed.code",
+                    message: "errors.dpopInitializationFailed.message"
+                });
+            }
+        } else {
             props.setErrorObj({
                 code: "errors.authorizationGrantTypeNotSupportedByWallet.code",
                 message:
                     "errors.authorizationGrantTypeNotSupportedByWallet.message"
-            });
-            return;
-        }
-        if (!selectedIssuer?.issuer_id || !filteredCredentialConfig.name) {
-            props.setErrorObj({
-                code: "errors.dpopInitializationFailed.code",
-                message: "errors.dpopInitializationFailed.message"
-            });
-            return;
-        }
-
-        try {
-            const {authorizationUrl, state} = await createAuthorizationUrl(selectedIssuer.issuer_id, {
-                redirectUri: api.authorizationRedirectionUrl,
-                credentialConfigurationId: filteredCredentialConfig.name,
-                uiLocales: language
-            });
-            addNewSession({
-                selectedIssuer: selectedIssuer,
-                selectedCredentialType: {type: filteredCredentialConfig.name, displayObj: filteredCredentialConfig.display},
-                vcStorageExpiryLimitInTimes: isNaN(defaultVCStorageExpiryLimit)
-                    ? vcStorageExpiryLimitInTimes
-                    : defaultVCStorageExpiryLimit,
-                state
-            });
-            window.open(authorizationUrl, "_self", "noopener");
-        } catch (error) {
-            props.setErrorObj({
-                code: "errors.dpopInitializationFailed.code",
-                message: "errors.dpopInitializationFailed.message"
             });
         }
     };

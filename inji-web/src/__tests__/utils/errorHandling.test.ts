@@ -4,19 +4,17 @@ import {
     withErrorHandling,
     ERROR_TYPES,
     StandardError,
-    ErrorOptions,
 } from '../../utils/errorHandling';
-import {reportApplicationError} from '../../utils/logger';
-
-jest.mock('../../utils/logger', () => ({
-    reportApplicationError: jest.fn(),
-}));
-
-const mockReportApplicationError = reportApplicationError as jest.MockedFunction<typeof reportApplicationError>;
 
 describe('errorHandling', () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
     beforeEach(() => {
         jest.clearAllMocks();
+    });
+
+    afterAll(() => {
+        consoleErrorSpy.mockRestore();
     });
 
     describe('standardizeError', () => {
@@ -189,7 +187,7 @@ describe('errorHandling', () => {
     });
 
     describe('logError', () => {
-        it('should log error by default', () => {
+        it('should log error code and message by default', () => {
             const originalError = new Error('Test error');
             const error: StandardError = {
                 code: ERROR_TYPES.API_CLIENT,
@@ -198,13 +196,10 @@ describe('errorHandling', () => {
 
             logError(error, { context: 'testContext' });
 
-            expect(mockReportApplicationError).toHaveBeenCalledTimes(1);
-            expect(mockReportApplicationError).toHaveBeenCalledWith({
-                code: ERROR_TYPES.API_CLIENT,
-                message: 'Test error',
-                context: 'testContext',
-                timestamp: expect.any(String),
-            });
+            expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                `[${ERROR_TYPES.API_CLIENT}] Test error (testContext)`
+            );
         });
 
         it('should not log when logError is false', () => {
@@ -214,10 +209,10 @@ describe('errorHandling', () => {
 
             logError(error, { logError: false });
 
-            expect(mockReportApplicationError).not.toHaveBeenCalled();
+            expect(consoleErrorSpy).not.toHaveBeenCalled();
         });
 
-        it('should include context in log data', () => {
+        it('should include context in the log line', () => {
             const originalError = new Error('Server error');
             const error: StandardError = {
                 code: ERROR_TYPES.API_SERVER,
@@ -226,15 +221,12 @@ describe('errorHandling', () => {
 
             logError(error, { context: 'apiCall' });
 
-            expect(mockReportApplicationError).toHaveBeenCalledWith({
-                code: ERROR_TYPES.API_SERVER,
-                message: 'Server error',
-                context: 'apiCall',
-                timestamp: expect.any(String),
-            });
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                `[${ERROR_TYPES.API_SERVER}] Server error (apiCall)`
+            );
         });
 
-        it('should log with sanitized metadata only', () => {
+        it('should log error code without the raw error object', () => {
             const originalError = new Error('Original error');
             (originalError as Error & {response?: {data?: {access_token?: string}}}).response = {
                 data: {access_token: "secret-token"}
@@ -246,14 +238,11 @@ describe('errorHandling', () => {
 
             logError(error, {context: "credentialIssuance"});
 
-            expect(mockReportApplicationError).toHaveBeenCalledTimes(1);
-            expect(mockReportApplicationError).toHaveBeenCalledWith({
-                code: ERROR_TYPES.UNKNOWN,
-                message: "Original error",
-                context: "credentialIssuance",
-                timestamp: expect.any(String)
-            });
-            expect(JSON.stringify(mockReportApplicationError.mock.calls[0])).not.toContain("secret-token");
+            expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                `[${ERROR_TYPES.UNKNOWN}] Original error (credentialIssuance)`
+            );
+            expect(JSON.stringify(consoleErrorSpy.mock.calls[0])).not.toContain("secret-token");
         });
     });
 
@@ -286,7 +275,7 @@ describe('errorHandling', () => {
 
             await withErrorHandling(asyncFn);
 
-            expect(mockReportApplicationError).toHaveBeenCalled();
+            expect(consoleErrorSpy).toHaveBeenCalled();
         });
 
         it('should not log error when logError is false', async () => {
@@ -295,7 +284,7 @@ describe('errorHandling', () => {
 
             await withErrorHandling(asyncFn, { logError: false });
 
-            expect(mockReportApplicationError).not.toHaveBeenCalled();
+            expect(consoleErrorSpy).not.toHaveBeenCalled();
         });
 
         it('should standardize HTTP errors', async () => {

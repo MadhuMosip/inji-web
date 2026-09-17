@@ -50,7 +50,7 @@ export class api {
             };
         }
     };
-    static fetchTokenAnddownloadVc: ApiRequest = {
+    static downloadVC: ApiRequest = {
         url: () => api.mimotoHost + `/credentials/download`,
         methodType: MethodType.POST,
         headers: () => {
@@ -60,6 +60,7 @@ export class api {
                 "Cache-Control": "no-cache, no-store, must-revalidate"
             };
         },
+        // Guest DPoP session is bound to the SESSION cookie from /authorize.
         credentials: "include",
         responseType: "blob"
     };

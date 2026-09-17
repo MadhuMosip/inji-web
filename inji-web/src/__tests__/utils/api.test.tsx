@@ -73,12 +73,12 @@ describe('Testing API Class', () => {
     });
   });
 
-  test('Check fetchTokenAnddownloadVc request', () => {
-    const fetchTokenAnddownloadVc: ApiRequest = apiModule.api.fetchTokenAnddownloadVc;
-    expect(fetchTokenAnddownloadVc.url()).toBe('https://api.collab.mossip.net/v1/mimoto/credentials/download');
-    expect(fetchTokenAnddownloadVc.methodType).toBe(apiModule.MethodType.POST);
-    expect(fetchTokenAnddownloadVc.credentials).toBe('include');
-    expect(fetchTokenAnddownloadVc.headers()).toEqual({
+  test('Check downloadVC request', () => {
+    const downloadVC: ApiRequest = apiModule.api.downloadVC;
+    expect(downloadVC.url()).toBe('https://api.collab.mossip.net/v1/mimoto/credentials/download');
+    expect(downloadVC.methodType).toBe(apiModule.MethodType.POST);
+    expect(downloadVC.credentials).toBe('include');
+    expect(downloadVC.headers()).toEqual({
       'accept': 'application/pdf',
       'Content-Type': 'application/x-www-form-urlencoded',
       'Cache-Control': 'no-cache, no-store, must-revalidate'

@@ -115,10 +115,10 @@ export function useApi<T = any>(): UseApiReturn<T> {
                             try {
                                 errorData = JSON.parse(res.data);
                             } catch {
-                                errorData = res.data;
+                                errorData = {message: res.data};
                             }
                         } else {
-                            errorData = res.data;
+                            errorData = {message: res.data};
                         }
                     }
 
