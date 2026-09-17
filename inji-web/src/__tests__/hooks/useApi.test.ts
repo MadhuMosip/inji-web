@@ -507,6 +507,7 @@ describe('useApi Hook', () => {
 
             await waitFor(() => {
                 expect(result.current.state).toBe(RequestStatus.ERROR);
+                expect((result.current.error as any)?.response?.data).toEqual({ error: 'String error' });
             });
 
             // Test string with non-JSON content type
@@ -531,6 +532,7 @@ describe('useApi Hook', () => {
 
                 expect(apiResult.error).toBeDefined();
                 expect(apiResult.state).toBe(RequestStatus.ERROR);
+                expect((apiResult.error as any)?.response?.data).toEqual({ message: 'Plain text error' });
             });
         });
 
